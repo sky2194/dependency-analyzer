@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import StepBanner from './StepBanner'
 import Tooltip from './Tooltip'
-import ECOSYSTEMS, { detectEcosystem } from '../data/ecosystems'
+import ECOSYSTEMS, { detectEcosystem, LOCKFILE_ECO } from '../data/ecosystems'
 
 const PLACEHOLDERS = {
   npm: `Paste your package.json here...\n\nExample:\n{\n  "dependencies": {\n    "express": "4.17.1",\n    "lodash": "4.17.21"\n  }\n}`,
@@ -56,6 +56,12 @@ export default function FileUpload({ onAnalyze, loading, onEcosystemChange }) {
             </button>
           )
         })}
+      </div>
+
+      {/* Lockfile quick option */}
+      <div style={{ marginBottom: 10, fontSize: 12, color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span>🔒</span>
+        <span>Have a <strong style={{color:'#6366f1'}}>package-lock.json</strong>? Drop it for faster, more accurate scan — exact installed versions, no registry calls.</span>
       </div>
 
       {/* Drop zone */}
