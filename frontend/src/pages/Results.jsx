@@ -26,6 +26,7 @@ export default function Results() {
   const navigate = useNavigate()
   const [tab, setTab] = useState(0)
   const [sevFilter, setSevFilter] = useState('ALL')
+  const [exportError, setExportError] = useState('')
   const result = state?.result
 
   if (!result) return (
@@ -48,7 +49,7 @@ export default function Results() {
       a.download = `sca-report-${result.project_name}.${type === 'pdf' ? 'html' : 'csv'}`
       a.click()
       URL.revokeObjectURL(url)
-    } catch { alert('Export failed — is the backend running?') }
+    } catch { setExportError('Export failed — is the backend running?') }
   }
 
   const vulns = result.vulnerabilities || []
@@ -61,7 +62,7 @@ export default function Results() {
   return (
     <div style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 40px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 28 }}>
-        <button onClick={() => navigate('/')} style={{ background: 'none', border: '1px solid var(--border)', color: 'var(--muted)', borderRadius: 6, padding: '6px 12px', cursor: 'pointer', fontSize: 12 }}>← New Scan</button>
+        <button onClick={() => navigate('/', { state: { lastEcosystem: result.ecosystem } })} style={{ background: 'none', border: '1px solid var(--border)', color: 'var(--muted)', borderRadius: 6, padding: '6px 12px', cursor: 'pointer', fontSize: 12 }}>← New Scan</button>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
           <button onClick={() => exportReport('pdf')} style={{ background: 'none', border: '1px solid var(--border)', color: 'var(--muted)', borderRadius: 6, padding: '6px 12px', cursor: 'pointer', fontSize: 12 }}>📄 Export PDF</button>
           <button onClick={() => exportReport('csv')} style={{ background: 'none', border: '1px solid var(--border)', color: 'var(--muted)', borderRadius: 6, padding: '6px 12px', cursor: 'pointer', fontSize: 12 }}>📊 Export CSV</button>
@@ -72,6 +73,17 @@ export default function Results() {
         </div>
       </div>
 
+      {result._isMock && (
+        <div style={{ background: '#2d2009', border: '1px solid #78350f', borderRadius: 'var(--radius)', padding: '10px 16px', color: '#f59e0b', fontSize: 13, marginBottom: 16 }}>
+          ⚠️ <strong>Demo data shown</strong> — backend not running. Start backend with <code style={{fontFamily:'var(--font-mono)', fontSize:11}}>./start.sh backend</code> for real results.
+        </div>
+      )}
+      {exportError && (
+        <div style={{ background: '#2d1515', border: '1px solid #7f1d1d', borderRadius: 'var(--radius)', padding: '10px 16px', color: '#ef4444', fontSize: 13, marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
+          ⚠️ {exportError}
+          <button onClick={() => setExportError('')} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}>✕</button>
+        </div>
+      )}
       {/* Unpinned version warnings */}
       {warnings.length > 0 && (
         <div style={{ background: '#2d2009', border: '1px solid #78350f', borderRadius: 'var(--radius)', padding: '12px 16px', marginBottom: 20 }}>

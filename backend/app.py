@@ -27,7 +27,7 @@ from export.pdf_export import generate_html_report
 from export.csv_export import generate_csv
 from parsers.lockfile_parser import parse as parse_lockfile
 from resolvers.lockfile_resolver import resolve as resolve_lockfile
-from cve.osv_client import query_package as osv_query, format_vuln as osv_format
+from cve.osv_client import query_package as osv_query, format_vuln as osv_format  # used in scan_tree
 
 app = Flask(__name__)
 
@@ -176,36 +176,6 @@ def analyze():
         'scan_timestamp': int(time.time()),
     })
 
-@app.route('/api/search', methods=['GET'])
-@rate_limited
-def search():
-    pkg       = request.args.get('pkg', '').strip()
-    version   = request.args.get('version', '').strip()
-    ecosystem = request.args.get('ecosystem', 'npm').strip()
-
-    if not pkg:
-        return jsonify({'error': 'Package name required'}), 400
-    if len(pkg) > 200:
-        return jsonify({'error': 'Package name too long'}), 400
-
-    ecosystems = [ecosystem] if ecosystem != 'all' else ['npm', 'pypi', 'maven']
-    vulns, seen = [], set()
-    for eco in ecosystems:
-        for v in osv_query(pkg, version or 'latest', eco):
-            fmt = osv_format(v, pkg, version or 'unknown')
-            fmt.update({
-                'path': ['your-app', pkg],
-                'root_cause': f"{pkg} is a direct dependency with a known vulnerability.",
-                'transitive_path': None
-            })
-            if fmt['cve_id'] not in seen:
-                seen.add(fmt['cve_id'])
-                vulns.append(fmt)
-
-    sev_order = {'CRITICAL': 0, 'HIGH': 1, 'MEDIUM': 2, 'LOW': 3}
-    vulns.sort(key=lambda v: sev_order.get(v.get('severity', 'LOW'), 3))
-
-    return jsonify({'package': pkg, 'version': version or 'any', 'vulnerabilities': vulns})
 
 @app.route('/api/cve/<cve_id>', methods=['GET'])
 def get_cve(cve_id):

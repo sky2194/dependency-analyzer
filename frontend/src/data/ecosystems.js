@@ -71,8 +71,18 @@ urllib3==1.26.2`
   }
 }
 
+export const LOCKFILE_ECO = {
+  label: 'Lock File', lang: 'npm (exact versions)', color: '#6366f1', icon: '🔒',
+  file: 'package-lock.json',
+  mediationRule: 'No mediation needed — lock files contain already-resolved exact versions. Fastest and most accurate scan.',
+  mediationFix: 'Lock files are the source of truth. No conflicts to resolve.',
+  mediationExample: null,
+  sampleContent: '{ "name": "my-app", "lockfileVersion": 2, "packages": {} }'
+}
+
 export const detectEcosystem = (filename) => {
   if (!filename) return null
+  if (filename.includes('package-lock.json')) return LOCKFILE_ECO
   if (filename.includes('package.json')) return ECOSYSTEMS.npm
   if (filename.endsWith('.txt') || filename.includes('requirements')) return ECOSYSTEMS.pypi
   if (filename.endsWith('.xml') || filename.includes('pom')) return ECOSYSTEMS.maven
