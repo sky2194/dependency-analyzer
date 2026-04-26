@@ -199,10 +199,11 @@ echo ""
 
 # Watch mode - re-run every 120 seconds
 if [ "$1" == "--watch" ]; then
+  SCRIPT_PATH="$PROJECT/tests/test.sh"
   while true; do
     echo -e "${YELLOW}Re-running in 120s... (Ctrl+C to stop)${NC}"
     sleep 120
     clear
-    exec bash "$0" --watch
+    exec bash "$SCRIPT_PATH" --watch
   done
 fi
