@@ -39,5 +39,6 @@ venv/
 venv/
 .venv/
 venv/
-.txt
+*.txt
 txt
+*.txt
