@@ -1,0 +1,20 @@
+const TERMS = {
+  cve:        { term: 'CVE',                   plain: 'A publicly known security hole in software — like a recall notice. Each has a unique ID e.g. CVE-2021-44228.' },
+  cvss:       { term: 'CVSS Score',            plain: 'Danger rating 0–10. 9–10 = emergency, 7–8 = serious, 4–6 = moderate, 0–3 = minor.' },
+  sca:        { term: 'SCA',                   plain: 'Software Composition Analysis — scanning all your borrowed code for known security issues.' },
+  dependency: { term: 'Dependency',            plain: 'A package your project borrows. Like using a pre-made wheel instead of inventing one.' },
+  direct:     { term: 'Direct Dependency',     plain: 'A package YOU added to your project — it is in your config file (package.json, pom.xml, requirements.txt).' },
+  transitive: { term: 'Transitive Dependency', plain: 'A package you never added — it came along because something you added needed it. Most CVEs hide here.' },
+  mediation:  { term: 'Dependency Mediation',  plain: 'When two packages need different versions of the same library, the package manager picks one. The loser is silently dropped — even if it was the safe version.' },
+  graph:      { term: 'Dependency Graph',      plain: 'A map of every package your project uses and how they connect — like a family tree for your code.' },
+  rootCause:  { term: 'Root Cause',            plain: 'The direct package that ultimately brought a vulnerable library into your project, even through many layers.' },
+  cvePath:    { term: 'CVE Path',              plain: 'The chain from your app to the vulnerable package. App → A → B → Vulnerable.' },
+  nvd:        { term: 'NVD',                   plain: 'US government official database of software security holes. Updated daily.' },
+  osv:        { term: 'OSV',                   plain: 'Google open-source vulnerability database. Great for npm, PyPI, Maven.' },
+  severity:   { term: 'Severity',              plain: 'How dangerous a CVE is: Critical = fix now. High = this week. Medium = this month. Low = when convenient.' },
+  npm:        { term: 'npm',                   plain: 'Node Package Manager — the package manager for JavaScript/Node.js projects. Uses package.json.' },
+  pypi:       { term: 'PyPI',                  plain: 'Python Package Index — the package manager for Python projects. Uses requirements.txt or setup.py.' },
+  maven:      { term: 'Maven',                 plain: 'Build tool and package manager for Java projects. Uses pom.xml. Mediation rule: first declaration wins.' },
+  depManagement: { term: 'dependencyManagement', plain: 'A Maven-specific section in pom.xml that lets you explicitly lock versions, overriding mediation. The correct fix for Maven conflicts.' },
+}
+export default TERMS

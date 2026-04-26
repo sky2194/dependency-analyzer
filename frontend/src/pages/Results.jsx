@@ -1,0 +1,109 @@
+import { useLocation, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import DependencyGraph from '../components/DependencyGraph'
+import VulnerabilityReport from '../components/VulnerabilityReport'
+import SeverityBadge from '../components/SeverityBadge'
+import Tooltip from '../components/Tooltip'
+
+const TABS = ['Dependency Graph', 'Vulnerabilities']
+const SEVS = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW']
+const SEV_COLORS = { CRITICAL: 'var(--critical)', HIGH: 'var(--high)', MEDIUM: 'var(--medium)', LOW: 'var(--low)' }
+
+function SummaryCard({ value, label, color, onClick, hint }) {
+  const [hover, setHover] = useState(false)
+  return (
+    <div onClick={onClick} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
+      style={{ background: 'var(--surface)', border: `1px solid ${hover ? color || 'var(--accent)' : 'var(--border)'}`, borderRadius: 'var(--radius)', padding: '14px', textAlign: 'center', cursor: 'pointer', transition: 'all 0.15s', position: 'relative', transform: hover ? 'translateY(-2px)' : 'none', boxShadow: hover ? `0 4px 16px ${(color || '#e05c2a')}22` : 'none' }}>
+      <div style={{ fontFamily: 'var(--font-mono)', fontSize: 26, fontWeight: 700, color: color || 'var(--info)' }}>{value}</div>
+      <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 3 }}>{label}</div>
+      {hover && <div style={{ position: 'absolute', bottom: 6, right: 8, fontSize: 10, color: color || 'var(--accent)', opacity: 0.8 }}>{hint} →</div>}
+    </div>
+  )
+}
+
+export default function Results() {
+  const { state } = useLocation()
+  const navigate = useNavigate()
+  const [tab, setTab] = useState(0)
+  const [sevFilter, setSevFilter] = useState('ALL')
+  const result = state?.result
+
+  if (!result) return (
+    <div style={{ textAlign: 'center', padding: 80 }}>
+      <p style={{ color: 'var(--muted)', marginBottom: 16 }}>No results found.</p>
+      <button onClick={() => navigate('/')} style={{ padding: '10px 20px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius)', cursor: 'pointer' }}>← Back to Dashboard</button>
+    </div>
+  )
+
+  const exportReport = async (type) => {
+    try {
+      const res = await fetch(`/api/export/${type}`, {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(result)
+      })
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `sca-report-${result.project_name}.${type === 'pdf' ? 'html' : 'csv'}`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch { alert('Export failed — is the backend running?') }
+  }
+
+  const vulns = result.vulnerabilities || []
+  const warnings = result.warnings || []
+  const counts = SEVS.reduce((a, s) => ({ ...a, [s]: vulns.filter(v => v.severity === s).length }), {})
+
+  const goToGraph = () => setTab(0)
+  const goToVulns = (sev = 'ALL') => { setTab(1); setSevFilter(sev) }
+
+  return (
+    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 40px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 28 }}>
+        <button onClick={() => navigate('/')} style={{ background: 'none', border: '1px solid var(--border)', color: 'var(--muted)', borderRadius: 6, padding: '6px 12px', cursor: 'pointer', fontSize: 12 }}>← New Scan</button>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+          <button onClick={() => exportReport('pdf')} style={{ background: 'none', border: '1px solid var(--border)', color: 'var(--muted)', borderRadius: 6, padding: '6px 12px', cursor: 'pointer', fontSize: 12 }}>📄 Export PDF</button>
+          <button onClick={() => exportReport('csv')} style={{ background: 'none', border: '1px solid var(--border)', color: 'var(--muted)', borderRadius: 6, padding: '6px 12px', cursor: 'pointer', fontSize: 12 }}>📊 Export CSV</button>
+        </div>
+        <div>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 22 }}>Scan Results</h2>
+          <div style={{ color: 'var(--muted)', fontSize: 12 }}><Tooltip termKey="sca">SCA</Tooltip> complete — <strong style={{color:'var(--text)'}}>{result.project_name || 'my-app'}</strong> · {result.total_packages} packages · {result.ecosystem?.toUpperCase() || 'NPM'}</div>
+        </div>
+      </div>
+
+      {/* Unpinned version warnings */}
+      {warnings.length > 0 && (
+        <div style={{ background: '#2d2009', border: '1px solid #78350f', borderRadius: 'var(--radius)', padding: '12px 16px', marginBottom: 20 }}>
+          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, color: 'var(--accent2)', marginBottom: 8 }}>
+            ⚠️ {warnings.length} unpinned version{warnings.length > 1 ? 's' : ''} detected
+          </div>
+          {warnings.map((w, i) => (
+            <div key={i} style={{ fontSize: 12, color: '#fcd34d', marginBottom: 4, lineHeight: 1.5 }}>• {w}</div>
+          ))}
+        </div>
+      )}
+
+      {/* Clickable summary cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: 10, marginBottom: 28 }}>
+        <SummaryCard value={result.total_packages} label="Total Packages" color="var(--info)" onClick={goToGraph} hint="View Graph" />
+        <SummaryCard value={vulns.length} label="Vulnerabilities" color="var(--critical)" onClick={() => goToVulns('ALL')} hint="View All" />
+        {SEVS.map(s => (
+          <SummaryCard key={s} value={counts[s]} label={<SeverityBadge level={s} />} color={SEV_COLORS[s]} onClick={() => goToVulns(s)} hint={`Filter ${s}`} />
+        ))}
+      </div>
+
+      {/* Tabs */}
+      <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', marginBottom: 24 }}>
+        {TABS.map((t, i) => (
+          <button key={t} onClick={() => setTab(i)} style={{ padding: '9px 20px', background: 'none', border: 'none', borderBottom: `2px solid ${tab === i ? 'var(--accent)' : 'transparent'}`, color: tab === i ? 'var(--accent)' : 'var(--muted)', fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 13, cursor: 'pointer', marginBottom: -1 }}>
+            {t} {i === 1 && vulns.length > 0 && <span style={{ background: 'var(--critical)', color: '#fff', borderRadius: 10, padding: '1px 6px', fontSize: 10, marginLeft: 4 }}>{vulns.length}</span>}
+          </button>
+        ))}
+      </div>
+
+      {tab === 0 && <DependencyGraph data={result} />}
+      {tab === 1 && <VulnerabilityReport data={result} defaultFilter={sevFilter} />}
+    </div>
+  )
+}
