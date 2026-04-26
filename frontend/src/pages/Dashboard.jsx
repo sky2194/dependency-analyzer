@@ -139,7 +139,9 @@ export default function Dashboard() {
       clearInterval(interval)
       setLoading(false)
       const ecoKey = detectedEco?.label?.toLowerCase() || 'npm'
-      navigate('/results', { state: { result: MOCKS[ecoKey] || MOCKS.npm } })
+      const mockResult = MOCKS[ecoKey] || MOCKS.npm
+      mockResult._isMock = true
+      navigate('/results', { state: { result: mockResult } })
     }
   }
 
