@@ -35,3 +35,6 @@ Thumbs.db
 # Test artifacts
 .pytest_cache/
 test-results/
+venv/
+venv/
+.venv/
