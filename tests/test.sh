@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PROJECT="/Users/saikoutilyayerabtai/Projects/Dependency Analayzer"
+PROJECT="/Users/saikoutilyayerabtai/Projects/dependency-analyzer"
 BACKEND="$PROJECT/backend"
 FRONTEND="$PROJECT/frontend"
 TESTS="$PROJECT/tests"
