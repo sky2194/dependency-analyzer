@@ -196,3 +196,13 @@ else
 fi
 echo -e "${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
+
+# Watch mode - re-run every 5 seconds
+if [ "$1" == "--watch" ]; then
+  while true; do
+    echo -e "${YELLOW}Re-running in 5s... (Ctrl+C to stop)${NC}"
+    sleep 5
+    clear
+    exec bash "$0"
+  done
+fi
