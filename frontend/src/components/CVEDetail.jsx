@@ -50,9 +50,12 @@ export default function CVEDetail({ vuln, onClose }) {
           <span style={{ color: 'var(--text)', marginLeft: 6 }}>{vuln.root_cause}</span>
         </div>
 
-        <div style={{ background: 'var(--fix-bg)', border: '1px solid var(--fix-border)', borderRadius: 6, padding: '10px 12px', marginBottom: 14, fontSize: 13, lineHeight: 1.6 }}>
-          🛠️ <strong style={{ color: 'var(--fix-text)' }}>Fix:</strong>
-          <span style={{ color: 'var(--text)', marginLeft: 6 }}>{vuln.fix}</span>
+        <div style={{ background: vuln.fix_version ? 'var(--fix-bg)' : 'var(--warn-bg)', border: `1px solid ${vuln.fix_version ? 'var(--fix-border)' : 'var(--warn-border)'}`, borderRadius: 6, padding: '10px 12px', marginBottom: 14, fontSize: 13, lineHeight: 1.6 }}>
+          {vuln.fix_version ? (
+            <>🛠️ <strong style={{ color: 'var(--fix-text)' }}>Fix:</strong> <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--text)' }}>upgrade to &gt;= {vuln.fix_version}</span></>
+          ) : (
+            <>⚠️ <strong style={{ color: 'var(--warn-text)' }}>No fix released yet</strong> — monitor <a href={vuln.osv_url} target="_blank" rel="noreferrer" style={{ color: 'var(--info)' }}>OSV</a> and <a href={vuln.nvd_url} target="_blank" rel="noreferrer" style={{ color: 'var(--info)' }}>NVD</a> for updates.</>
+          )}
         </div>
 
         <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
