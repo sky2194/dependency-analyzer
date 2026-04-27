@@ -2,7 +2,7 @@ import requests
 
 OSV_URL = 'https://api.osv.dev/v1'
 
-ECOSYSTEM_MAP = {'npm': 'npm', 'pypi': 'PyPI', 'maven': 'Maven', 'lockfile': 'npm'}
+ECOSYSTEM_MAP = {'npm': 'npm', 'pypi': 'PyPI', 'maven': 'Maven', 'lockfile': 'npm', 'npm-lock': 'npm'}
 
 def query_package(name, version, ecosystem):
     eco = ECOSYSTEM_MAP.get(ecosystem, 'npm')

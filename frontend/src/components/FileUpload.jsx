@@ -50,18 +50,12 @@ export default function FileUpload({ onAnalyze, loading, onEcosystemChange }) {
           const active = activeEco === key
           return (
             <button key={key} onClick={() => { setActiveEco(key); setContent(''); onEcosystemChange?.(e) }}
-              style={{ flex: 1, padding: '10px 0', border: 'none', borderRight: '1px solid var(--border)', background: active ? 'var(--surface2)' : 'var(--surface)', color: active ? e.color : 'var(--muted)', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 12, borderBottom: active ? `2px solid ${e.color}` : '2px solid transparent', transition: 'all 0.15s' }}>
+              style={{ flex: 1, padding: '10px 0', border: 'none', borderRight: key !== 'maven' ? '1px solid var(--border)' : 'none', background: active ? 'var(--surface2)' : 'var(--surface)', color: active ? e.color : 'var(--muted)', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 12, borderBottom: active ? `2px solid ${e.color}` : '2px solid transparent', transition: 'all 0.15s' }}>
               {e.icon} {e.label}
               <div style={{ fontSize: 10, fontWeight: 400, color: 'var(--muted)', marginTop: 2 }}>{e.file}</div>
             </button>
           )
         })}
-        {/* Lockfile tab */}
-        <button onClick={() => { setActiveEco('lockfile'); setContent(''); onEcosystemChange?.({ label: 'Lock File', color: '#6366f1', file: 'package-lock.json' }) }}
-          style={{ flex: 1, padding: '10px 0', border: 'none', borderRight: 'none', background: activeEco === 'lockfile' ? 'var(--surface2)' : 'var(--surface)', color: activeEco === 'lockfile' ? '#6366f1' : 'var(--muted)', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 12, borderBottom: activeEco === 'lockfile' ? '2px solid #6366f1' : '2px solid transparent', transition: 'all 0.15s' }}>
-          🔒 Lock File
-          <div style={{ fontSize: 10, fontWeight: 400, color: 'var(--muted)', marginTop: 2 }}>package-lock.json</div>
-        </button>
       </div>
 
       {/* Drop zone */}
@@ -72,7 +66,7 @@ export default function FileUpload({ onAnalyze, loading, onEcosystemChange }) {
         style={{ border: `2px dashed ${drag ? 'var(--accent)' : 'var(--border)'}`, borderRadius: 'var(--radius)', padding: '16px', textAlign: 'center', cursor: 'pointer', background: drag ? '#1e1510' : 'var(--surface)', marginBottom: 10, transition: 'all 0.2s' }}>
         <div style={{ fontSize: 20, marginBottom: 4 }}>📁</div>
         <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 13 }}>Drop file or click to browse</div>
-        <div style={{ color: 'var(--muted)', fontSize: 11, marginTop: 2 }}>package.json · package-lock.json · requirements.txt · pom.xml</div>
+        <div style={{ color: 'var(--muted)', fontSize: 11, marginTop: 2 }}>package.json / package-lock.json · requirements.txt · pom.xml</div>
         <input ref={ref} type="file" hidden accept=".json,.txt,.xml" onChange={e => handleFile(e.target.files[0])} />
       </div>
 
@@ -81,17 +75,17 @@ export default function FileUpload({ onAnalyze, loading, onEcosystemChange }) {
         <span style={{ fontSize: 12, color: 'var(--muted)' }}>Need an example?</span>
         <button onClick={() => loadSample(activeEco)}
           style={{ border: `1px solid ${eco.color}`, background: 'none', color: eco.color, borderRadius: 5, padding: '3px 12px', fontSize: 11, fontFamily: 'var(--font-mono)', cursor: 'pointer' }}>
-          Load {activeEco === 'lockfile' ? 'package-lock.json' : eco.file} example
+          Load {eco.file} example
         </button>
       </div>
 
-      <div style={{ fontSize: 12, color: activeEco === 'lockfile' ? '#6366f1' : eco.color, marginBottom: 8, fontWeight: 600 }}>{activeEco === 'lockfile' ? '🔒 npm Lock File detected — exact versions, faster scan' : `${eco.icon} ${eco.lang} detected`}</div>
+      <div style={{ fontSize: 12, color: eco.color, marginBottom: 8, fontWeight: 600 }}>{eco.icon} {eco.lang} detected</div>
 
       <textarea
         value={content}
         onChange={e => setContent(e.target.value)}
         rows={10}
-        placeholder={PLACEHOLDERS[activeEco] || 'Paste your package-lock.json contents here...'}
+        placeholder={PLACEHOLDERS[activeEco]}
         style={{ width: '100%', fontFamily: 'var(--font-mono)', fontSize: 12, padding: 12, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', color: 'var(--text)', resize: 'vertical', outline: 'none' }}
       />
 
@@ -100,7 +94,7 @@ export default function FileUpload({ onAnalyze, loading, onEcosystemChange }) {
           ⚠️ File too large ({Math.round(content.length/1024)}KB). Maximum is 512KB.
         </div>
       )}
-      <button onClick={() => onAnalyze(content, activeEco === 'lockfile' ? 'package-lock.json' : eco.file)} disabled={!content.trim() || loading || content.length > 512000}
+      <button onClick={() => onAnalyze(content, eco.file)} disabled={!content.trim() || loading || content.length > 512000}
         style={{ marginTop: 14, padding: '11px 28px', background: content.trim() ? 'var(--accent)' : 'var(--border)', color: '#fff', border: 'none', borderRadius: 'var(--radius)', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14, cursor: content.trim() ? 'pointer' : 'not-allowed' }}>
         {loading ? '⏳ Scanning...' : '🔍 Analyze Dependencies'}
       </button>

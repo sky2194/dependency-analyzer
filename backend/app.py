@@ -105,14 +105,14 @@ def deduplicate_vulns(vulnerabilities):
     return list(seen.values())
 
 def detect_ecosystem(filename):
-    if 'package-lock.json' in filename: return 'lockfile'
+    if 'package-lock.json' in filename: return 'npm-lock'
     if 'package.json' in filename: return 'npm'
     if filename.endswith('.txt') or 'requirements' in filename: return 'pypi'
     if filename.endswith('.xml') or 'pom' in filename: return 'maven'
     return 'npm'
 
-PARSERS   = {'npm': parse_npm, 'pypi': parse_pypi, 'maven': parse_maven, 'lockfile': parse_lockfile}
-RESOLVERS = {'npm': resolve_npm, 'pypi': resolve_pypi, 'maven': resolve_maven, 'lockfile': resolve_lockfile}
+PARSERS   = {'npm': parse_npm, 'pypi': parse_pypi, 'maven': parse_maven, 'npm-lock': parse_lockfile}
+RESOLVERS = {'npm': resolve_npm, 'pypi': resolve_pypi, 'maven': resolve_maven, 'npm-lock': resolve_lockfile}
 
 
 # ── Routes ────────────────────────────────────────────────────────────────────
@@ -165,7 +165,7 @@ def analyze():
     }
 
     return jsonify({
-        'ecosystem': ecosystem,
+        'ecosystem': 'npm' if ecosystem == 'npm-lock' else ecosystem,
         'project_name': project_name,
         'total_packages': total,
         'graph': graph,

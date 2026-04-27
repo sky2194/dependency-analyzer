@@ -7,21 +7,31 @@ import Results from './pages/Results'
 export const ScanContext = createContext({ scanning: false, scanProject: '', setScanning: () => {}, setScanProject: () => {} })
 export const useScan = () => useContext(ScanContext)
 
-function ScanStatusBar({ scanning, scanProject, navigate }) {
+function ScanStatusBar({ scanning, scanProject }) {
   if (!scanning) return null
   return (
-    <button onClick={() => navigate('/')}
-      style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8, background: '#2d1510', border: '1px solid var(--accent)', borderRadius: 6, padding: '4px 12px', cursor: 'pointer', color: 'var(--accent)', fontSize: 12, fontFamily: 'var(--font-mono)', animation: 'pulse-border 2s ease-in-out infinite' }}>
+    <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8, background: '#2d1510', border: '1px solid var(--accent)', borderRadius: 6, padding: '4px 12px', color: 'var(--accent)', fontSize: 12, fontFamily: 'var(--font-mono)' }}>
       <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--accent)', display: 'inline-block', animation: 'pulse 1s ease-in-out infinite' }} />
-      Scanning {scanProject}... click to view progress
-    </button>
+      Scanning {scanProject}...
+    </div>
   )
 }
 
 export default function App() {
   const [scanning, setScanning] = useState(false)
   const [scanProject, setScanProject] = useState('')
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark')
   const navigate = useNavigate()
+
+  const toggleTheme = () => {
+    const next = theme === 'dark' ? 'light' : 'dark'
+    setTheme(next)
+    localStorage.setItem('theme', next)
+    document.documentElement.setAttribute('data-theme', next)
+  }
+
+  // Apply theme on mount
+  useState(() => { document.documentElement.setAttribute('data-theme', theme) })
 
   return (
     <ScanContext.Provider value={{ scanning, setScanning, scanProject, setScanProject }}>
@@ -44,7 +54,11 @@ export default function App() {
               {label}
             </NavLink>
           ))}
-          <ScanStatusBar scanning={scanning} scanProject={scanProject} navigate={navigate} />
+          <ScanStatusBar scanning={scanning} scanProject={scanProject} />
+          <button onClick={toggleTheme} title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+            style={{ marginLeft: scanning ? 8 : 'auto', background: 'none', border: '1px solid var(--border)', borderRadius: 6, padding: '5px 10px', cursor: 'pointer', fontSize: 14, color: 'var(--muted)', transition: 'all 0.15s' }}>
+            {theme === 'dark' ? '☀️' : '🌙'}
+          </button>
         </nav>
 
         <Routes>

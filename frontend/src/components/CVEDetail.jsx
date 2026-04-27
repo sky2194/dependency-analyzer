@@ -55,9 +55,13 @@ export default function CVEDetail({ vuln, onClose }) {
           <span style={{ color: 'var(--text)', marginLeft: 6 }}>{vuln.fix}</span>
         </div>
 
-        <div style={{ display: 'flex', gap: 10 }}>
+        <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
           {vuln.nvd_url && <a href={vuln.nvd_url} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: 'var(--info)', textDecoration: 'underline' }}>View on <Tooltip termKey="nvd">NVD</Tooltip> ↗</a>}
           {vuln.osv_url && <a href={vuln.osv_url} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: 'var(--info)', textDecoration: 'underline' }}>View on <Tooltip termKey="osv">OSV</Tooltip> ↗</a>}
+        </div>
+
+        <div style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 6, padding: '10px 12px', fontSize: 11, color: 'var(--muted)', lineHeight: 1.6 }}>
+          ⚠️ <strong>Before applying this fix:</strong> Always test in a staging environment first. Check that upgrading doesn't break peer dependency requirements or change API behaviour your code depends on. The safe version shown is the minimum fix — your project may have constraints that require a different approach.
         </div>
       </div>
     </div>
