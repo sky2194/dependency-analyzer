@@ -4,6 +4,12 @@ PROJECT="/Users/saikoutilyayerabtai/Projects/dependency-analyzer"
 FRONTEND="$PROJECT/frontend"
 BACKEND="$PROJECT/backend"
 
+
+ echo "Cleaning ports..."
+   lsof -ti :5000 | xargs kill -9 2>/dev/null
+   lsof -ti :3000 | xargs kill -9 2>/dev/null
+
+   
 # Colors
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'

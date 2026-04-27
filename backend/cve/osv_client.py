@@ -17,94 +17,107 @@ def query_package(name, version, ecosystem):
     except Exception:
         return []
 
-def _version_in_range(installed_ver, ranges):
-    """Check if installed version falls within any affected range."""
+def _parse_version(v):
+    try:
+        return Version('0') if v == '0' else Version(v)
+    except InvalidVersion:
+        return None
+
+def _is_affected(installed_ver, affected):
     try:
         installed = Version(installed_ver)
     except InvalidVersion:
-        return True  # can't parse, assume affected
+        return True  # assume affected if unparseable
 
-    for r in ranges:
-        r_type = r.get('type', '')
-        if r_type not in ('SEMVER', 'ECOSYSTEM'):
-            continue
-        introduced = None
-        fixed = None
-        for event in r.get('events', []):
-            if 'introduced' in event:
-                try: introduced = Version(event['introduced']) if event['introduced'] != '0' else Version('0')
-                except InvalidVersion: pass
-            if 'fixed' in event:
-                try: fixed = Version(event['fixed'])
-                except InvalidVersion: pass
-        if introduced is not None and installed >= introduced:
-            if fixed is None or installed < fixed:
-                return True
+    for a in affected:
+        # Check exact versions list first
+        if installed_ver in a.get('versions', []):
+            return True
+        # Check ranges
+        for r in a.get('ranges', []):
+            if r.get('type') not in ('SEMVER', 'ECOSYSTEM'):
+                continue
+            introduced, fixed = None, None
+            for event in r.get('events', []):
+                if 'introduced' in event:
+                    introduced = _parse_version(event['introduced'])
+                if 'fixed' in event:
+                    fixed = _parse_version(event['fixed'])
+            if introduced is not None and installed >= introduced:
+                if fixed is None or installed < fixed:
+                    return True
     return False
 
-def _get_fix_for_version(installed_ver, affected):
-    """Get the correct fix version for the installed version branch."""
+def _get_fix_version(installed_ver, affected):
+    """Get correct fix version for the installed version branch."""
     try:
         installed = Version(installed_ver)
     except InvalidVersion:
         return None
 
-    best_fix = None
+    candidates = []
     for a in affected:
         for r in a.get('ranges', []):
             if r.get('type') not in ('SEMVER', 'ECOSYSTEM'):
                 continue
-            introduced = None
-            fixed = None
+            introduced, fixed = None, None
             for event in r.get('events', []):
                 if 'introduced' in event:
-                    try:
-                        v = event['introduced']
-                        introduced = Version('0') if v == '0' else Version(v)
-                    except InvalidVersion:
-                        pass
+                    introduced = _parse_version(event['introduced'])
                 if 'fixed' in event:
-                    try: fixed = Version(event['fixed'])
-                    except InvalidVersion: pass
-
-            # This range covers our installed version
+                    fixed = _parse_version(event['fixed'])
+            # Range covers our version → this fixed version is relevant
             if introduced is not None and installed >= introduced:
-                if fixed is None or installed < fixed:
-                    if fixed and (best_fix is None or fixed < Version(best_fix)):
-                        best_fix = str(fixed)
+                if fixed and installed < fixed:
+                    candidates.append(fixed)
 
-    return best_fix
+    # Return the smallest fix version that covers our installed version
+    return str(min(candidates)) if candidates else None
+
+def _get_severity_cvss(vuln):
+    """Extract severity and CVSS from OSV, falling back to database_specific."""
+    for sev in vuln.get('severity', []):
+        score_str = sev.get('score', '')
+        try:
+            # CVSS vector string like "CVSS:3.1/AV:N/AC:L/..."
+            if score_str.startswith('CVSS'):
+                # Extract base score from vector — last number after last /
+                parts = score_str.split('/')
+                # Try to find numeric score in aliases or database_specific
+                pass
+            score = float(score_str.split('/')[0]) if '/' not in score_str[:10] else None
+            if score:
+                if score >= 9.0: return 'CRITICAL', score
+                if score >= 7.0: return 'HIGH', score
+                if score >= 4.0: return 'MEDIUM', score
+                return 'LOW', score
+        except Exception:
+            pass
+
+    # Fallback to database_specific severity
+    db = vuln.get('database_specific', {})
+    sev = db.get('severity', '').upper()
+    if sev in ('CRITICAL', 'HIGH', 'MEDIUM', 'LOW'):
+        # Map severity to typical CVSS midpoint
+        score_map = {'CRITICAL': 9.5, 'HIGH': 7.5, 'MEDIUM': 5.0, 'LOW': 2.0}
+        return sev, score_map[sev]
+
+    return 'MEDIUM', 0.0
 
 def format_vuln(vuln, package, version):
     affected = vuln.get('affected', [])
 
-    # Filter: only include if installed version is actually affected
-    is_affected = False
-    for a in affected:
-        pkg_match = a.get('package', {}).get('name', '').lower() == package.lower()
-        if not pkg_match:
-            continue
-        ranges = a.get('ranges', [])
-        versions_list = a.get('versions', [])
-        if version in versions_list:
-            is_affected = True
-            break
-        if _version_in_range(version, ranges):
-            is_affected = True
-            break
+    # Only report if this version is actually affected
+    if not _is_affected(version, affected):
+        return None
 
-    if not is_affected and affected:
-        return None  # Not affected at this version
+    fix_version = _get_fix_version(version, affected)
+    fix = f">= {fix_version}" if fix_version else None
 
-    # Get correct fix version for installed version branch
-    fix_version = _get_fix_for_version(version, affected)
-    fix = f"Upgrade to >= {fix_version}" if fix_version else "No fix available yet — check OSV for updates."
-
-    severity = _get_severity(vuln)
-    cvss = _get_cvss(vuln)
+    severity, cvss_score = _get_severity_cvss(vuln)
     aliases = vuln.get('aliases', [])
     cve_id = next((a for a in aliases if a.startswith('CVE-')), vuln.get('id', 'UNKNOWN'))
-    summary = vuln.get('summary', vuln.get('details', 'No description available.')[:200])
+    summary = vuln.get('summary', '') or vuln.get('details', '')[:200]
 
     return {
         'cve_id': cve_id,
@@ -112,35 +125,10 @@ def format_vuln(vuln, package, version):
         'package': package,
         'version': version,
         'severity': severity,
-        'cvss_score': cvss,
+        'cvss_score': cvss_score,
         'description': summary,
-        'fix': fix,
+        'fix_version': fix_version,  # raw version string
+        'fix': fix,                  # ">= X.Y.Z" or None
         'osv_url': f"https://osv.dev/vulnerability/{vuln.get('id')}",
-        'nvd_url': f"https://nvd.nist.gov/vuln/detail/{cve_id}" if cve_id != 'UNKNOWN' else None,
+        'nvd_url': f"https://nvd.nist.gov/vuln/detail/{cve_id}" if cve_id.startswith('CVE-') else None,
     }
-
-def _get_severity(vuln):
-    for sev in vuln.get('severity', []):
-        score_str = sev.get('score', '')
-        try:
-            score = float(score_str.split('/')[0]) if '/' in score_str else float(score_str)
-            if score >= 9.0: return 'CRITICAL'
-            if score >= 7.0: return 'HIGH'
-            if score >= 4.0: return 'MEDIUM'
-            return 'LOW'
-        except Exception:
-            pass
-    db = vuln.get('database_specific', {})
-    sev = db.get('severity', '').upper()
-    if sev in ('CRITICAL', 'HIGH', 'MEDIUM', 'LOW'):
-        return sev
-    return 'MEDIUM'
-
-def _get_cvss(vuln):
-    for sev in vuln.get('severity', []):
-        score_str = sev.get('score', '')
-        try:
-            return float(score_str.split('/')[0]) if '/' in score_str else float(score_str)
-        except Exception:
-            pass
-    return 0.0

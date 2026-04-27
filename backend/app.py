@@ -103,6 +103,52 @@ def deduplicate_vulns(vulnerabilities):
 
     return list(seen.values())
 
+def group_vulns_by_package(vulnerabilities):
+    """Group CVEs by package and compute one recommended fix per package."""
+    from packaging.version import Version, InvalidVersion
+    groups = {}
+
+    for v in vulnerabilities:
+        key = f"{v['package']}@{v['version']}"
+        if key not in groups:
+            groups[key] = {
+                'package': v['package'],
+                'version': v['version'],
+                'cves': [],
+                'highest_severity': 'LOW',
+                'recommended_fix': None,
+                'path': v.get('path', []),
+                'root_cause': v.get('root_cause', ''),
+            }
+        groups[key]['cves'].append(v)
+
+        # Track highest severity
+        sev_order = {'CRITICAL': 0, 'HIGH': 1, 'MEDIUM': 2, 'LOW': 3}
+        curr = groups[key]['highest_severity']
+        if sev_order.get(v['severity'], 3) < sev_order.get(curr, 3):
+            groups[key]['highest_severity'] = v['severity']
+
+        # Track highest fix version (the one that fixes all CVEs)
+        fv = v.get('fix_version')
+        if fv:
+            try:
+                new_fix = Version(fv)
+                existing = groups[key]['recommended_fix']
+                if existing is None or new_fix > Version(existing):
+                    groups[key]['recommended_fix'] = fv
+            except InvalidVersion:
+                pass
+
+    # Sort groups by severity
+    sev_order = {'CRITICAL': 0, 'HIGH': 1, 'MEDIUM': 2, 'LOW': 3}
+    result = sorted(groups.values(), key=lambda g: sev_order.get(g['highest_severity'], 3))
+
+    # Sort CVEs within each group by severity
+    for g in result:
+        g['cves'].sort(key=lambda v: sev_order.get(v['severity'], 3))
+
+    return result
+
 def detect_ecosystem(filename):
     if 'package-lock.json' in filename: return 'npm-lock'
     if 'package.json' in filename: return 'npm'
@@ -163,6 +209,8 @@ def analyze():
         'type': 'root', 'dependencies': graph_deps, 'vulnerabilities': []
     }
 
+    grouped = group_vulns_by_package(vulnerabilities)
+
     return jsonify({
         'ecosystem': 'npm' if ecosystem == 'npm-lock' else ecosystem,
         'project_name': project_name,
@@ -172,6 +220,7 @@ def analyze():
         'vulnerabilities': vulnerabilities,
         'warnings': warnings,
         'scan_timestamp': int(time.time()),
+        'grouped_vulnerabilities': grouped,
     })
 
 

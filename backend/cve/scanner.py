@@ -1,56 +1,58 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from .osv_client import query_package as osv_query, format_vuln as osv_format
-from .nvd_client import query_package as nvd_query
+from .nvd_client import get_cvss
 
 def scan_package(name, version, ecosystem):
-    """Query OSV + NVD concurrently for a single package."""
-    results = {}
-
-    def fetch_osv():
+    """Query OSV for a single package, enrich CVSS from NVD if missing."""
+    try:
         raw = osv_query(name, version, ecosystem)
-        results = [osv_format(v, name, version) for v in raw]
-        return [r for r in results if r is not None]  # filter non-affected versions
+        vulns = [osv_format(v, name, version) for v in raw]
+        vulns = [v for v in vulns if v is not None]
 
-    def fetch_nvd():
-        return nvd_query(name, version)
+        # Enrich missing CVSS scores from NVD in parallel
+        def enrich(v):
+            if v['cvss_score'] == 0.0 and v['cve_id'].startswith('CVE-'):
+                nvd_score, nvd_sev = get_cvss(v['cve_id'])
+                if nvd_score:
+                    v['cvss_score'] = nvd_score
+                if nvd_sev:
+                    v['severity'] = nvd_sev
+            return v
 
-    with ThreadPoolExecutor(max_workers=2) as ex:
-        futures = {'osv': ex.submit(fetch_osv), 'nvd': ex.submit(fetch_nvd)}
-        for source, future in futures.items():
-            try:
-                results[source] = future.result()
-            except Exception:
-                results[source] = []
+        with ThreadPoolExecutor(max_workers=5) as ex:
+            vulns = list(ex.map(enrich, vulns))
 
-    # Merge: OSV is primary, NVD fills gaps
-    merged = {v['cve_id']: v for v in results['osv']}
-    for v in results['nvd']:
-        if v['cve_id'] not in merged:
-            merged[v['cve_id']] = v
-        else:
-            # Enrich OSV entry with NVD url if missing
-            if not merged[v['cve_id']].get('nvd_url'):
-                merged[v['cve_id']]['nvd_url'] = v.get('nvd_url')
-
-    return list(merged.values())
+        return vulns
+    except Exception:
+        return []
 
 def scan_tree(graph_deps, ecosystem, app_name='my-app'):
-    """Recursively scan all nodes in the dependency tree."""
+    """Scan all nodes in dependency tree concurrently."""
     all_vulns = []
-    _scan_node(graph_deps, ecosystem, app_name, [app_name], all_vulns)
+    _scan_node(graph_deps, ecosystem, [app_name], all_vulns)
     return all_vulns
 
-def _scan_node(deps, ecosystem, app_name, path, all_vulns):
-    for dep in deps:
+def _scan_node(deps, ecosystem, path, all_vulns):
+    # Scan all deps at this level in parallel
+    def scan_dep(dep):
         current_path = path + [dep['name']]
         vulns = scan_package(dep['name'], dep['version'], ecosystem)
         for v in vulns:
             v['path'] = current_path
-            v['root_cause'] = _build_root_cause(current_path, dep['type'])
-        all_vulns.extend(vulns)
+            v['root_cause'] = _build_root_cause(current_path, dep.get('type', 'transitive'))
         dep['vulnerabilities'] = [{'cve_id': v['cve_id']} for v in vulns]
-        if dep.get('dependencies'):
-            _scan_node(dep['dependencies'], ecosystem, app_name, current_path, all_vulns)
+        return vulns, dep.get('dependencies', []), current_path
+
+    with ThreadPoolExecutor(max_workers=8) as ex:
+        futures = [ex.submit(scan_dep, dep) for dep in deps]
+        for future in as_completed(futures):
+            try:
+                vulns, children, current_path = future.result()
+                all_vulns.extend(vulns)
+                if children:
+                    _scan_node(children, ecosystem, current_path, all_vulns)
+            except Exception:
+                pass
 
 def _build_root_cause(path, dep_type):
     if len(path) <= 2:
