@@ -74,24 +74,24 @@ export default function Results() {
       </div>
 
       {result._isMock && (
-        <div style={{ background: '#2d2009', border: '1px solid #78350f', borderRadius: 'var(--radius)', padding: '10px 16px', color: '#f59e0b', fontSize: 13, marginBottom: 16 }}>
+        <div style={{ background: 'var(--warn-bg)', border: '1px solid var(--warn-border)', borderRadius: 'var(--radius)', padding: '10px 16px', color: '#f59e0b', fontSize: 13, marginBottom: 16 }}>
           ⚠️ <strong>Demo data shown</strong> — backend not running. Start backend with <code style={{fontFamily:'var(--font-mono)', fontSize:11}}>./start.sh backend</code> for real results.
         </div>
       )}
       {exportError && (
-        <div style={{ background: '#2d1515', border: '1px solid #7f1d1d', borderRadius: 'var(--radius)', padding: '10px 16px', color: '#ef4444', fontSize: 13, marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
+        <div style={{ background: 'var(--vuln-bg)', border: '1px solid var(--vuln-border)', borderRadius: 'var(--radius)', padding: '10px 16px', color: '#ef4444', fontSize: 13, marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
           ⚠️ {exportError}
           <button onClick={() => setExportError('')} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}>✕</button>
         </div>
       )}
       {/* Unpinned version warnings */}
       {warnings.length > 0 && (
-        <div style={{ background: '#2d2009', border: '1px solid #78350f', borderRadius: 'var(--radius)', padding: '12px 16px', marginBottom: 20 }}>
+        <div style={{ background: 'var(--warn-bg)', border: '1px solid var(--warn-border)', borderRadius: 'var(--radius)', padding: '12px 16px', marginBottom: 20 }}>
           <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, color: 'var(--accent2)', marginBottom: 8 }}>
             ⚠️ {warnings.length} unpinned version{warnings.length > 1 ? 's' : ''} detected
           </div>
           {warnings.map((w, i) => (
-            <div key={i} style={{ fontSize: 12, color: '#fcd34d', marginBottom: 4, lineHeight: 1.5 }}>• {w}</div>
+            <div key={i} style={{ fontSize: 12, color: 'var(--warn-text)', marginBottom: 4, lineHeight: 1.5 }}>• {w}</div>
           ))}
         </div>
       )}

@@ -8,7 +8,8 @@ def scan_package(name, version, ecosystem):
 
     def fetch_osv():
         raw = osv_query(name, version, ecosystem)
-        return [osv_format(v, name, version) for v in raw]
+        results = [osv_format(v, name, version) for v in raw]
+        return [r for r in results if r is not None]  # filter non-affected versions
 
     def fetch_nvd():
         return nvd_query(name, version)

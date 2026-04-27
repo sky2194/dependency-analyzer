@@ -11,9 +11,9 @@ function Node({ node, depth = 0 }) {
     <div style={{ marginLeft: depth * 20 }}>
       <div
         onClick={() => hasChildren && setCollapsed(!collapsed)}
-        style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 10px', borderRadius: 6, marginBottom: 2, background: vuln ? '#2d1515' : 'transparent', border: `1px solid ${vuln ? '#7f1d1d' : 'transparent'}`, cursor: hasChildren ? 'pointer' : 'default', userSelect: 'none' }}
+        style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 10px', borderRadius: 6, marginBottom: 2, background: vuln ? 'var(--vuln-bg)' : 'transparent', border: `1px solid ${vuln ? 'var(--vuln-border)' : 'transparent'}`, cursor: hasChildren ? 'pointer' : 'default', userSelect: 'none' }}
         onMouseEnter={e => { if (hasChildren) e.currentTarget.style.background = vuln ? '#3d2020' : 'var(--surface2)' }}
-        onMouseLeave={e => { e.currentTarget.style.background = vuln ? '#2d1515' : 'transparent' }}
+        onMouseLeave={e => { e.currentTarget.style.background = vuln ? 'var(--vuln-bg)' : 'transparent' }}
       >
         {depth > 0 && <span style={{ color: 'var(--border)', fontFamily: 'var(--font-mono)', fontSize: 12 }}>└─</span>}
         {hasChildren && (
@@ -21,8 +21,8 @@ function Node({ node, depth = 0 }) {
         )}
         <span style={{ fontFamily: 'var(--font-mono)', fontSize: 13, fontWeight: depth === 0 ? 700 : 400, color: depth === 0 ? 'var(--accent)' : 'var(--text)' }}>{node.name}</span>
         <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--muted)' }}>@{node.version}</span>
-        {node.type === 'direct' && <span style={{ fontSize: 10, background: '#0f2d1a', color: '#22c55e', border: '1px solid #14532d', borderRadius: 3, padding: '1px 6px' }}><Tooltip termKey="direct">direct</Tooltip></span>}
-        {node.type === 'transitive' && <span style={{ fontSize: 10, background: '#2d2009', color: '#f59e0b', border: '1px solid #78350f', borderRadius: 3, padding: '1px 6px' }}><Tooltip termKey="transitive">transitive</Tooltip></span>}
+        {node.type === 'direct' && <span style={{ fontSize: 10, background: 'var(--fix-bg)', color: '#22c55e', border: '1px solid var(--fix-border)', borderRadius: 3, padding: '1px 6px' }}><Tooltip termKey="direct">direct</Tooltip></span>}
+        {node.type === 'transitive' && <span style={{ fontSize: 10, background: 'var(--warn-bg)', color: '#f59e0b', border: '1px solid var(--warn-border)', borderRadius: 3, padding: '1px 6px' }}><Tooltip termKey="transitive">transitive</Tooltip></span>}
         {hasChildren && <span style={{ fontSize: 10, color: 'var(--muted)', marginLeft: 2 }}>({node.dependencies.length})</span>}
         {vuln
           ? <span style={{ marginLeft: 'auto', fontSize: 11, color: '#ef4444' }}>⚠️ {node.vulnerabilities.length} CVE{node.vulnerabilities.length > 1 ? 's' : ''}</span>
@@ -59,10 +59,10 @@ export default function DependencyGraph({ data }) {
           </div>
           <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 12 }}>Where version conflicts existed, one version was selected and the rest silently dropped.</div>
           {data.mediation.map((m, i) => (
-            <div key={i} style={{ background: 'var(--surface)', border: `1px solid ${m.risk ? '#7f1d1d' : 'var(--border)'}`, borderLeft: `3px solid ${m.risk ? '#ef4444' : 'var(--accent2)'}`, borderRadius: 'var(--radius)', padding: '12px 14px', marginBottom: 10 }}>
+            <div key={i} style={{ background: 'var(--surface)', border: `1px solid ${m.risk ? 'var(--vuln-border)' : 'var(--border)'}`, borderLeft: `3px solid ${m.risk ? '#ef4444' : 'var(--accent2)'}`, borderRadius: 'var(--radius)', padding: '12px 14px', marginBottom: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                 <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 13 }}>{m.package}</span>
-                {m.loser && <span style={{ fontSize: 10, background: '#2d1515', color: '#ef4444', border: '1px solid #7f1d1d', borderRadius: 3, padding: '1px 6px' }}>version conflict</span>}
+                {m.loser && <span style={{ fontSize: 10, background: 'var(--vuln-bg)', color: '#ef4444', border: '1px solid var(--vuln-border)', borderRadius: 3, padding: '1px 6px' }}>version conflict</span>}
                 <span style={{ marginLeft: 'auto', fontSize: 12 }}>selected: <strong style={{ color: m.risk ? '#ef4444' : 'var(--accent2)' }}>{m.selected}</strong></span>
               </div>
               {m.requestedBy?.map((r, j) => (
@@ -77,7 +77,7 @@ export default function DependencyGraph({ data }) {
                 </div>
               ))}
               <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--border)' }}>📌 {m.reason}</div>
-              {m.risk && <div style={{ fontSize: 11, color: '#fca5a5', marginTop: 6, lineHeight: 1.5 }}>⚠️ {m.risk}</div>}
+              {m.risk && <div style={{ fontSize: 11, color: 'var(--vuln-text)', marginTop: 6, lineHeight: 1.5 }}>⚠️ {m.risk}</div>}
             </div>
           ))}
         </>
