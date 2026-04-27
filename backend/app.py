@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from functools import wraps
 from collections import defaultdict
-import os, time, hashlib
+import os, time
 
 # ── Load .env ─────────────────────────────────────────────────────────────────
 def load_env():
@@ -27,7 +27,6 @@ from export.pdf_export import generate_html_report
 from export.csv_export import generate_csv
 from parsers.lockfile_parser import parse as parse_lockfile
 from resolvers.lockfile_resolver import resolve as resolve_lockfile
-from cve.osv_client import query_package as osv_query, format_vuln as osv_format  # used in scan_tree
 
 app = Flask(__name__)
 

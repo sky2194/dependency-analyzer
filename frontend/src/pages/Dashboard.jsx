@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useScan } from '../App'
 import axios from 'axios'
 import FileUpload from '../components/FileUpload'
@@ -24,7 +24,7 @@ const SEVS = [
 ]
 
 function MediationPanel({ eco }) {
-  if (!eco) return null
+  if (!eco || !eco.mediationExample) return null
   const ex = eco.mediationExample
   return (
     <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 16 }}>
@@ -60,15 +60,6 @@ function RightPanel({ eco }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14, position: 'sticky', top: 68, maxHeight: 'calc(100vh - 90px)', overflowY: 'auto', paddingRight: 4 }}>
       <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 16 }}>
-        <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, marginBottom: 12, color: 'var(--accent)' }}>WHAT HAPPENS WHEN YOU SCAN</div>
-        {['Upload File', 'Build Graph', 'Scan CVEs', 'Show Paths', 'Fix Report'].map((s, i) => (
-          <div key={s} style={{ display: 'flex', gap: 10, marginBottom: 8, alignItems: 'flex-start' }}>
-            <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'var(--surface2)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontFamily: 'var(--font-mono)', flexShrink: 0, color: 'var(--accent)' }}>{i + 1}</div>
-            <span style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.5 }}>{s}</span>
-          </div>
-        ))}
-      </div>
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 16 }}>
         <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, marginBottom: 12, color: 'var(--accent)' }}><Tooltip termKey="severity">SEVERITY GUIDE</Tooltip></div>
         {SEVS.map(s => (
           <div key={s.level} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
@@ -85,7 +76,7 @@ function RightPanel({ eco }) {
       <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 16 }}>
         <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, marginBottom: 12, color: 'var(--accent)' }}>DEPENDENCY TYPES</div>
         {[
-          { label: 'Direct', key: 'direct', color: '#22c55e', desc: 'You added this. It\'s in your config file.' },
+          { label: 'Direct', key: 'direct', color: '#22c55e', desc: "You added this. It's in your config file." },
           { label: 'Transitive', key: 'transitive', color: '#f59e0b', desc: 'Pulled in automatically. Most CVEs hide here.' },
         ].map(d => (
           <div key={d.label} style={{ display: 'flex', gap: 10, marginBottom: 10 }}>
@@ -119,25 +110,27 @@ function RightPanel({ eco }) {
 }
 
 export default function Dashboard() {
+  const location = useLocation()
+  const lastEco = location.state?.lastEcosystem
   const [loading, setLoading] = useState(false)
   const [loadingStep, setLoadingStep] = useState(0)
   const [error, setError] = useState('')
-  const [eco, setEco] = useState(ECOSYSTEMS.npm)
+  const [eco, setEco] = useState(lastEco ? (ECOSYSTEMS[lastEco] || ECOSYSTEMS.npm) : ECOSYSTEMS.npm)
   const { setScanning, setScanProject } = useScan()
   const navigate = useNavigate()
 
   const analyze = async (content, filename) => {
-    setLoading(true); setError(''); setLoadingStep(0)
+    setLoading(true); setScanning(true); setScanProject(filename); setError(''); setLoadingStep(0)
     const detectedEco = detectEcosystem(filename)
     const interval = setInterval(() => setLoadingStep(s => Math.min(s + 1, LOADING_STEPS.length - 1)), 1500)
     try {
       const res = await axios.post('/api/analyze', { content, filename })
       clearInterval(interval)
-      setLoading(false)
+      setLoading(false); setScanning(false); setScanProject('')
       navigate('/results', { state: { result: res.data } })
     } catch {
       clearInterval(interval)
-      setLoading(false)
+      setLoading(false); setScanning(false); setScanProject('')
       const ecoKey = detectedEco?.label?.toLowerCase() || 'npm'
       const mockResult = MOCKS[ecoKey] || MOCKS.npm
       mockResult._isMock = true

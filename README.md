@@ -139,6 +139,12 @@ rm -rf backend/venv frontend/node_modules
 ./start.sh
 ```
 
+## Known Limitations
+
+- **Rate limiting is in-memory** — resets on server restart. For production, use Redis-backed rate limiting.
+- **Reachability** — CVEs are flagged based on package version, not whether the vulnerable function is actually called in your code.
+- **Transitive depth** — npm resolves up to 3 levels deep, PyPI/Maven up to 2 levels. Deeper chains may be missed.
+
 ## License
 
 Apache License 2.0 — see [LICENSE](LICENSE) for details.

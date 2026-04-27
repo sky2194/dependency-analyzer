@@ -39,7 +39,7 @@ export default function DependencyGraph({ data }) {
 
   return (
     <div>
-      <StepBanner icon="🌳" title="Step 2 — Full Dependency Graph"
+      <StepBanner icon="🌳" title="Dependency Graph"
         text={<>Every package — <Tooltip termKey="direct">direct</Tooltip> (you added) and <Tooltip termKey="transitive">transitive</Tooltip> (auto-pulled). Click any node to expand/collapse. ⚠️ = CVEs · ✓ = clean.</>}
       />
       <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '16px 18px', marginBottom: 20, overflowX: 'auto' }}>
