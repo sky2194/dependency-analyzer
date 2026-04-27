@@ -33,7 +33,7 @@ function MediationPanel({ eco }) {
         <span style={{ marginLeft: 8, fontSize: 10, color: eco.color, fontWeight: 400 }}>{eco.icon} {eco.label} rules</span>
       </div>
       <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 12, lineHeight: 1.6 }}>{eco.mediationRule}</div>
-      <div style={{ background: 'var(--surface2)', borderRadius: 6, padding: '10px 12px', fontFamily: 'var(--font-mono)', fontSize: 11 }}>
+      <div style={{ background: 'var(--code-bg)', borderRadius: 6, padding: '10px 12px', fontFamily: 'var(--font-mono)', fontSize: 11 }}>
         <div style={{ color: 'var(--muted)', marginBottom: 8 }}>{ex.package} needed by:</div>
         {ex.contestants.map((c, i) => (
           <div key={i} style={{ display: 'flex', gap: 6, marginBottom: 6, alignItems: 'center' }}>
@@ -50,7 +50,7 @@ function MediationPanel({ eco }) {
           <span style={{ color: 'var(--muted)', fontSize: 10, marginLeft: 6 }}>({ex.winReason})</span>
         </div>
       </div>
-      <div style={{ fontSize: 11, color: '#fca5a5', marginTop: 8, lineHeight: 1.5 }}>⚠️ {ex.danger}</div>
+      <div style={{ fontSize: 11, color: 'var(--vuln-text)', marginTop: 8, lineHeight: 1.5 }}>⚠️ {ex.danger}</div>
       <div style={{ fontSize: 11, color: 'var(--ok)', marginTop: 6, lineHeight: 1.5 }}>🛠️ Fix: {eco.mediationFix}</div>
     </div>
   )
@@ -164,7 +164,7 @@ export default function Dashboard() {
         </div>
       ) : (
         <>
-          {error && <div style={{ background: '#2d1515', border: '1px solid #7f1d1d', borderRadius: 'var(--radius)', padding: '10px 14px', color: '#ef4444', fontSize: 12, marginBottom: 16 }}>⚠️ {error}</div>}
+          {error && <div style={{ background: 'var(--vuln-bg)', border: '1px solid var(--vuln-border)', borderRadius: 'var(--radius)', padding: '10px 14px', color: '#ef4444', fontSize: 12, marginBottom: 16 }}>⚠️ {error}</div>}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 24, alignItems: 'start' }}>
             <FileUpload onAnalyze={analyze} loading={loading} onEcosystemChange={setEco} />
             <RightPanel eco={eco} />

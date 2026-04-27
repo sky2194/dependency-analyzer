@@ -9,7 +9,7 @@ function PathRow({ label, path, color }) {
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, fontFamily: 'var(--font-mono)', fontSize: 12 }}>
         {path.map((p, i) => (
           <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <span style={{ background: i === path.length - 1 ? '#2d1515' : 'var(--surface2)', color: i === path.length - 1 ? color || '#ef4444' : 'var(--text)', padding: '2px 8px', borderRadius: 4 }}>{p}</span>
+            <span style={{ background: i === path.length - 1 ? 'var(--vuln-bg)' : 'var(--surface2)', color: i === path.length - 1 ? color || '#ef4444' : 'var(--text)', padding: '2px 8px', borderRadius: 4 }}>{p}</span>
             {i < path.length - 1 && <span style={{ color: 'var(--muted)' }}>→</span>}
           </span>
         ))}
@@ -45,13 +45,13 @@ export default function CVEDetail({ vuln, onClose }) {
           )}
         </div>
 
-        <div style={{ background: '#2d1515', border: '1px solid #7f1d1d', borderRadius: 6, padding: '10px 12px', marginBottom: 10, fontSize: 13, lineHeight: 1.6 }}>
-          🎯 <strong style={{ color: '#fca5a5' }}><Tooltip termKey="rootCause">Root Cause:</Tooltip></strong>
+        <div style={{ background: 'var(--vuln-bg)', border: '1px solid var(--vuln-border)', borderRadius: 6, padding: '10px 12px', marginBottom: 10, fontSize: 13, lineHeight: 1.6 }}>
+          🎯 <strong style={{ color: 'var(--vuln-text)' }}><Tooltip termKey="rootCause">Root Cause:</Tooltip></strong>
           <span style={{ color: 'var(--text)', marginLeft: 6 }}>{vuln.root_cause}</span>
         </div>
 
-        <div style={{ background: '#0f2d1a', border: '1px solid #14532d', borderRadius: 6, padding: '10px 12px', marginBottom: 14, fontSize: 13, lineHeight: 1.6 }}>
-          🛠️ <strong style={{ color: '#6ee7b7' }}>Fix:</strong>
+        <div style={{ background: 'var(--fix-bg)', border: '1px solid var(--fix-border)', borderRadius: 6, padding: '10px 12px', marginBottom: 14, fontSize: 13, lineHeight: 1.6 }}>
+          🛠️ <strong style={{ color: 'var(--fix-text)' }}>Fix:</strong>
           <span style={{ color: 'var(--text)', marginLeft: 6 }}>{vuln.fix}</span>
         </div>
 
@@ -60,7 +60,7 @@ export default function CVEDetail({ vuln, onClose }) {
           {vuln.osv_url && <a href={vuln.osv_url} target="_blank" rel="noreferrer" style={{ fontSize: 12, color: 'var(--info)', textDecoration: 'underline' }}>View on <Tooltip termKey="osv">OSV</Tooltip> ↗</a>}
         </div>
 
-        <div style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 6, padding: '10px 12px', fontSize: 11, color: 'var(--muted)', lineHeight: 1.6 }}>
+        <div style={{ background: 'var(--code-bg)', border: '1px solid var(--border)', borderRadius: 6, padding: '10px 12px', fontSize: 11, color: 'var(--muted)', lineHeight: 1.6 }}>
           ⚠️ <strong>Before applying this fix:</strong> Always test in a staging environment first. Check that upgrading doesn't break peer dependency requirements or change API behaviour your code depends on. The safe version shown is the minimum fix — your project may have constraints that require a different approach.
         </div>
       </div>

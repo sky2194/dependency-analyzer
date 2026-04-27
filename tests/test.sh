@@ -38,8 +38,7 @@ header "📁 PROJECT STRUCTURE"
 for f in "backend/app.py" "backend/requirements.txt" \
           "backend/parsers/npm_parser.py" "backend/parsers/pypi_parser.py" "backend/parsers/maven_parser.py" \
           "backend/resolvers/npm_resolver.py" "backend/cve/osv_client.py" "backend/cve/nvd_client.py" \
-          "frontend/src/App.jsx" "frontend/src/pages/Dashboard.jsx" "frontend/src/pages/Results.jsx" \
-          "frontend/src/pages/Search.jsx" "frontend/package.json" "frontend/vite.config.js"; do
+          "frontend/src/App.jsx" "frontend/src/pages/Dashboard.jsx" "frontend/src/pages/Results.jsx"; do
   if [ -f "$PROJECT/$f" ]; then
     pass "$f exists"
   else

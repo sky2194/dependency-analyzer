@@ -20,3 +20,17 @@ button { font-family: var(--font-body); }
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* Semantic color tokens that adapt to theme */
+:root {
+  --vuln-bg: #2d1515; --vuln-border: #7f1d1d; --vuln-text: #fca5a5;
+  --fix-bg: #0f2d1a; --fix-border: #14532d; --fix-text: #6ee7b7;
+  --warn-bg: #2d2009; --warn-border: #78350f; --warn-text: #fcd34d;
+  --code-bg: #1e2333;
+}
+[data-theme="light"] {
+  --vuln-bg: #fef2f2; --vuln-border: #fecaca; --vuln-text: #dc2626;
+  --fix-bg: #f0fdf4; --fix-border: #bbf7d0; --fix-text: #15803d;
+  --warn-bg: #fffbeb; --warn-border: #fde68a; --warn-text: #92400e;
+  --code-bg: #f1f5f9;
+}

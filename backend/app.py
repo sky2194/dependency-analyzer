@@ -80,27 +80,26 @@ def validate_content(content, filename):
 # ── CVE deduplication ─────────────────────────────────────────────────────────
 def deduplicate_vulns(vulnerabilities):
     """
-    Keep only the most specific (deepest path) occurrence of each CVE.
-    If lodash appears as both direct and transitive with same CVE,
-    keep the one with the longer path (more specific) and merge paths.
+    Deduplicate CVEs: same CVE on same package+version = one entry.
+    Keep shortest path (closest to root = most actionable fix point).
+    Preserve additional paths as transitive_path for context.
     """
-    seen = {}  # cve_id+package -> best entry
+    seen = {}  # cve_id:package:version -> best entry
 
     for vuln in vulnerabilities:
-        key = f"{vuln['cve_id']}:{vuln['package']}"
+        key = f"{vuln['cve_id']}:{vuln['package']}:{vuln.get('version','')}";
         if key not in seen:
             seen[key] = vuln
         else:
             existing = seen[key]
-            # Keep longer path (more specific/deeper)
-            if len(vuln.get('path', [])) > len(existing.get('path', [])):
-                # Preserve the shorter path as transitive_path
-                vuln['transitive_path'] = existing.get('path')
+            curr_path = vuln.get('path', [])
+            exist_path = existing.get('path', [])
+            # Keep shortest path (most direct/actionable)
+            if len(curr_path) < len(exist_path):
+                vuln['transitive_path'] = exist_path
                 seen[key] = vuln
-            else:
-                # Add current path as transitive_path if not already set
-                if not existing.get('transitive_path') and vuln.get('path') != existing.get('path'):
-                    existing['transitive_path'] = vuln.get('path')
+            elif not existing.get('transitive_path') and curr_path != exist_path:
+                existing['transitive_path'] = curr_path
 
     return list(seen.values())
 

@@ -56,7 +56,7 @@ export default function App() {
           ))}
           <ScanStatusBar scanning={scanning} scanProject={scanProject} />
           <button onClick={toggleTheme} title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-            style={{ marginLeft: scanning ? 8 : 'auto', background: 'none', border: '1px solid var(--border)', borderRadius: 6, padding: '5px 10px', cursor: 'pointer', fontSize: 14, color: 'var(--muted)', transition: 'all 0.15s' }}>
+            style={{ marginLeft: 'auto', background: 'none', border: '1px solid var(--border)', borderRadius: 6, padding: '5px 10px', cursor: 'pointer', fontSize: 14, color: 'var(--muted)', transition: 'all 0.15s' }}>
             {theme === 'dark' ? '☀️' : '🌙'}
           </button>
         </nav>
