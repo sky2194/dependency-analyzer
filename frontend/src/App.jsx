@@ -1,5 +1,5 @@
 import { Routes, Route, NavLink, useNavigate } from 'react-router-dom'
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useState, useEffect } from 'react'
 import Dashboard from './pages/Dashboard'
 import Results from './pages/Results'
 
@@ -31,7 +31,7 @@ export default function App() {
   }
 
   // Apply theme on mount
-  useState(() => { document.documentElement.setAttribute('data-theme', theme) })
+  useEffect(() => { document.documentElement.setAttribute('data-theme', theme) }, [])
 
   return (
     <ScanContext.Provider value={{ scanning, setScanning, scanProject, setScanProject }}>

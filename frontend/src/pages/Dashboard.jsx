@@ -36,12 +36,14 @@ function MediationPanel({ eco }) {
       <div style={{ background: 'var(--code-bg)', borderRadius: 6, padding: '10px 12px', fontFamily: 'var(--font-mono)', fontSize: 11 }}>
         <div style={{ color: 'var(--muted)', marginBottom: 8 }}>{ex.package} needed by:</div>
         {ex.contestants.map((c, i) => (
-          <div key={i} style={{ display: 'flex', gap: 6, marginBottom: 6, alignItems: 'center' }}>
-            <span style={{ color: 'var(--muted)', fontSize: 10, width: 14 }}>depth {c.depth}</span>
-            <span style={{ color: c.safe ? '#22c55e' : '#f97316' }}>{c.requester}</span>
-            <span style={{ color: 'var(--muted)' }}>→ {ex.package}@</span>
-            <span style={{ color: c.safe ? '#22c55e' : '#ef4444', fontWeight: 700 }}>{c.version}</span>
-            <span style={{ fontSize: 10, color: c.safe ? '#22c55e' : '#ef4444' }}>{c.safe ? '✓ safe' : '⚠️ vuln'}</span>
+          <div key={i} style={{ display: 'grid', gridTemplateColumns: '52px 1fr auto', gap: 6, marginBottom: 8, alignItems: 'center' }}>
+            <span style={{ color: 'var(--muted)', fontSize: 10, whiteSpace: 'nowrap' }}>depth {c.depth}</span>
+            <span style={{ color: c.safe ? '#22c55e' : '#f97316', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={c.requester}>{c.requester}</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
+              <span style={{ color: 'var(--muted)' }}>{ex.package}@</span>
+              <span style={{ color: c.safe ? '#22c55e' : '#ef4444', fontWeight: 700 }}>{c.version}</span>
+              <span style={{ fontSize: 10, color: c.safe ? '#22c55e' : '#ef4444' }}>{c.safe ? '✓' : '⚠️'}</span>
+            </span>
           </div>
         ))}
         <div style={{ borderTop: '1px solid var(--border)', paddingTop: 8, marginTop: 4 }}>
