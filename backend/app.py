@@ -31,7 +31,7 @@ from resolvers.lockfile_resolver import resolve as resolve_lockfile
 app = Flask(__name__)
 
 # ── CORS — restrict to frontend origin only ───────────────────────────────────
-ALLOWED_ORIGINS = os.environ.get('ALLOWED_ORIGINS', 'http://localhost:3000').split(',')
+ALLOWED_ORIGINS = os.environ.get('ALLOWED_ORIGINS', '*').split(',')
 CORS(app, origins=ALLOWED_ORIGINS)
 
 # ── Constants ─────────────────────────────────────────────────────────────────
@@ -289,12 +289,7 @@ def health():
 def _count_packages(deps):
     return len(deps) + sum(_count_packages(d.get('dependencies', [])) for d in deps)
 
-# if __name__ == '__main__':
-#     app.run(debug=True, port=5000)
-
-# if __name__ == "__main__":
-#     app.run(host="0.0.0.0", port=5000)
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    debug = os.environ.get('FLASK_ENV') != 'production'
+    app.run(host='0.0.0.0', port=port, debug=debug)
