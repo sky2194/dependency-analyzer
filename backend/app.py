@@ -36,7 +36,7 @@ CORS(app, origins=ALLOWED_ORIGINS)
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 MAX_CONTENT_SIZE  = 512 * 1024   # 512 KB max file size
-RATE_LIMIT        = 30            # max requests per window
+RATE_LIMIT        = 10            # max requests per window
 RATE_WINDOW       = 60            # seconds
 
 # ── Rate limiter (in-memory) ──────────────────────────────────────────────────
@@ -281,11 +281,5 @@ def health():
 def _count_packages(deps):
     return len(deps) + sum(_count_packages(d.get('dependencies', [])) for d in deps)
 
-@app.route("/")
-def home():
-    return {"message": "API running"}
-
-# ONLY for local testing
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
-
+if __name__ == '__main__':
+    app.run(debug=True, port=5000)
