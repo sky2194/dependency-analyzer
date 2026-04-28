@@ -36,7 +36,7 @@ CORS(app, origins=ALLOWED_ORIGINS)
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 MAX_CONTENT_SIZE  = 512 * 1024   # 512 KB max file size
-RATE_LIMIT        = 10            # max requests per window
+RATE_LIMIT        = 30            # max requests per window
 RATE_WINDOW       = 60            # seconds
 
 # ── Rate limiter (in-memory) ──────────────────────────────────────────────────
@@ -165,12 +165,20 @@ RESOLVERS = {'npm': resolve_npm, 'pypi': resolve_pypi, 'maven': resolve_maven, '
 @app.route('/api/analyze', methods=['POST'])
 @rate_limited
 def analyze():
+    # Reject oversized requests before reading body
+    if request.content_length and request.content_length > MAX_CONTENT_SIZE * 2:
+        return jsonify({'error': f'Request too large. Maximum allowed size is 512KB.'}), 413
+
     body     = request.get_json(silent=True)
     if not body:
         return jsonify({'error': 'Invalid JSON body'}), 400
 
     content  = body.get('content', '')
     filename = body.get('filename', 'package.json')
+
+    if len(content.encode('utf-8')) > MAX_CONTENT_SIZE:
+        size_kb = len(content.encode('utf-8')) // 1024
+        return jsonify({'error': f'File too large ({size_kb}KB). Maximum allowed size is 512KB.'}), 413
 
     # Input validation
     error, status = validate_content(content, filename)
