@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useScan } from '../App'
 import axios from 'axios'
+import API_BASE from '../config'
 import FileUpload from '../components/FileUpload'
 import Tooltip from '../components/Tooltip'
 import ECOSYSTEMS, { detectEcosystem } from '../data/ecosystems'
@@ -126,7 +127,7 @@ export default function Dashboard() {
     const detectedEco = detectEcosystem(filename)
     const interval = setInterval(() => setLoadingStep(s => Math.min(s + 1, LOADING_STEPS.length - 1)), 1500)
     try {
-      const res = await axios.post('/api/analyze', { content, filename })
+      const res = await axios.post(`${API_BASE}/api/analyze`, { content, filename })
       clearInterval(interval)
       setLoading(false); setScanning(false); setScanProject('')
       navigate('/results', { state: { result: res.data } })

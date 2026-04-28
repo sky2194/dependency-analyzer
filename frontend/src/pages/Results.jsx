@@ -1,4 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom'
+import API_BASE from '../config'
 import { useState } from 'react'
 import DependencyGraph from '../components/DependencyGraph'
 import VulnerabilityReport from '../components/VulnerabilityReport'
@@ -38,7 +39,7 @@ export default function Results() {
 
   const exportReport = async (type) => {
     try {
-      const res = await fetch(`/api/export/${type}`, {
+      const res = await fetch(`${API_BASE}/api/export/${type}`, {
         method: 'POST', headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(result)
       })
