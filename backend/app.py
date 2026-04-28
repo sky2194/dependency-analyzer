@@ -36,7 +36,7 @@ CORS(app, origins=ALLOWED_ORIGINS)
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 MAX_CONTENT_SIZE  = 512 * 1024   # 512 KB max file size
-RATE_LIMIT        = 10            # max requests per window
+RATE_LIMIT        = 30            # max requests per window
 RATE_WINDOW       = 60            # seconds
 
 # ── Rate limiter (in-memory) ──────────────────────────────────────────────────
