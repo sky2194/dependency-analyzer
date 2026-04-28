@@ -289,5 +289,8 @@ def health():
 def _count_packages(deps):
     return len(deps) + sum(_count_packages(d.get('dependencies', [])) for d in deps)
 
-if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+# if __name__ == '__main__':
+#     app.run(debug=True, port=5000)
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)
