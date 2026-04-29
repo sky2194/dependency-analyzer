@@ -171,9 +171,9 @@ def add_cors_headers(response):
         response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
     return response
 
-@app.route('/api/analyze', methods=['POST'])
-@rate_limited
-def analyze():
+# @app.route('/api/analyze', methods=['POST'])
+# @rate_limited
+# def analyze():
     # Reject oversized requests before reading body
     if request.content_length and request.content_length > MAX_CONTENT_SIZE * 2:
         return jsonify({'error': f'Request too large. Maximum allowed size is 512KB.'}), 413
@@ -240,6 +240,94 @@ def analyze():
         'grouped_vulnerabilities': grouped,
     })
 
+@app.route('/api/analyze', methods=['POST'])
+@rate_limited
+def analyze():
+    start_time = time.time()
+
+    if request.content_length and request.content_length > MAX_CONTENT_SIZE * 2:
+        return jsonify({'error': 'Request too large (max 512KB)'}), 413
+
+    body = request.get_json(silent=True)
+    if not body:
+        return jsonify({'error': 'Invalid JSON body'}), 400
+
+    content  = body.get('content', '')
+    filename = body.get('filename', 'package.json')
+
+    if len(content.encode('utf-8')) > MAX_CONTENT_SIZE:
+        return jsonify({'error': 'File too large (max 512KB)'}), 413
+
+    error, status = validate_content(content, filename)
+    if error:
+        return jsonify({'error': error}), status
+
+    ecosystem = detect_ecosystem(filename)
+
+    try:
+        parsed = PARSERS[ecosystem](content)
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+
+    project_name = parsed.get('project_name', 'my-app')
+    direct_deps  = parsed.get('deps', [])
+
+    if not direct_deps:
+        return jsonify({'error': 'No dependencies found'}), 400
+
+    # 🔥 LIMIT DIRECT DEPENDENCIES
+    if len(direct_deps) > 50:
+        return jsonify({'error': 'Too many dependencies (max 50 allowed)'}), 400
+
+    warnings = [d['warning'] for d in direct_deps if d.get('warning')]
+
+    # 🔥 RESOLVE GRAPH
+    graph_deps, mediation = RESOLVERS[ecosystem](direct_deps)
+
+    # 🔥 LIMIT GRAPH SIZE (avoid memory crash)
+    def trim_graph(deps, limit=100):
+        return deps[:limit]
+
+    graph_deps = trim_graph(graph_deps)
+
+    # 🔥 TIME SAFE SCAN
+    try:
+        vulnerabilities = scan_tree(graph_deps, ecosystem, project_name)
+    except Exception as e:
+        return jsonify({'error': f'Scan failed: {str(e)}'}), 500
+
+    # ⏱ Timeout protection (Render ~30s)
+    if time.time() - start_time > 25:
+        return jsonify({'error': 'Processing timeout. Try smaller file.'}), 408
+
+    vulnerabilities = deduplicate_vulns(vulnerabilities)
+
+    sev_order = {'CRITICAL': 0, 'HIGH': 1, 'MEDIUM': 2, 'LOW': 3}
+    vulnerabilities.sort(key=lambda v: sev_order.get(v.get('severity', 'LOW'), 3))
+
+    total = _count_packages(graph_deps)
+
+    graph = {
+        'name': project_name,
+        'version': parsed.get('project_version', '1.0.0'),
+        'type': 'root',
+        'dependencies': graph_deps,
+        'vulnerabilities': []
+    }
+
+    grouped = group_vulns_by_package(vulnerabilities)
+
+    return jsonify({
+        'ecosystem': 'npm' if ecosystem == 'npm-lock' else ecosystem,
+        'project_name': project_name,
+        'total_packages': total,
+        'graph': graph,
+        'mediation': mediation,
+        'vulnerabilities': vulnerabilities,
+        'warnings': warnings,
+        'scan_timestamp': int(time.time()),
+        'grouped_vulnerabilities': grouped,
+    })
 
 @app.route('/api/cve/<cve_id>', methods=['GET'])
 def get_cve(cve_id):
