@@ -79,7 +79,7 @@ case "$1" in
     echo -e "   Frontend: ${BLUE}http://localhost:3000${NC}"
     echo -e "   Backend:  ${BLUE}http://localhost:5000${NC}"
     echo ""
-    echo "Press Ctrl+C to stop all services"
+    echo "Press Ctrl+C to stop all the services"
     trap stop_all INT
     wait
     ;;
