@@ -32,7 +32,7 @@ app = Flask(__name__)
 
 # ── CORS — restrict to frontend origin only ───────────────────────────────────
 ALLOWED_ORIGINS = os.environ.get('ALLOWED_ORIGINS', 'https://dependency-analyzer-eight.vercel.app,http://localhost:3000').split(',')
-CORS(app, origins=ALLOWED_ORIGINS)
+CORS(app, origins=ALLOWED_ORIGINS, supports_credentials=True, allow_headers=['Content-Type'], methods=['GET','POST','OPTIONS'])
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 MAX_CONTENT_SIZE  = 512 * 1024   # 512 KB max file size
@@ -161,6 +161,15 @@ RESOLVERS = {'npm': resolve_npm, 'pypi': resolve_pypi, 'maven': resolve_maven, '
 
 
 # ── Routes ────────────────────────────────────────────────────────────────────
+
+@app.after_request
+def add_cors_headers(response):
+    origin = request.headers.get('Origin', '')
+    if origin in ALLOWED_ORIGINS or '*' in ALLOWED_ORIGINS:
+        response.headers['Access-Control-Allow-Origin'] = origin
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+    return response
 
 @app.route('/api/analyze', methods=['POST'])
 @rate_limited
