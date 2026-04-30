@@ -2,38 +2,34 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from .osv_client import query_package as osv_query, format_vuln as osv_format
 from .nvd_client import get_cvss
 
+# Conservative limits for free tier hosting (512MB RAM)
+MAX_SCAN_WORKERS = 2
+MAX_NVD_WORKERS  = 2
+
 def scan_package(name, version, ecosystem):
-    """Query OSV for a single package, enrich CVSS from NVD if missing."""
     try:
         raw = osv_query(name, version, ecosystem)
         vulns = [osv_format(v, name, version) for v in raw]
         vulns = [v for v in vulns if v is not None]
 
-        # Enrich missing CVSS scores from NVD in parallel
-        def enrich(v):
+        # Enrich CVSS from NVD sequentially to avoid overwhelming free tier
+        for v in vulns:
             if v['cvss_score'] == 0.0 and v['cve_id'].startswith('CVE-'):
                 nvd_score, nvd_sev = get_cvss(v['cve_id'])
                 if nvd_score:
                     v['cvss_score'] = nvd_score
                 if nvd_sev:
                     v['severity'] = nvd_sev
-            return v
-
-        with ThreadPoolExecutor(max_workers=5) as ex:
-            vulns = list(ex.map(enrich, vulns))
-
         return vulns
     except Exception:
         return []
 
 def scan_tree(graph_deps, ecosystem, app_name='my-app'):
-    """Scan all nodes in dependency tree concurrently."""
     all_vulns = []
     _scan_node(graph_deps, ecosystem, [app_name], all_vulns)
     return all_vulns
 
 def _scan_node(deps, ecosystem, path, all_vulns):
-    # Scan all deps at this level in parallel
     def scan_dep(dep):
         current_path = path + [dep['name']]
         vulns = scan_package(dep['name'], dep['version'], ecosystem)
@@ -43,7 +39,7 @@ def _scan_node(deps, ecosystem, path, all_vulns):
         dep['vulnerabilities'] = [{'cve_id': v['cve_id']} for v in vulns]
         return vulns, dep.get('dependencies', []), current_path
 
-    with ThreadPoolExecutor(max_workers=8) as ex:
+    with ThreadPoolExecutor(max_workers=MAX_SCAN_WORKERS) as ex:
         futures = [ex.submit(scan_dep, dep) for dep in deps]
         for future in as_completed(futures):
             try:
