@@ -70,3 +70,10 @@ Marketing/
 
 # API keys in config files
 config.secret.*
+
+# SSH Keys (public and private)
+*.pub
+id_rsa*
+id_ed25519*
+*.pem
+*.key
