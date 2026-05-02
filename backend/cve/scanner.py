@@ -2,7 +2,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from .osv_client import query_package as osv_query, format_vuln as osv_format
 from .nvd_client import get_cvss
 
-# Conservative limits for free tier hosting (512MB RAM)
+# DigitalOcean 1GB RAM - increased from Render free tier limits
 MAX_SCAN_WORKERS = 4
 MAX_NVD_WORKERS  = 3
 
@@ -12,33 +12,22 @@ def scan_package(name, version, ecosystem):
         vulns = [osv_format(v, name, version) for v in raw]
         vulns = [v for v in vulns if v is not None]
 
-    #     # Enrich CVSS from NVD sequentially to avoid overwhelming free tier
-    #     for v in vulns:
-    #         if v['cvss_score'] == 0.0 and v['cve_id'].startswith('CVE-'):
-    #             nvd_score, nvd_sev = get_cvss(v['cve_id'])
-    #             if nvd_score:
-    #                 v['cvss_score'] = nvd_score
-    #             if nvd_sev:
-    #                 v['severity'] = nvd_sev
-    #     return vulns
-    # except Exception:
-    #     return []
-     
-    #Enrich missing CVSS scores from NVD in parallel
+        # Enrich missing CVSS scores from NVD in parallel
+        def enrich(v):
+            if v['cvss_score'] == 0.0 and v['cve_id'].startswith('CVE-'):
+                nvd_score, nvd_sev = get_cvss(v['cve_id'])
+                if nvd_score:
+                    v['cvss_score'] = nvd_score
+                if nvd_sev:
+                    v['severity'] = nvd_sev
+            return v
 
-def enrich(v):
-    if v['cvss_score'] == 0.0 and v['cve_id'].startswith('CVE-'):
-        nvd_score, nvd_sev = get_cvss(v['cve_id'])
-        if nvd_score:
-            v['cvss_score'] = nvd_score
-        if nvd_sev:
-            v['severity'] = nvd_sev
-    return v
+        with ThreadPoolExecutor(max_workers=MAX_NVD_WORKERS) as ex:
+            vulns = list(ex.map(enrich, vulns))
 
-with ThreadPoolExecutor(max_workers=MAX_NVD_WORKERS) as ex:
-    vulns = list(ex.map(enrich, vulns))
-
-return vulns
+        return vulns
+    except Exception:
+        return []
 
 def scan_tree(graph_deps, ecosystem, app_name='my-app'):
     all_vulns = []
