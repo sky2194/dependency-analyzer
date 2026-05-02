@@ -125,15 +125,19 @@ export default function Dashboard() {
   const analyze = async (content, filename) => {
     setLoading(true); setScanning(true); setScanProject(filename); setError(''); setLoadingStep(0)
     const detectedEco = detectEcosystem(filename)
-    const interval = setInterval(() => setLoadingStep(s => Math.min(s + 1, LOADING_STEPS.length - 1)), 1500)
+    const interval = setInterval(() => setLoadingStep(s => Math.min(s + 1, LOADING_STEPS.length - 1)), 2000)
     try {
-      const res = await axios.post(`${API_BASE}/api/analyze`, { content, filename })
+      const res = await axios.post(`${API_BASE}/api/analyze`, { content, filename }, { timeout: 180000 })
       clearInterval(interval)
       setLoading(false); setScanning(false); setScanProject('')
       navigate('/results', { state: { result: res.data } })
-    } catch {
+    } catch (err) {
       clearInterval(interval)
       setLoading(false); setScanning(false); setScanProject('')
+      const status = err?.response?.status
+      if (status === 408) { setError('Scan timed out — try a smaller file'); return }
+      if (status === 413) { setError('File too large — maximum 512KB'); return }
+      if (status === 429) { setError('Too many requests — wait 60s and try again'); return }
       const ecoKey = detectedEco?.label?.toLowerCase() || 'npm'
       const mockResult = MOCKS[ecoKey] || MOCKS.npm
       mockResult._isMock = true
