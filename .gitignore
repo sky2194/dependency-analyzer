@@ -52,3 +52,21 @@ logs/
 ssh-keygen
 Marketing/
 ssh-keygen
+
+# Security - never commit these
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+*_rsa
+*_ed25519
+*id_rsa*
+*id_ed25519*
+ssh-keygen
+secrets/
+Marketing/
+
+# API keys in config files
+config.secret.*
