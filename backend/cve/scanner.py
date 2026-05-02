@@ -31,10 +31,10 @@ def scan_package(name, version, ecosystem):
 
 def scan_tree(graph_deps, ecosystem, app_name='my-app'):
     all_vulns = []
-    _scan_node(graph_deps, ecosystem, [app_name], all_vulns)
+    _scan_node(graph_deps, ecosystem, [app_name], all_vulns, max_depth=2, current_depth=0)
     return all_vulns
 
-def _scan_node(deps, ecosystem, path, all_vulns):
+def _scan_node(deps, ecosystem, path, all_vulns, max_depth=2, current_depth=0):
     def scan_dep(dep):
         current_path = path + [dep['name']]
         vulns = scan_package(dep['name'], dep['version'], ecosystem)
@@ -50,8 +50,8 @@ def _scan_node(deps, ecosystem, path, all_vulns):
             try:
                 vulns, children, current_path = future.result()
                 all_vulns.extend(vulns)
-                if children:
-                    _scan_node(children, ecosystem, current_path, all_vulns)
+                if children and current_depth < max_depth:
+                    _scan_node(children, ecosystem, current_path, all_vulns, max_depth, current_depth + 1)
             except Exception:
                 pass
 
