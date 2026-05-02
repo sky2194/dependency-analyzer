@@ -48,4 +48,7 @@ txt
 *.pem
 *.log
 logs/
-*.logS
+*.logSMarketing/
+ssh-keygen
+Marketing/
+ssh-keygen
