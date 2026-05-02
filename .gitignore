@@ -37,8 +37,15 @@ Thumbs.db
 test-results/
 venv/
 venv/
+*.venv/
 .venv/
 venv/
 *.txt
 txt
 *.txt
+*.pub
+*.key
+*.pem
+*.log
+logs/
+*.logS
