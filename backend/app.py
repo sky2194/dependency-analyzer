@@ -31,7 +31,8 @@ from resolvers.lockfile_resolver import resolve as resolve_lockfile
 app = Flask(__name__)
 
 # ── CORS — restrict to frontend origin only ───────────────────────────────────
-ALLOWED_ORIGINS = os.environ.get('ALLOWED_ORIGINS', 'https://dependency-analyzer-eight.vercel.app,http://localhost:3000').split(',')
+# ALLOWED_ORIGINS = os.environ.get('ALLOWED_ORIGINS', 'https://dependency-analyzer-eight.vercel.app,http://localhost:3000').split(',')
+ALLOWED_ORIGINS = ['*']  # Temporary - allow all origins for testing
 CORS(app, origins=ALLOWED_ORIGINS, supports_credentials=True, allow_headers=['Content-Type'], methods=['GET','POST','OPTIONS'])
 
 # ── Constants ─────────────────────────────────────────────────────────────────
