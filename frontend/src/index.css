@@ -76,3 +76,61 @@ button { font-family: var(--font-body); }
   /* Tabs: smaller text */
   button[style*="font-family: var(--font-display)"] { font-size: 11px !important; }
 }
+
+/* ── Typography improvements ────────────────────────────────────────────── */
+body { font-size: 15px; }
+
+h1, h2, h3 { line-height: 1.3; }
+
+/* ── Mobile: Dashboard layout ───────────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Stack the main grid */
+  div[style*="gridTemplateColumns: '1fr 300px'"],
+  div[style*='gridTemplateColumns: "1fr 300px"'],
+  div[style*="gridTemplateColumns: 1fr 300px"] {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  /* Dashboard padding */
+  div[style*="padding: '36px 40px'"],
+  div[style*="padding: '32px 40px'"],
+  div[style*='padding: "36px 40px"'] {
+    padding: 16px !important;
+  }
+
+  /* Nav */
+  nav { padding: 0 12px !important; }
+
+  /* Remove sticky from right panel */
+  div[style*="position: sticky"] {
+    position: static !important;
+    max-height: none !important;
+  }
+
+  /* Summary cards */
+  div[style*="repeat(auto-fit, minmax(110px"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Hide less important table columns */
+  table th:nth-child(3),
+  table td:nth-child(3) { display: none !important; }
+
+  /* Results page padding */
+  div[style*="padding: '32px 24px'"] {
+    padding: 16px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  body { font-size: 14px; }
+
+  /* Single column cards */
+  div[style*="repeat(auto-fit, minmax(110px"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* Prevent horizontal overflow */
+  pre { max-width: calc(100vw - 48px); }
+}

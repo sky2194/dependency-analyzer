@@ -147,10 +147,13 @@ export default function Dashboard() {
 
   return (
     <div style={{ maxWidth: 1400, margin: '0 auto', padding: '36px 40px' }}>
-      <div style={{ marginBottom: 24 }}>
-        <div style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--accent)', letterSpacing: 2, marginBottom: 6 }}>SOFTWARE COMPOSITION ANALYSIS</div>
-        <p style={{ color: 'var(--muted)', fontSize: 13, lineHeight: 1.7 }}>
-          Scan for CVEs across all direct + transitive dependencies. Uses NVD + OSV. Supports npm, PyPI, Maven.
+      <div style={{ marginBottom: 28 }}>
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 800, marginBottom: 6, letterSpacing: -0.3 }}>
+          Dependency Vulnerability Scanner
+        </h1>
+        <p style={{ color: 'var(--muted)', fontSize: 14, lineHeight: 1.7, maxWidth: 600 }}>
+          Upload your dependency manifest to scan all direct and transitive packages for known CVEs.
+          Results are sourced from <strong style={{color:'var(--text)'}}>NVD</strong> and <strong style={{color:'var(--text)'}}>OSV</strong> — the industry-standard vulnerability databases.
         </p>
       </div>
 
