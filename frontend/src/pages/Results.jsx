@@ -34,7 +34,7 @@ export default function Results() {
   if (!result) return (
     <div style={{ textAlign: 'center', padding: 80 }}>
       <p style={{ color: 'var(--muted)', marginBottom: 16 }}>No results found.</p>
-      <button onClick={() => navigate('/')} style={{ padding: '10px 20px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius)', cursor: 'pointer' }}>← Back to Dashboard</button>
+      <button onClick={() => navigate('/')} style={{ padding: '10px 20px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius)', cursor: 'pointer' }}>← Back to Scanner</button>
     </div>
   )
 
@@ -62,31 +62,57 @@ export default function Results() {
   const goToVulns = (sev = 'ALL') => { setTab(1); setSevFilter(sev) }
 
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 40px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 28 }}>
-        <button onClick={() => navigate('/', { state: { lastEcosystem: result.ecosystem } })} style={{ background: 'none', border: '1px solid var(--border)', color: 'var(--muted)', borderRadius: 6, padding: '6px 12px', cursor: 'pointer', fontSize: 12 }}>← New Scan</button>
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-          <button onClick={() => exportReport('pdf')} style={{ background: 'none', border: '1px solid var(--border)', color: 'var(--muted)', borderRadius: 6, padding: '6px 12px', cursor: 'pointer', fontSize: 12 }}>📄 Export PDF</button>
-          <button onClick={() => exportReport('csv')} style={{ background: 'none', border: '1px solid var(--border)', color: 'var(--muted)', borderRadius: 6, padding: '6px 12px', cursor: 'pointer', fontSize: 12 }}>📊 Export CSV</button>
+    <div className="page-container-md">
+
+      {/* Header: title left, actions right */}
+      <div className="results-header" style={{ display: 'flex', alignItems: 'flex-start', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>
+        {/* Title — always first on mobile via CSS order */}
+        <div className="results-title" style={{ flex: 1, minWidth: 200 }}>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 24, marginBottom: 4 }}>
+            Scan Results
+          </h1>
+          <div style={{ color: 'var(--muted)', fontSize: 13 }}>
+            <Tooltip termKey="sca">SCA</Tooltip> complete —{' '}
+            <strong style={{ color: 'var(--text)' }}>{result.project_name || 'my-app'}</strong>
+            {' · '}{result.total_packages} packages{' · '}
+            {result.ecosystem?.toUpperCase() || 'NPM'}
+          </div>
         </div>
-        <div>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 22 }}>Scan Results</h2>
-          <div style={{ color: 'var(--muted)', fontSize: 12 }}><Tooltip termKey="sca">SCA</Tooltip> complete — <strong style={{color:'var(--text)'}}>{result.project_name || 'my-app'}</strong> · {result.total_packages} packages · {result.ecosystem?.toUpperCase() || 'NPM'}</div>
+
+        {/* Actions — right aligned */}
+        <div className="results-actions" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+          <button onClick={() => navigate('/', { state: { lastEcosystem: result.ecosystem } })}
+            style={{ background: 'none', border: '1px solid var(--border)', color: 'var(--muted)', borderRadius: 6, padding: '7px 14px', cursor: 'pointer', fontSize: 12, whiteSpace: 'nowrap' }}>
+            ← New Scan
+          </button>
+          <CompareScans current={result} />
+          <button onClick={() => exportReport('pdf')}
+            style={{ background: 'none', border: '1px solid var(--border)', color: 'var(--muted)', borderRadius: 6, padding: '7px 14px', cursor: 'pointer', fontSize: 12, whiteSpace: 'nowrap' }}>
+            📄 Export PDF
+          </button>
+          <button onClick={() => exportReport('csv')}
+            style={{ background: 'none', border: '1px solid var(--border)', color: 'var(--muted)', borderRadius: 6, padding: '7px 14px', cursor: 'pointer', fontSize: 12, whiteSpace: 'nowrap' }}>
+            📊 Export CSV
+          </button>
         </div>
       </div>
 
+      {/* Mock data warning */}
       {result._isMock && (
         <div style={{ background: 'var(--warn-bg)', border: '1px solid var(--warn-border)', borderRadius: 'var(--radius)', padding: '10px 16px', color: '#f59e0b', fontSize: 13, marginBottom: 16 }}>
-          ⚠️ <strong>Demo data shown</strong> — backend not running. Start backend with <code style={{fontFamily:'var(--font-mono)', fontSize:11}}>./start.sh backend</code> for real results.
+          ⚠️ <strong>Demo data shown</strong> — backend not running. Start backend with{' '}
+          <code style={{ fontFamily: 'var(--font-mono)', fontSize: 11 }}>./start.sh backend</code> for real results.
         </div>
       )}
-      <CompareScans current={result} />
+
+      {/* Export error */}
       {exportError && (
-        <div style={{ background: 'var(--vuln-bg)', border: '1px solid var(--vuln-border)', borderRadius: 'var(--radius)', padding: '10px 16px', color: '#ef4444', fontSize: 13, marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
+        <div style={{ background: 'var(--vuln-bg)', border: '1px solid var(--vuln-border)', borderRadius: 'var(--radius)', padding: '10px 16px', color: '#ef4444', fontSize: 13, marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           ⚠️ {exportError}
-          <button onClick={() => setExportError('')} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}>✕</button>
+          <button onClick={() => setExportError('')} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: 16 }}>✕</button>
         </div>
       )}
+
       {/* Unpinned version warnings */}
       {warnings.length > 0 && (
         <div style={{ background: 'var(--warn-bg)', border: '1px solid var(--warn-border)', borderRadius: 'var(--radius)', padding: '12px 16px', marginBottom: 20 }}>

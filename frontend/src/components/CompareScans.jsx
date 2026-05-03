@@ -26,24 +26,26 @@ export default function CompareScans({ current }) {
   const diff = prev ? computeDiff(prev, current) : null
 
   return (
-    <div style={{ marginBottom: 16 }}>
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-        <button onClick={saveCurrent}
-          style={{ fontSize: 12, padding: '5px 12px', background: 'none', border: '1px solid var(--border)', borderRadius: 6, color: 'var(--muted)', cursor: 'pointer' }}>
-          💾 Save scan
+    <>
+      {/* Inline action buttons — rendered inside the header actions row */}
+      <button onClick={saveCurrent}
+        style={{ fontSize: 12, padding: '7px 14px', background: 'none', border: '1px solid var(--border)', borderRadius: 6, color: 'var(--muted)', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+        💾 Save Scan
+      </button>
+      <label style={{ fontSize: 12, padding: '7px 14px', background: 'none', border: '1px solid var(--border)', borderRadius: 6, color: 'var(--muted)', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+        📂 Compare
+        <input type="file" accept=".json" hidden onChange={loadPrev} />
+      </label>
+      {diff && (
+        <button onClick={() => setOpen(o => !o)}
+          style={{ fontSize: 12, padding: '7px 14px', background: 'var(--accent)', border: 'none', borderRadius: 6, color: '#fff', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+          {open ? 'Hide' : 'Diff'} ({diff.added.length}↑ · {diff.fixed.length}↓)
         </button>
-        <label style={{ fontSize: 12, padding: '5px 12px', background: 'none', border: '1px solid var(--border)', borderRadius: 6, color: 'var(--muted)', cursor: 'pointer' }}>
-          📂 Compare with previous
-          <input type="file" accept=".json" hidden onChange={loadPrev} />
-        </label>
-        {diff && <button onClick={() => setOpen(o => !o)}
-          style={{ fontSize: 12, padding: '5px 12px', background: 'var(--accent)', border: 'none', borderRadius: 6, color: '#fff', cursor: 'pointer' }}>
-          {open ? 'Hide' : 'Show'} diff ({diff.added.length} new · {diff.fixed.length} fixed)
-        </button>}
-      </div>
+      )}
 
+      {/* Diff panel — renders below header as a full-width block */}
       {open && diff && (
-        <div style={{ marginTop: 12, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
+        <div style={{ width: '100%', marginTop: 12, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
           <DiffSection title="🆕 New vulnerabilities" items={diff.added} color="var(--critical)" />
           <DiffSection title="✅ Fixed vulnerabilities" items={diff.fixed} color="var(--ok)" />
           {diff.added.length === 0 && diff.fixed.length === 0 && (
@@ -51,7 +53,7 @@ export default function CompareScans({ current }) {
           )}
         </div>
       )}
-    </div>
+    </>
   )
 }
 

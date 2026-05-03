@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import StepBanner from './StepBanner'
-import Tooltip from './Tooltip'
 
 function Node({ node, depth = 0 }) {
   const [expanded, setExpanded] = useState(depth < 2)
@@ -27,12 +26,12 @@ function Node({ node, depth = 0 }) {
         <span style={{ fontSize: 11, color: 'var(--muted)' }}>@{node.version}</span>
         {node.type === 'direct' && (
           <span style={{ fontSize: 10, background: 'var(--fix-bg)', color: '#22c55e', border: '1px solid var(--fix-border)', borderRadius: 3, padding: '1px 6px' }}>
-            <Tooltip termKey="direct">direct</Tooltip>
+            direct
           </span>
         )}
         {node.type === 'transitive' && (
           <span style={{ fontSize: 10, background: 'var(--warn-bg)', color: '#f59e0b', border: '1px solid var(--warn-border)', borderRadius: 3, padding: '1px 6px' }}>
-            <Tooltip termKey="transitive">transitive</Tooltip>
+            transitive
           </span>
         )}
         {isVuln && <span style={{ marginLeft: 'auto', fontSize: 11, color: '#ef4444' }}>⚠️ {vulnCount} CVE{vulnCount > 1 ? 's' : ''}</span>}
@@ -58,7 +57,7 @@ export default function DependencyGraph({ data }) {
   return (
     <div>
       <StepBanner icon="🌳" title="Dependency Tree"
-        text={<>Every package — <Tooltip termKey="direct">direct</Tooltip> and <Tooltip termKey="transitive">transitive</Tooltip>. Click any node to expand/collapse. ⚠️ = CVEs · ✓ = clean.</>}
+        text={<>Every package — direct and transitive. Click any node to expand/collapse. ⚠️ = CVEs · ✓ = clean.</>}
       />
 
       <input value={search} onChange={e => setSearch(e.target.value)}
