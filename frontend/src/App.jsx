@@ -1,6 +1,7 @@
 import { Routes, Route, NavLink, useNavigate } from 'react-router-dom'
 import { createContext, useContext, useState, useEffect } from 'react'
 import Dashboard from './pages/Dashboard'
+import Learn from './pages/Learn'
 import Results from './pages/Results'
 
 
@@ -44,7 +45,7 @@ export default function App() {
           <NavLink to="/" style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 16, color: 'var(--text)', marginRight: 24, letterSpacing: 0.5 }}>
             🔐 Dependency Analyzer
           </NavLink>
-          {[{ to: '/', label: 'Dashboard', end: true }].map(({ to, label, end }) => (
+          {[{ to: '/', label: 'Dashboard', end: true }, { to: '/learn', label: '📚 Learn' }].map(({ to, label, end }) => (
             <NavLink key={to} to={to} end={end} style={({ isActive }) => ({
               padding: '6px 14px', fontSize: 13, fontWeight: 600, borderRadius: 6,
               background: isActive ? '#2d1510' : 'none',
@@ -64,6 +65,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/results" element={<Results />} />
+          <Route path="/learn" element={<Learn />} />
 
         </Routes>
       </div>

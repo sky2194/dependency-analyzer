@@ -146,11 +146,11 @@ export default function Dashboard() {
   }
 
   return (
-    <div style={{ maxWidth: 1400, margin: '0 auto', padding: '36px 40px' }}>
+    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '36px 40px' }}>
       <div style={{ marginBottom: 24 }}>
         <div style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--accent)', letterSpacing: 2, marginBottom: 6 }}>SOFTWARE COMPOSITION ANALYSIS</div>
         <p style={{ color: 'var(--muted)', fontSize: 13, lineHeight: 1.7 }}>
-          Scan for CVEs across all direct + transitive dependencies. Uses NVD + OSV. Supports npm, PyPI, Maven.
+          Scan for <Tooltip termKey="cve">CVEs</Tooltip> across all <Tooltip termKey="direct">direct</Tooltip> + <Tooltip termKey="transitive">transitive dependencies</Tooltip>. Uses NVD + OSV. Supports <Tooltip termKey="npm">npm</Tooltip>, <Tooltip termKey="pypi">PyPI</Tooltip>, <Tooltip termKey="maven">Maven</Tooltip>.
         </p>
       </div>
 
@@ -181,5 +181,3 @@ export default function Dashboard() {
     </div>
   )
 }
-
-
