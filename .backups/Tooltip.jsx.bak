@@ -22,18 +22,7 @@ export default function Tooltip({ termKey, children }) {
   return (
     <>
       <span ref={ref} onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)}
-        style={{ 
-          borderBottom: '2px dashed var(--accent)', 
-          cursor: 'help', 
-          fontWeight: 500, 
-          display: 'inline',
-          transition: 'all 0.2s ease',
-          ...(show && {
-            textShadow: '0 0 8px var(--accent)',
-            borderBottomColor: 'var(--accent)',
-            filter: 'brightness(1.3)'
-          })
-        }}>
+        style={{ borderBottom: '2px dotted var(--accent)', cursor: 'help', fontWeight: 500, display: 'inline' }}>
         {children || data.term}
       </span>
       {show && (

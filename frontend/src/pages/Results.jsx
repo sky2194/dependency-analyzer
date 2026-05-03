@@ -5,6 +5,7 @@ import DependencyGraph from '../components/DependencyGraph'
 import VulnerabilityReport from '../components/VulnerabilityReport'
 import SeverityBadge from '../components/SeverityBadge'
 import Tooltip from '../components/Tooltip'
+import CompareScans from '../components/CompareScans'
 
 const TABS = ['Dependency Graph', 'Vulnerabilities']
 const SEVS = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW']
@@ -79,6 +80,7 @@ export default function Results() {
           ⚠️ <strong>Demo data shown</strong> — backend not running. Start backend with <code style={{fontFamily:'var(--font-mono)', fontSize:11}}>./start.sh backend</code> for real results.
         </div>
       )}
+      <CompareScans current={result} />
       {exportError && (
         <div style={{ background: 'var(--vuln-bg)', border: '1px solid var(--vuln-border)', borderRadius: 'var(--radius)', padding: '10px 16px', color: '#ef4444', fontSize: 13, marginBottom: 16, display: 'flex', justifyContent: 'space-between' }}>
           ⚠️ {exportError}

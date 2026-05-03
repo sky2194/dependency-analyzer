@@ -1,6 +1,29 @@
 import SeverityBadge from './SeverityBadge'
 import Tooltip from './Tooltip'
 
+function getPlainEnglish(vuln) {
+  const desc = (vuln.description || '').toLowerCase()
+  const pkg   = vuln.package
+  const fix   = vuln.fix_version
+  const fixMsg = fix ? `Upgrading ${pkg} to ${fix} or later will remove this risk.` : `No fix is available yet — monitor the package for updates.`
+
+  if (desc.includes('prototype pollution'))
+    return `An attacker who can control input to your app may be able to corrupt shared JavaScript objects, potentially bypassing security checks or crashing the server. ${fixMsg}`
+  if (desc.includes('command injection') || desc.includes('code injection') || desc.includes('rce'))
+    return `An attacker may be able to run their own commands on your server if they can control input that ${pkg} processes. This is high severity — treat as urgent. ${fixMsg}`
+  if (desc.includes('denial of service') || desc.includes('redos') || desc.includes('dos'))
+    return `A malicious or malformed input could cause ${pkg} to hang indefinitely, making your app unresponsive. ${fixMsg}`
+  if (desc.includes('path traversal'))
+    return `An attacker may be able to read files outside your intended directory if they control file paths processed by ${pkg}. ${fixMsg}`
+  if (desc.includes('sql injection'))
+    return `An attacker may be able to read or modify your database if user input reaches ${pkg} without proper sanitisation. ${fixMsg}`
+  if (desc.includes('xss') || desc.includes('cross-site scripting'))
+    return `An attacker may be able to inject malicious scripts into pages served to your users via ${pkg}. ${fixMsg}`
+  if (desc.includes('ssrf'))
+    return `An attacker may be able to make your server send requests to internal systems or cloud metadata endpoints via ${pkg}. ${fixMsg}`
+  return `This vulnerability in ${pkg} could be exploited by an attacker depending on how your app uses it. Review the description above and check if the affected code path is reachable. ${fixMsg}`
+}
+
 function PathRow({ label, path, color }) {
   if (!path?.length) return null
   return (
@@ -35,6 +58,11 @@ export default function CVEDetail({ vuln, onClose }) {
         <div style={{ marginBottom: 14 }}>
           <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 4 }}>Description</div>
           <p style={{ fontSize: 13, lineHeight: 1.6 }}>{vuln.description}</p>
+        </div>
+
+        <div style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 6, padding: '10px 14px', marginBottom: 14 }}>
+          <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 4 }}>💬 What this means for your app</div>
+          <p style={{ fontSize: 13, lineHeight: 1.6, color: 'var(--text)' }}>{getPlainEnglish(vuln)}</p>
         </div>
 
         <div style={{ marginBottom: 14 }}>
