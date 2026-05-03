@@ -1,76 +1,86 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Tooltip from '../components/Tooltip'
+import TERMS from '../data/terms'
 
 const SECTIONS = [
   {
+    id: 'pipeline', icon: '🔄', title: 'SCA Pipeline',
+    content: [
+      { type: 'text', text: 'How dependency scanning fits into CI/CD:' },
+      { type: 'diagram', steps: [
+        { num: 1, title: 'Code + Dependencies', desc: 'Developer commits package.json / requirements.txt / pom.xml to Git' },
+        { num: 2, title: 'Build Process', desc: 'CI runs npm install / pip install / mvn package → resolves all transitive deps → creates artifacts (node_modules, .whl, .jar)' },
+        { num: 3, title: 'SBOM Generation', desc: 'Tools like Syft, CycloneDX CLI scan artifacts → extract package names + versions → output SBOM in CycloneDX/SPDX format (JSON/XML)' },
+        { num: 4, title: 'Vulnerability Scan', desc: 'Grype/Trivy reads SBOM → queries NVD/OSV for each package@version → matches CVEs' },
+        { num: 5, title: 'Report + Gate', desc: 'If CRITICAL CVEs found → fail build OR send alerts. Report includes CVE ID, CVSS score, fix version' },
+        { num: 6, title: 'Remediation', desc: 'Developer updates package.json with fixed versions → re-run pipeline' },
+      ]},
+      { type: 'callout', color: 'info', text: '💡 This tool simulates steps 3-4: you upload package.json, we build the dependency tree (SBOM equivalent) and scan NVD/OSV.' },
+    ]
+  },
+  {
     id: 'sca', icon: '🔍', title: 'What is SCA?',
     content: [
-      { type: 'text', text: 'Software Composition Analysis (SCA) is the practice of automatically scanning your project\'s dependencies for known security vulnerabilities.' },
-      { type: 'text', text: 'Modern applications use hundreds of open-source packages. Each package can contain security holes — called CVEs. SCA tools check every package you use against databases of known vulnerabilities.' },
-      { type: 'callout', color: 'info', text: '💡 Up to 80% of modern application code comes from open-source packages — making SCA one of the highest-impact security practices.' },
+      { type: 'text', text: 'Software Composition Analysis scans your project\'s dependencies for known security vulnerabilities.' },
+      { type: 'text', text: 'Modern apps use hundreds of open-source packages. Each can contain security holes (CVEs). SCA tools check every package against vulnerability databases.' },
+      { type: 'callout', color: 'info', text: '💡 Up to 80% of modern application code comes from open-source packages.' },
     ]
   },
   {
-    id: 'cve', icon: '🏷️', title: 'Understanding CVEs',
+    id: 'cve', icon: '🏷️', title: 'CVEs',
     content: [
-      { type: 'text', text: 'A CVE (Common Vulnerability and Exposure) is a unique identifier for a known security flaw. Format: CVE-YEAR-NUMBER. Example: CVE-2021-44228 is Log4Shell, one of the most severe vulnerabilities ever found.' },
+      { type: 'text', text: 'CVE = Common Vulnerability and Exposure. Format: CVE-YEAR-NUMBER. Example: CVE-2021-44228 (Log4Shell).' },
       { type: 'table', headers: ['Field', 'Meaning'], rows: [
-        ['CVE ID', 'Unique identifier for the vulnerability'],
-        ['CVSS Score', 'Severity rating from 0 (none) to 10 (critical)'],
-        ['CWE', 'Category of weakness (e.g. XSS, SQL Injection)'],
-        ['Fix Version', 'Minimum version that patches the vulnerability'],
+        ['CVE ID', 'Unique identifier'],
+        ['CVSS Score', 'Severity (0-10)'],
+        ['CWE', 'Weakness category'],
+        ['Fix Version', 'Patched version'],
       ]},
-      { type: 'callout', color: 'warn', text: '⚠️ Not every CVE affects your app — it depends on whether you call the vulnerable function. This is called reachability.' },
     ]
   },
   {
-    id: 'cvss', icon: '📊', title: 'CVSS Scores Explained',
+    id: 'cvss', icon: '📊', title: 'CVSS Scores',
     content: [
-      { type: 'text', text: 'CVSS (Common Vulnerability Scoring System) rates vulnerabilities from 0–10 based on how easy they are to exploit and how much damage they can cause.' },
+      { type: 'text', text: 'CVSS rates vulnerabilities 0-10 based on exploitability and impact.' },
       { type: 'table', headers: ['Score', 'Severity', 'Action'], rows: [
-        ['9.0 – 10.0', 'CRITICAL', 'Fix immediately — drop everything'],
-        ['7.0 – 8.9',  'HIGH',     'Fix this week — schedule urgent work'],
-        ['4.0 – 6.9',  'MEDIUM',   'Fix this month — add to backlog'],
-        ['0.1 – 3.9',  'LOW',      'Fix when convenient — low risk'],
+        ['9.0–10.0', 'CRITICAL', 'Fix immediately'],
+        ['7.0–8.9',  'HIGH',     'Fix this week'],
+        ['4.0–6.9',  'MEDIUM',   'Fix this month'],
+        ['0.1–3.9',  'LOW',      'Fix when convenient'],
       ]},
-      { type: 'callout', color: 'ok', text: '✅ CVSS scores can be misleading in isolation — always consider context. A CRITICAL CVE in a dev-only tool is less urgent than a HIGH CVE in your authentication library.' },
     ]
   },
   {
-    id: 'deps', icon: '🌳', title: 'Direct vs Transitive Dependencies',
+    id: 'deps', icon: '🌳', title: 'Direct vs Transitive',
     content: [
-      { type: 'text', text: 'When you install a package, it brings along its own dependencies — and those bring their own, and so on. This creates a tree.' },
-      { type: 'code', text: 'Your App\n  └── express@4.17.0          (direct — you added this)\n        └── qs@6.7.0           (transitive — express needs it)\n              └── CVE-2022-24999  ← vulnerability here' },
-      { type: 'text', text: 'The majority of CVEs come from transitive dependencies — packages you never chose to add. That\'s why scanning the full tree matters.' },
+      { type: 'text', text: 'Direct = you added it. Transitive = pulled in automatically by your dependencies.' },
+      { type: 'code', text: 'Your App\n  └── express@4.17.0 (direct)\n        └── qs@6.7.0 (transitive)\n              └── CVE-2022-24999' },
+      { type: 'text', text: 'Most CVEs hide in transitive dependencies you never chose.' },
     ]
   },
   {
-    id: 'fix', icon: '🛠️', title: 'How to Fix Vulnerabilities',
+    id: 'fix', icon: '🛠️', title: 'How to Fix',
     content: [
-      { type: 'text', text: 'Most vulnerabilities are fixed by upgrading to a patched version. This tool shows you the exact command to run.' },
-      { type: 'table', headers: ['Ecosystem', 'Fix command example'], rows: [
+      { type: 'text', text: 'Most fixes = upgrade to patched version.' },
+      { type: 'table', headers: ['Ecosystem', 'Command'], rows: [
         ['npm',   'npm install lodash@4.17.21'],
         ['PyPI',  'pip install Django==3.2.13'],
-        ['Maven', 'Update version in pom.xml to 2.13.1'],
+        ['Maven', 'Update pom.xml to 2.13.1'],
       ]},
-      { type: 'callout', color: 'warn', text: '⚠️ Always test in a staging environment before applying fixes to production. Upgrading may break peer dependency requirements or change API behaviour.' },
     ]
   },
   {
     id: 'supply-chain', icon: '⛓️', title: 'Supply Chain Attacks',
     content: [
-      { type: 'text', text: 'A supply chain attack happens when an attacker compromises an open-source package that thousands of apps depend on. Famous examples: SolarWinds (2020), XZ Utils (2024), event-stream (2018).' },
-      { type: 'callout', color: 'critical', text: '🚨 A single compromised package can affect millions of applications worldwide — making supply chain security one of the most important topics in modern software.' },
-      { type: 'text', text: 'SCA is your first line of defence — it detects when a package you depend on has a known vulnerability, so you can upgrade before attackers exploit it.' },
+      { type: 'text', text: 'Attacker compromises a popular package → affects millions of apps. Examples: SolarWinds (2020), XZ Utils (2024).' },
+      { type: 'callout', color: 'critical', text: '🚨 One compromised package can affect millions of applications worldwide.' },
     ]
   },
   {
-    id: 'sbom', icon: '📋', title: 'SBOMs — Software Bill of Materials',
+    id: 'sbom', icon: '📋', title: 'SBOMs',
     content: [
-      { type: 'text', text: 'An SBOM is a complete inventory of every component in your software — like a nutrition label for your code. It lists every package, version, and licence.' },
-      { type: 'text', text: 'SBOMs are increasingly required by enterprise customers, government contracts (US Executive Order 14028), and security compliance frameworks like SOC2 and ISO 27001.' },
-      { type: 'callout', color: 'info', text: '💡 This tool\'s export feature generates a report that can be used as the basis for an SBOM, documenting all your dependencies and their known vulnerabilities.' },
+      { type: 'text', text: 'SBOM = Software Bill of Materials. Complete inventory of every component (like a nutrition label for code).' },
+      { type: 'text', text: 'Required by US Executive Order 14028, SOC2, ISO 27001.' },
     ]
   },
 ]
@@ -85,7 +95,7 @@ export default function Learn() {
   const section  = SECTIONS.find(s => s.id === active)
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto', padding: '32px 24px' }}>
+    <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px' }}>
       <button onClick={() => navigate(-1)}
         style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: 13, marginBottom: 20 }}>
         ← Back
@@ -95,7 +105,7 @@ export default function Learn() {
         📚 SCA Concepts
       </h1>
       <p style={{ color: 'var(--muted)', fontSize: 14, marginBottom: 28 }}>
-        Everything you need to know about dependency security — plain English.
+        Security jargon, decoded.
       </p>
 
       <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: 24 }}>
@@ -122,6 +132,33 @@ export default function Learn() {
           {section.content.map((block, i) => {
             if (block.type === 'text') return (
               <p key={i} style={{ fontSize: 14, lineHeight: 1.8, color: 'var(--text)', marginBottom: 16 }}>{block.text}</p>
+            )
+            if (block.type === 'diagram') return (
+              <div key={i} style={{ marginBottom: 16 }}>
+                {block.steps.map((step, j) => (
+                  <div key={j} style={{ display: 'flex', gap: 16, marginBottom: 12, alignItems: 'flex-start' }}>
+                    <div style={{ 
+                      minWidth: 32, 
+                      height: 32, 
+                      borderRadius: '50%', 
+                      background: 'var(--accent)', 
+                      color: '#000', 
+                      fontWeight: 700, 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      fontSize: 14,
+                      flexShrink: 0
+                    }}>
+                      {step.num}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 4 }}>{step.title}</div>
+                      <div style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.6 }}>{step.desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )
             if (block.type === 'callout') return (
               <div key={i} style={{ background: BG[block.color], border: `1px solid ${BORDER[block.color]}`, borderRadius: 8, padding: '12px 16px', marginBottom: 16, fontSize: 13, lineHeight: 1.7, color: COLORS[block.color] }}>
@@ -151,18 +188,6 @@ export default function Learn() {
             )
             return null
           })}
-        </div>
-      </div>
-
-      {/* Glossary */}
-      <div style={{ marginTop: 32, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: 24 }}>
-        <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, marginBottom: 16 }}>📖 Quick Glossary</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>
-          {['cve','cvss','sca','direct','transitive','mediation','nvd','osv','remediation','patchVersion','cwe','epss','zeroDay','supplyChain','lockfile','semver','sbom','ghsa'].map(key => (
-            <div key={key} style={{ fontSize: 12 }}>
-              <Tooltip termKey={key}><span style={{ fontWeight: 600, color: 'var(--accent)', cursor: 'help' }}>{key}</span></Tooltip>
-            </div>
-          ))}
         </div>
       </div>
     </div>
