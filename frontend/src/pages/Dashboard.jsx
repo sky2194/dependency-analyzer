@@ -150,7 +150,7 @@ export default function Dashboard() {
       <div style={{ marginBottom: 24 }}>
         <div style={{ fontSize: 11, fontFamily: 'var(--font-mono)', color: 'var(--accent)', letterSpacing: 2, marginBottom: 6 }}>SOFTWARE COMPOSITION ANALYSIS</div>
         <p style={{ color: 'var(--muted)', fontSize: 13, lineHeight: 1.7 }}>
-          Scan for <Tooltip termKey="cve">CVEs</Tooltip> across all <Tooltip termKey="direct">direct</Tooltip> + <Tooltip termKey="transitive">transitive dependencies</Tooltip>. Uses <Tooltip termKey="nvd">NVD</Tooltip> + <Tooltip termKey="osv">OSV</Tooltip>. Supports <Tooltip termKey="npm">npm</Tooltip>, <Tooltip termKey="pypi">PyPI</Tooltip>, <Tooltip termKey="maven">Maven</Tooltip>.
+          Scan for <Tooltip termKey="cve">CVEs</Tooltip> across all <Tooltip termKey="direct">direct</Tooltip> + <Tooltip termKey="transitive">transitive dependencies</Tooltip>. Uses NVD + OSV. Supports <Tooltip termKey="npm">npm</Tooltip>, <Tooltip termKey="pypi">PyPI</Tooltip>, <Tooltip termKey="maven">Maven</Tooltip>.
         </p>
       </div>
 
