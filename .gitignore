@@ -77,3 +77,7 @@ id_rsa*
 id_ed25519*
 *.pem
 *.key
+.venv/
+venv/
+backend/venv/
+frontend/node_modules/
