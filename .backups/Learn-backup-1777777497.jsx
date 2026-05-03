@@ -10,7 +10,7 @@ const SECTIONS = [
       { type: 'diagram', steps: [
         { num: 1, title: 'Code + Dependencies', desc: 'Developer commits package.json / requirements.txt / pom.xml to Git' },
         { num: 2, title: 'Build Process', desc: 'CI runs npm install / pip install / mvn package → resolves all transitive deps → creates artifacts (node_modules, .whl, .jar)' },
-        { num: 3, title: 'SBOM Generation', desc: 'TIMING: Before build (manifest scan), during build (Maven/Gradle plugin), or after build (filesystem scan). TOOLS: Syft (Anchore), CycloneDX CLI, Tern, SPDX generators. OUTPUT: CycloneDX JSON/XML or SPDX JSON listing every package + version + license + file hash. Example: {"components":[{"name":"lodash","version":"4.17.20"}]}' },
+        { num: 3, title: 'SBOM Generation', desc: 'Tools like Syft, CycloneDX CLI scan artifacts → extract package names + versions → output SBOM in CycloneDX/SPDX format (JSON/XML)' },
         { num: 4, title: 'Vulnerability Scan', desc: 'Grype/Trivy reads SBOM → queries NVD/OSV for each package@version → matches CVEs' },
         { num: 5, title: 'Report + Gate', desc: 'If CRITICAL CVEs found → fail build OR send alerts. Report includes CVE ID, CVSS score, fix version' },
         { num: 6, title: 'Remediation', desc: 'Developer updates package.json with fixed versions → re-run pipeline' },
