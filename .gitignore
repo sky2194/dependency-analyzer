@@ -81,3 +81,5 @@ id_ed25519*
 venv/
 backend/venv/
 frontend/node_modules/
+*.backups
+.backups/.backups/
