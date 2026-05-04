@@ -101,3 +101,140 @@ button { font-family: var(--font-body); }
   .learn-sidebar { display: none !important; }
   .mobile-section-picker { display: block !important; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOBILE RESPONSIVE DESIGN
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ─ Tablets (768px and below) ─────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Dashboard: Stack layout vertically */
+  .page-container {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Dashboard grid → flexbox column */
+  div[style*="display: 'grid'"][style*="gridTemplateColumns: '1fr 300px'"] {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+
+  /* Right panel: Remove sticky positioning */
+  div[style*="position: 'sticky'"],
+  div[style*="position: sticky"] {
+    position: static !important;
+    max-height: none !important;
+  }
+
+  /* Learn page: Grid → single column */
+  .learn-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Learn sidebar: Hide on mobile, show dropdown */
+  .learn-sidebar {
+    display: none !important;
+  }
+
+  .mobile-section-picker {
+    display: block !important;
+  }
+
+  /* Results cards: 2 columns on tablet */
+  div[style*="repeat(auto-fit, minmax(110px"] {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Padding: Reduce on mobile */
+  .page-container {
+    padding: 16px !important;
+  }
+
+  .page-container-md {
+    padding: 16px !important;
+  }
+
+  /* Results header: Stack on mobile */
+  .results-header {
+    flex-direction: column !important;
+  }
+
+  .results-actions {
+    width: 100% !important;
+  }
+
+  /* Buttons: Touch-friendly */
+  button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Tables: Horizontal scroll on mobile */
+  table {
+    font-size: 12px;
+  }
+
+  table td, table th {
+    padding: 8px 10px !important;
+  }
+
+  /* Hide less important columns on small screens */
+  table th:nth-child(n+4),
+  table td:nth-child(n+4) {
+    display: none;
+  }
+
+  /* Typography: Adjust for mobile readability */
+  h1 {
+    font-size: 20px !important;
+  }
+
+  h2 {
+    font-size: 16px !important;
+  }
+
+  p {
+    font-size: 13px !important;
+  }
+}
+
+/* ─ Phones (480px and below) ──────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  /* Summary cards: Single column */
+  div[style*="repeat(auto-fit, minmax(110px"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Results actions: Stack vertically */
+  .results-actions {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  .results-actions button {
+    width: 100%;
+  }
+
+  /* Navigation: Tighter spacing */
+  nav {
+    padding: 12px !important;
+  }
+
+  /* Font sizes: Very readable on small screens */
+  body {
+    font-size: 14px;
+  }
+
+  h1 {
+    font-size: 18px !important;
+  }
+
+  /* File upload area: Full width */
+  div[role="region"] {
+    width: 100% !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */

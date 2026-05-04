@@ -1,3 +1,13 @@
+#!/bin/bash
+# Complete Deployment Script - All improvements for Learn.jsx and Mobile CSS
+# Run from project root: ./final-deploy.sh
+
+set -e
+
+echo "🚀 Deploying all improvements..."
+
+# Create the COMPLETE improved Learn.jsx
+cat > frontend/src/pages/Learn.jsx << 'EOFLEARN'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import TERMS from '../data/terms'
@@ -349,3 +359,54 @@ export default function Learn() {
     </div>
   )
 }
+EOFLEARN
+
+echo "✅ Learn.jsx updated with ALL improvements"
+
+# Add mobile CSS to index.css
+if ! grep -q "MOBILE RESPONSIVE DESIGN" frontend/src/index.css; then
+  cat >> frontend/src/index.css << 'EOFCSS'
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOBILE RESPONSIVE DESIGN (768px & 480px breakpoints)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  .learn-grid { grid-template-columns: 1fr !important; }
+  .learn-sidebar { display: none !important; }
+  .mobile-section-picker { display: block !important; }
+  
+  div[style*="repeat(auto-fit, minmax(110px"] { grid-template-columns: repeat(2, 1fr) !important; }
+  button { min-height: 44px; min-width: 44px; }
+  table { font-size: 12px; }
+  table td, table th { padding: 8px 10px !important; }
+  h1 { font-size: 20px !important; }
+  h2 { font-size: 16px !important; }
+  p { font-size: 13px !important; }
+}
+
+@media (max-width: 480px) {
+  div[style*="repeat(auto-fit, minmax(110px"] { grid-template-columns: 1fr !important; }
+  .results-actions { flex-direction: column !important; gap: 8px !important; }
+  .results-actions button { width: 100%; }
+  body { font-size: 14px; }
+  h1 { font-size: 18px !important; }
+}
+EOFCSS
+  echo "✅ Mobile CSS added to index.css"
+else
+  echo "✓ Mobile CSS already in index.css"
+fi
+
+echo ""
+echo "✅ DEPLOYMENT COMPLETE!"
+echo ""
+echo "📋 Files updated:"
+echo "  ✓ frontend/src/pages/Learn.jsx (10 sections, all improvements)"
+echo "  ✓ frontend/src/index.css (mobile responsive)"
+echo ""
+echo "🧪 Next: Test locally"
+echo "  cd frontend && npm run dev"
+echo "  Test on 375px width - dashboard stacks"
+echo "  Click Learn tab - 10 sections"
+echo ""
