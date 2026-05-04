@@ -1,9 +1,15 @@
 #!/bin/bash
 
-PROJECT="/Users/saikoutilyayerabtai/Projects/Dependency Analayzer"
+PROJECT="/Users/saikoutilyayerabtai/Projects/dependency-analyzer"
 FRONTEND="$PROJECT/frontend"
 BACKEND="$PROJECT/backend"
 
+
+ echo "Cleaning ports..."
+   lsof -ti :5000 | xargs kill -9 2>/dev/null
+   lsof -ti :3000 | xargs kill -9 2>/dev/null
+
+   
 # Colors
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
@@ -73,7 +79,7 @@ case "$1" in
     echo -e "   Frontend: ${BLUE}http://localhost:3000${NC}"
     echo -e "   Backend:  ${BLUE}http://localhost:5000${NC}"
     echo ""
-    echo "Press Ctrl+C to stop all services"
+    echo "Press Ctrl+C to stop all the services"
     trap stop_all INT
     wait
     ;;

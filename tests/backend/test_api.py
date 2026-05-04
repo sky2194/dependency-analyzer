@@ -109,33 +109,6 @@ def test_analyze_invalid_json_returns_400():
 # ── Search ────────────────────────────────────────────────────────────────────
 
 @skip_if_offline
-def test_search_returns_200():
-    res = requests.get(f"{BASE}/api/search", params={"pkg": "lodash", "version": "4.17.11"}, timeout=15)
-    assert res.status_code == 200
-
-@skip_if_offline
-def test_search_has_required_fields():
-    res = requests.get(f"{BASE}/api/search", params={"pkg": "lodash"}, timeout=15)
-    data = res.json()
-    assert 'package' in data
-    assert 'vulnerabilities' in data
-
-@skip_if_offline
-def test_search_missing_pkg_returns_400():
-    res = requests.get(f"{BASE}/api/search", timeout=10)
-    assert res.status_code == 400
-
-@skip_if_offline
-def test_search_vuln_has_required_fields():
-    res = requests.get(f"{BASE}/api/search", params={"pkg": "lodash", "version": "4.17.11"}, timeout=15)
-    vulns = res.json().get('vulnerabilities', [])
-    if vulns:
-        for field in ['cve_id', 'severity', 'description', 'fix']:
-            assert field in vulns[0], f"Vulnerability missing field: {field}"
-
-# ── Sprint 1: Security & Validation Tests ─────────────────────────────────────
-
-@skip_if_offline
 def test_oversized_content_returns_413():
     big_content = '{"name":"test","dependencies":{' + ','.join([f'"pkg{i}":"1.0.0"' for i in range(5000)]) + '}}'
     res = requests.post(f"{BASE}/api/analyze", json={"content": big_content, "filename": "package.json"}, timeout=10)
@@ -149,11 +122,6 @@ def test_invalid_json_body_returns_400():
 @skip_if_offline
 def test_cve_invalid_format_returns_400():
     res = requests.get(f"{BASE}/api/cve/NOT-A-CVE", timeout=5)
-    assert res.status_code == 400
-
-@skip_if_offline
-def test_search_long_package_name_returns_400():
-    res = requests.get(f"{BASE}/api/search", params={"pkg": "a" * 201}, timeout=5)
     assert res.status_code == 400
 
 @skip_if_offline

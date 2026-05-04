@@ -1,9 +1,11 @@
 import { useLocation, useNavigate } from 'react-router-dom'
+import API_BASE from '../config'
 import { useState } from 'react'
 import DependencyGraph from '../components/DependencyGraph'
 import VulnerabilityReport from '../components/VulnerabilityReport'
 import SeverityBadge from '../components/SeverityBadge'
 import Tooltip from '../components/Tooltip'
+import CompareScans from '../components/CompareScans'
 
 const TABS = ['Dependency Graph', 'Vulnerabilities']
 const SEVS = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW']
@@ -26,18 +28,19 @@ export default function Results() {
   const navigate = useNavigate()
   const [tab, setTab] = useState(0)
   const [sevFilter, setSevFilter] = useState('ALL')
+  const [exportError, setExportError] = useState('')
   const result = state?.result
 
   if (!result) return (
     <div style={{ textAlign: 'center', padding: 80 }}>
       <p style={{ color: 'var(--muted)', marginBottom: 16 }}>No results found.</p>
-      <button onClick={() => navigate('/')} style={{ padding: '10px 20px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius)', cursor: 'pointer' }}>← Back to Dashboard</button>
+      <button onClick={() => navigate('/')} style={{ padding: '10px 20px', background: 'var(--accent)', color: '#fff', border: 'none', borderRadius: 'var(--radius)', cursor: 'pointer' }}>← Back to Scanner</button>
     </div>
   )
 
   const exportReport = async (type) => {
     try {
-      const res = await fetch(`/api/export/${type}`, {
+      const res = await fetch(`${API_BASE}/api/export/${type}`, {
         method: 'POST', headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(result)
       })
@@ -48,7 +51,7 @@ export default function Results() {
       a.download = `sca-report-${result.project_name}.${type === 'pdf' ? 'html' : 'csv'}`
       a.click()
       URL.revokeObjectURL(url)
-    } catch { alert('Export failed — is the backend running?') }
+    } catch { setExportError('Export failed — is the backend running?') }
   }
 
   const vulns = result.vulnerabilities || []
@@ -59,27 +62,65 @@ export default function Results() {
   const goToVulns = (sev = 'ALL') => { setTab(1); setSevFilter(sev) }
 
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 40px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 28 }}>
-        <button onClick={() => navigate('/')} style={{ background: 'none', border: '1px solid var(--border)', color: 'var(--muted)', borderRadius: 6, padding: '6px 12px', cursor: 'pointer', fontSize: 12 }}>← New Scan</button>
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-          <button onClick={() => exportReport('pdf')} style={{ background: 'none', border: '1px solid var(--border)', color: 'var(--muted)', borderRadius: 6, padding: '6px 12px', cursor: 'pointer', fontSize: 12 }}>📄 Export PDF</button>
-          <button onClick={() => exportReport('csv')} style={{ background: 'none', border: '1px solid var(--border)', color: 'var(--muted)', borderRadius: 6, padding: '6px 12px', cursor: 'pointer', fontSize: 12 }}>📊 Export CSV</button>
+    <div className="page-container-md">
+
+      {/* Header: title left, actions right */}
+      <div className="results-header" style={{ display: 'flex', alignItems: 'flex-start', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>
+        {/* Title — always first on mobile via CSS order */}
+        <div className="results-title" style={{ flex: 1, minWidth: 200 }}>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: 24, marginBottom: 4 }}>
+            Scan Results
+          </h1>
+          <div style={{ color: 'var(--muted)', fontSize: 13 }}>
+            <Tooltip termKey="sca">SCA</Tooltip> complete —{' '}
+            <strong style={{ color: 'var(--text)' }}>{result.project_name || 'my-app'}</strong>
+            {' · '}{result.total_packages} packages{' · '}
+            {result.ecosystem?.toUpperCase() || 'NPM'}
+          </div>
         </div>
-        <div>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 22 }}>Scan Results</h2>
-          <div style={{ color: 'var(--muted)', fontSize: 12 }}><Tooltip termKey="sca">SCA</Tooltip> complete — <strong style={{color:'var(--text)'}}>{result.project_name || 'my-app'}</strong> · {result.total_packages} packages · {result.ecosystem?.toUpperCase() || 'NPM'}</div>
+
+        {/* Actions — right aligned */}
+        <div className="results-actions" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+          <button onClick={() => navigate('/', { state: { lastEcosystem: result.ecosystem } })}
+            style={{ background: 'none', border: '1px solid var(--border)', color: 'var(--muted)', borderRadius: 6, padding: '7px 14px', cursor: 'pointer', fontSize: 12, whiteSpace: 'nowrap' }}>
+            ← New Scan
+          </button>
+          <CompareScans current={result} />
+          <button onClick={() => exportReport('pdf')}
+            style={{ background: 'none', border: '1px solid var(--border)', color: 'var(--muted)', borderRadius: 6, padding: '7px 14px', cursor: 'pointer', fontSize: 12, whiteSpace: 'nowrap' }}>
+            📄 Export PDF
+          </button>
+          <button onClick={() => exportReport('csv')}
+            style={{ background: 'none', border: '1px solid var(--border)', color: 'var(--muted)', borderRadius: 6, padding: '7px 14px', cursor: 'pointer', fontSize: 12, whiteSpace: 'nowrap' }}>
+            📊 Export CSV
+          </button>
         </div>
       </div>
 
+      {/* Mock data warning */}
+      {result._isMock && (
+        <div style={{ background: 'var(--warn-bg)', border: '1px solid var(--warn-border)', borderRadius: 'var(--radius)', padding: '10px 16px', color: '#f59e0b', fontSize: 13, marginBottom: 16 }}>
+          ⚠️ <strong>Demo data shown</strong> — backend not running. Start backend with{' '}
+          <code style={{ fontFamily: 'var(--font-mono)', fontSize: 11 }}>./start.sh backend</code> for real results.
+        </div>
+      )}
+
+      {/* Export error */}
+      {exportError && (
+        <div style={{ background: 'var(--vuln-bg)', border: '1px solid var(--vuln-border)', borderRadius: 'var(--radius)', padding: '10px 16px', color: '#ef4444', fontSize: 13, marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          ⚠️ {exportError}
+          <button onClick={() => setExportError('')} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: 16 }}>✕</button>
+        </div>
+      )}
+
       {/* Unpinned version warnings */}
       {warnings.length > 0 && (
-        <div style={{ background: '#2d2009', border: '1px solid #78350f', borderRadius: 'var(--radius)', padding: '12px 16px', marginBottom: 20 }}>
+        <div style={{ background: 'var(--warn-bg)', border: '1px solid var(--warn-border)', borderRadius: 'var(--radius)', padding: '12px 16px', marginBottom: 20 }}>
           <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, color: 'var(--accent2)', marginBottom: 8 }}>
             ⚠️ {warnings.length} unpinned version{warnings.length > 1 ? 's' : ''} detected
           </div>
           {warnings.map((w, i) => (
-            <div key={i} style={{ fontSize: 12, color: '#fcd34d', marginBottom: 4, lineHeight: 1.5 }}>• {w}</div>
+            <div key={i} style={{ fontSize: 12, color: 'var(--warn-text)', marginBottom: 4, lineHeight: 1.5 }}>• {w}</div>
           ))}
         </div>
       )}

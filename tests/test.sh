@@ -1,198 +1,170 @@
 #!/bin/bash
 
-PROJECT="/Users/saikoutilyayerabtai/Projects/Dependency Analayzer"
+PROJECT="/Users/saikoutilyayerabtai/Projects/dependency-analyzer"
 BACKEND="$PROJECT/backend"
 FRONTEND="$PROJECT/frontend"
 TESTS="$PROJECT/tests"
 
-# Colors
-GREEN='\033[0;32m'
-RED='\033[0;31m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-BOLD='\033[1m'
-NC='\033[0m'
-
-PASS=0
-FAIL=0
-WARN=0
+GREEN='\033[0;32m' RED='\033[0;31m' YELLOW='\033[1;33m' BOLD='\033[1m' NC='\033[0m'
+PASS=0; FAIL=0; WARN=0
 
 pass() { echo -e "  ${GREEN}✅ $1${NC}"; ((PASS++)); }
 fail() { echo -e "  ${RED}❌ $1${NC}"; ((FAIL++)); }
 warn() { echo -e "  ${YELLOW}⚠️  $1${NC}"; ((WARN++)); }
-header() { echo -e "\n${BOLD}$1${NC}"; echo "  $(printf '─%.0s' {1..50})"; }
+header() { echo -e "\n${BOLD}$1${NC}"; echo "  ──────────────────────────────────────────────────"; }
 
 echo ""
 echo -e "${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${BOLD}   DEPENDENCY ANALYZER — HEALTH CHECK${NC}"
 echo -e "${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 
-# Load .env if present
-if [ -f "$BACKEND/.env" ]; then
-  export $(cat "$BACKEND/.env" | grep -v "^#" | grep -v "^$" | xargs)
-fi
+# Load .env
+[ -f "$BACKEND/.env" ] && export $(cat "$BACKEND/.env" | grep -v "^#" | grep -v "^$" | xargs) 2>/dev/null
 
 # ── 1. PROJECT STRUCTURE ─────────────────────────────────────────────────────
 header "📁 PROJECT STRUCTURE"
 
-for f in "backend/app.py" "backend/requirements.txt" \
-          "backend/parsers/npm_parser.py" "backend/parsers/pypi_parser.py" "backend/parsers/maven_parser.py" \
-          "backend/resolvers/npm_resolver.py" "backend/cve/osv_client.py" "backend/cve/nvd_client.py" \
-          "frontend/src/App.jsx" "frontend/src/pages/Dashboard.jsx" "frontend/src/pages/Results.jsx" \
-          "frontend/src/pages/Search.jsx" "frontend/package.json" "frontend/vite.config.js"; do
-  if [ -f "$PROJECT/$f" ]; then
-    pass "$f exists"
-  else
-    fail "$f MISSING"
-  fi
+REQUIRED=(
+  "backend/app.py" "backend/requirements.txt"
+  "backend/parsers/npm_parser.py" "backend/parsers/pypi_parser.py"
+  "backend/parsers/maven_parser.py" "backend/parsers/lockfile_parser.py"
+  "backend/resolvers/npm_resolver.py" "backend/resolvers/pypi_resolver.py"
+  "backend/resolvers/maven_resolver.py" "backend/resolvers/lockfile_resolver.py"
+  "backend/cve/osv_client.py" "backend/cve/nvd_client.py" "backend/cve/scanner.py"
+  "backend/export/pdf_export.py" "backend/export/csv_export.py"
+  "frontend/src/App.jsx" "frontend/src/pages/Dashboard.jsx" "frontend/src/pages/Results.jsx"
+  "frontend/src/components/FileUpload.jsx" "frontend/src/components/VulnerabilityReport.jsx"
+  "frontend/src/components/DependencyGraph.jsx" "frontend/src/components/CVEDetail.jsx"
+  "frontend/src/components/Tooltip.jsx" "frontend/src/data/terms.js"
+  "frontend/package.json" "frontend/vite.config.js"
+  "tests/backend/test_parsers.py" "tests/backend/test_cve.py"
+  "tests/backend/test_api.py" "tests/backend/test_resolvers.py"
+  "start.sh" ".gitignore" "README.md"
+)
+
+DEAD=("frontend/src/pages/Search.jsx" "frontend/src/components/SearchBar.jsx")
+
+for f in "${REQUIRED[@]}"; do
+  [ -f "$PROJECT/$f" ] && pass "$f" || fail "$f MISSING"
+done
+for f in "${DEAD[@]}"; do
+  [ ! -f "$PROJECT/$f" ] && pass "$f correctly removed" || fail "$f should be deleted"
 done
 
 # ── 2. BACKEND ENVIRONMENT ────────────────────────────────────────────────────
 header "🐍 BACKEND ENVIRONMENT"
 
-if [ -d "$BACKEND/venv" ]; then
-  pass "Virtual environment exists"
-else
-  fail "Virtual environment missing — run: cd backend && python3 -m venv venv"
-fi
-
-if [ -f "$BACKEND/venv/bin/python" ]; then
-  PY_VER=$("$BACKEND/venv/bin/python" --version 2>&1)
-  pass "Python: $PY_VER"
-fi
+[ -d "$BACKEND/venv" ] && pass "virtualenv exists" || fail "virtualenv missing"
+[ -f "$BACKEND/venv/bin/python" ] && pass "Python: $("$BACKEND/venv/bin/python" --version 2>&1)" || fail "Python not found"
 
 for pkg in flask flask_cors requests xmltodict packaging pytest; do
-  if "$BACKEND/venv/bin/pip" show $pkg > /dev/null 2>&1; then
-    pass "$pkg installed"
-  else
-    fail "$pkg NOT installed — run: pip install -r requirements.txt"
-  fi
+  "$BACKEND/venv/bin/pip" show $pkg > /dev/null 2>&1 && pass "$pkg installed" || fail "$pkg missing"
 done
 
-# ── 3. BACKEND UNIT TESTS ─────────────────────────────────────────────────────
-header "🧪 UNIT TESTS (Parsers & Logic)"
+[ -n "$NVD_API_KEY" ] && pass "NVD_API_KEY configured" || warn "NVD_API_KEY not set"
+[ -f "$BACKEND/.env" ] && pass ".env file exists" || warn ".env missing"
 
-cd "$BACKEND"
-source venv/bin/activate 2>/dev/null
+# ── 3. UNIT TESTS ─────────────────────────────────────────────────────────────
+header "🧪 UNIT TESTS"
+cd "$BACKEND" && source venv/bin/activate 2>/dev/null
 
-echo "  Running parser tests..."
-if python -m pytest "$TESTS/backend/test_parsers.py" -q --tb=no 2>&1 | grep -q "passed"; then
-  PARSER_RESULT=$(python -m pytest "$TESTS/backend/test_parsers.py" -q --tb=no 2>&1 | tail -1)
-  pass "Parsers: $PARSER_RESULT"
-else
-  PARSER_RESULT=$(python -m pytest "$TESTS/backend/test_parsers.py" -q --tb=short 2>&1 | tail -5)
-  fail "Parser tests failed:\n$PARSER_RESULT"
-fi
+run_pytest() {
+  local name=$1 file=$2
+  OUT=$(python -m pytest "$file" -q --tb=short 2>&1)
+  if echo "$OUT" | grep -qE "passed"; then
+    pass "$name: $(echo "$OUT" | tail -1)"
+    echo "$OUT" | grep "FAILED" | while read l; do echo -e "    ${RED}$l${NC}"; done
+  else
+    fail "$name failed"
+    echo "$OUT" | tail -8
+  fi
+}
 
-echo "  Running resolver tests..."
-if python -m pytest "$TESTS/backend/test_resolvers.py" -q --tb=no 2>&1 | grep -q "passed"; then
-  pass "Resolvers: $(python -m pytest "$TESTS/backend/test_resolvers.py" -q --tb=no 2>&1 | tail -1)"
-else
-  fail "Resolver tests failed"
-fi
+run_pytest "Parsers" "$TESTS/backend/test_parsers.py"
+run_pytest "Resolvers" "$TESTS/backend/test_resolvers.py"
+run_pytest "CVE clients" "$TESTS/backend/test_cve.py"
 
 # ── 4. BACKEND SERVER ─────────────────────────────────────────────────────────
-header "🚀 BACKEND SERVER (live)"
+header "🚀 BACKEND SERVER"
 
 if curl -s http://localhost:5000/api/health > /dev/null 2>&1; then
   HEALTH=$(curl -s http://localhost:5000/api/health)
-  pass "Server running — $HEALTH"
+  pass "Server running"
+  echo "$HEALTH" | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+print(f'     NVD key: {d.get(\"nvd_api_key_configured\")}, Rate limit: {d.get(\"rate_limit\")}')
+" 2>/dev/null
 
-  # Test analyze endpoint
-  echo "  Testing /api/analyze (npm) — this may take 60s..."
+  run_pytest "API endpoints" "$TESTS/backend/test_api.py"
+
+  echo "  Testing /api/analyze (npm)..."
   ANALYZE=$(curl -s -X POST http://localhost:5000/api/analyze \
     -H "Content-Type: application/json" \
-    -d '{"content":"{\"name\":\"test\",\"dependencies\":{\"lodash\":\"4.17.21\"}}","filename":"package.json"}' \
-    --max-time 90)
+    -d '{"content":"{\"name\":\"test\",\"dependencies\":{\"lodash\":\"4.17.11\"}}","filename":"package.json"}' \
+    --max-time 60)
   if echo "$ANALYZE" | grep -q "ecosystem"; then
-    pass "/api/analyze — returned valid response"
-  elif [ -z "$ANALYZE" ]; then
-    fail "/api/analyze — timed out (resolver fetching transitive deps is slow on first run)"
+    pass "/api/analyze — valid response"
   else
-    fail "/api/analyze — unexpected response: ${ANALYZE:0:200}"
+    fail "/api/analyze — unexpected response: ${ANALYZE:0:100}"
   fi
-
-  # Test search endpoint
-  echo "  Testing /api/search..."
-  SEARCH=$(curl -s "http://localhost:5000/api/search?pkg=lodash&version=4.17.11" --max-time 15)
-  if echo "$SEARCH" | grep -q "vulnerabilities"; then
-    pass "/api/search — returned valid response"
-  else
-    fail "/api/search — unexpected response"
-  fi
-
-  # Test NVD API key
-  if [ -z "$NVD_API_KEY" ]; then
-    warn "NVD_API_KEY not set — NVD requests are rate-limited (5/30s). Get free key: https://nvd.nist.gov/developers/request-an-api-key"
-  else
-    pass "NVD_API_KEY configured"
-  fi
-
 else
-  fail "Backend server NOT running on port 5000"
-  warn "Start it: cd backend && source venv/bin/activate && python app.py"
+  fail "Backend NOT running on port 5000"
+  warn "Start: ./start.sh backend"
 fi
 
-# ── 5. CVE CLIENTS ────────────────────────────────────────────────────────────
+# ── 5. CVE DATA SOURCES ───────────────────────────────────────────────────────
 header "🔐 CVE DATA SOURCES"
 
-echo "  Testing OSV.dev connection..."
 OSV=$(curl -s -X POST https://api.osv.dev/v1/query \
   -H "Content-Type: application/json" \
-  -d '{"version":"4.17.11","package":{"name":"lodash","ecosystem":"npm"}}' \
-  --max-time 10)
-if echo "$OSV" | grep -q "vulns\|id"; then
-  pass "OSV.dev API reachable and returning data"
+  -d '{"version":"4.17.11","package":{"name":"lodash","ecosystem":"npm"}}' --max-time 8)
+if echo "$OSV" | grep -q '"id"'; then
+  COUNT=$(echo "$OSV" | python3 -c "import sys,json;d=json.load(sys.stdin);print(len(d.get('vulns',[])))" 2>/dev/null)
+  pass "OSV.dev reachable — $COUNT CVEs for lodash@4.17.11"
 else
-  fail "OSV.dev API not reachable — check internet connection"
+  fail "OSV.dev not reachable"
 fi
 
-echo "  Testing NVD API connection..."
-NVD=$(curl -s "https://services.nvd.nist.gov/rest/json/cves/2.0?keywordSearch=lodash&resultsPerPage=1" --max-time 10)
-if echo "$NVD" | grep -q "vulnerabilities\|totalResults"; then
-  pass "NVD API reachable"
+NVD=$(curl -s "https://services.nvd.nist.gov/rest/json/cves/2.0?cveId=CVE-2021-44228" --max-time 8)
+if echo "$NVD" | grep -q "CVE-2021-44228"; then
+  SCORE=$(echo "$NVD" | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+m=d['vulnerabilities'][0]['cve']['metrics']
+k=next(iter(m))
+print(m[k][0]['cvssData']['baseScore'])
+" 2>/dev/null)
+  pass "NVD reachable — Log4Shell CVSS: $SCORE"
 else
-  warn "NVD API slow or rate-limited — consider adding NVD_API_KEY"
+  warn "NVD slow or rate-limited"
 fi
 
 # ── 6. FRONTEND ───────────────────────────────────────────────────────────────
 header "⚛️  FRONTEND"
-
 cd "$FRONTEND"
+[ -d "node_modules" ] && pass "node_modules installed" || fail "run: npm install"
 
-if [ -d "node_modules" ]; then
-  pass "node_modules installed"
-else
-  fail "node_modules missing — run: npm install"
-fi
-
-echo "  Running build check..."
 BUILD=$(npx vite build 2>&1)
 if echo "$BUILD" | grep -q "built in"; then
-  BUILT_IN=$(echo "$BUILD" | grep "built in" | tail -1)
-  pass "Build successful — $BUILT_IN"
+  pass "Build: $(echo "$BUILD" | grep 'built in' | tail -1 | xargs)"
 else
-  fail "Build failed:\n$(echo "$BUILD" | tail -5)"
+  fail "Build failed"
+  echo "$BUILD" | tail -5
 fi
 
-if curl -s http://localhost:3000 > /dev/null 2>&1; then
-  pass "Frontend running on http://localhost:3000"
-else
-  warn "Frontend not running — start: npm run dev"
-fi
+curl -s http://localhost:3000 > /dev/null 2>&1 && pass "Frontend running on :3000" || warn "Frontend not running"
 
 # ── SUMMARY ───────────────────────────────────────────────────────────────────
 echo ""
 echo -e "${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-TOTAL=$((PASS + FAIL + WARN))
 echo -e "  ${GREEN}${PASS} passed${NC} · ${YELLOW}${WARN} warnings${NC} · ${RED}${FAIL} failed${NC}"
-
 if [ $FAIL -eq 0 ] && [ $WARN -eq 0 ]; then
-  echo -e "  ${GREEN}${BOLD}Your app is healthy 🟢${NC}"
+  echo -e "  ${GREEN}${BOLD}App is healthy 🟢${NC}"
 elif [ $FAIL -eq 0 ]; then
-  echo -e "  ${YELLOW}${BOLD}App running with warnings 🟡${NC}"
+  echo -e "  ${YELLOW}${BOLD}Running with warnings 🟡${NC}"
 else
-  echo -e "  ${RED}${BOLD}Issues found — check failures above 🔴${NC}"
+  echo -e "  ${RED}${BOLD}Issues found — fix failures above 🔴${NC}"
 fi
 echo -e "${BOLD}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""

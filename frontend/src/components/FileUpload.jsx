@@ -40,7 +40,7 @@ export default function FileUpload({ onAnalyze, loading, onEcosystemChange }) {
 
   return (
     <div>
-      <StepBanner icon="📂" title="Step 1 — Upload your dependency file"
+      <StepBanner icon="📂" title="Upload your dependency file"
         text={<>Your <Tooltip termKey="dependency">dependency</Tooltip> file lists every package your project uses. We parse it, build the full <Tooltip termKey="graph">dependency graph</Tooltip> including <Tooltip termKey="transitive">transitive dependencies</Tooltip>, then check each against <Tooltip termKey="nvd">NVD</Tooltip> + <Tooltip termKey="osv">OSV</Tooltip>.</>}
       />
 
@@ -66,7 +66,7 @@ export default function FileUpload({ onAnalyze, loading, onEcosystemChange }) {
         style={{ border: `2px dashed ${drag ? 'var(--accent)' : 'var(--border)'}`, borderRadius: 'var(--radius)', padding: '16px', textAlign: 'center', cursor: 'pointer', background: drag ? '#1e1510' : 'var(--surface)', marginBottom: 10, transition: 'all 0.2s' }}>
         <div style={{ fontSize: 20, marginBottom: 4 }}>📁</div>
         <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 13 }}>Drop file or click to browse</div>
-        <div style={{ color: 'var(--muted)', fontSize: 11, marginTop: 2 }}>package.json · package-lock.json · requirements.txt · pom.xml</div>
+        <div style={{ color: 'var(--muted)', fontSize: 11, marginTop: 2 }}>package.json / package-lock.json · requirements.txt · pom.xml</div>
         <input ref={ref} type="file" hidden accept=".json,.txt,.xml" onChange={e => handleFile(e.target.files[0])} />
       </div>
 
