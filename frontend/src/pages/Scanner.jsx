@@ -4,7 +4,7 @@ import { useScan } from '../App'
 import axios from 'axios'
 import API_BASE from '../config'
 import { MOCKS } from '../data/mocks'
-import ECOSYSTEMS, { detectEcosystem } from '../data/ecosystems'
+import ECOSYSTEMS from '../data/ecosystems'
 
 const SCAN_STEPS = ['Parsing manifest structure','Resolving dependency tree','Fetching NVD + OSV data','Cross-referencing CVEs','Generating risk report']
 
@@ -25,9 +25,7 @@ export default function Scanner() {
   const [loading, setLoading] = useState(false)
   const [scanStep, setScanStep] = useState(0)
   const [error, setError] = useState('')
-  const detected = code ? detectEcosystem(code) : null
-
-  const eco = ECOSYSTEMS.find(e => e.id === ecosystem)
+  const eco = ECOSYSTEMS[ecosystem]
 
   async function runScan() {
     if (!code.trim()) { setError('Paste a dependency file first'); return }
@@ -93,9 +91,9 @@ export default function Scanner() {
           </span>
         </div>
 
-        {detected && (
+        {code && eco && (
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'var(--orange-dim)', border: '1px solid rgba(224,92,42,0.3)', padding: '4px 10px', borderRadius: 4, fontSize: 11, fontWeight: 600, color: 'var(--orange)', fontFamily: 'var(--font-mono)', marginBottom: 10 }}>
-            🔵 {detected.label} detected
+            🔵 {eco.lang} detected
           </div>
         )}
 
