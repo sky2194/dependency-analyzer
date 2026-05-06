@@ -150,3 +150,136 @@ button { font-family: var(--font-ui); }
   padding: 2px 6px;
   border-radius: 4px;
 }
+
+/* RESPONSIVE BASE */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-size: 16px;
+}
+
+.app-container {
+  padding: 16px;
+}
+
+/* FLEXIBLE NAV + LAYOUT */
+.nav {
+  flex-wrap: wrap;
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+
+  .app-container {
+    padding: 10px;
+  }
+
+  .nav {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* DEVICE RESPONSIVENESS */
+
+/* Large Desktop */
+@media (min-width: 1440px) {
+  body { font-size: 17px; }
+  .app-container { max-width: 1200px; margin: auto; }
+}
+
+/* Laptop */
+@media (max-width: 1440px) {
+  body { font-size: 16px; }
+}
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .nav { flex-wrap: wrap; }
+  .app-container { padding: 12px; }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  body { font-size: 14px; }
+  .nav { flex-direction: column; }
+  .app-container { padding: 10px; }
+}
+
+/* FLUID SYSTEM (no manual breakpoints needed in most cases) */
+
+body {
+  font-size: clamp(14px, 1.2vw, 18px);
+}
+
+.app-container {
+  padding: clamp(10px, 2vw, 24px);
+  max-width: 1200px;
+  margin: auto;
+}
+
+/* FLUID NAVBAR */
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* NAV ITEMS AUTO SCALE */
+.nav-link {
+  font-size: clamp(12px, 1vw, 14px);
+  padding: clamp(6px, 1vw, 10px);
+}
+
+/* FLEX LAYOUT FOR ALL PAGES */
+.page-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+/* ANALYTICS SAFE FLEX AREA */
+.analytics-layout {
+  display: flex;
+  flex: 1;
+  min-width: 280px;
+}
+.scan-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.scan-box {
+  background: var(--bg-card);
+  padding: 24px;
+  border-radius: 12px;
+  text-align: center;
+  min-width: 260px;
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(255,255,255,0.2);
+  border-top: 3px solid var(--orange);
+  border-radius: 50%;
+  margin: 0 auto 12px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

@@ -19,7 +19,8 @@ const EXAMPLE = `{
 
 export default function Scanner() {
   const navigate = useNavigate()
-  const { setScanning, setScanProject } = useScan()
+  // const { setScanning, setScanProject } = useScan()
+  const [scanning, setScanning] = useState(false);
   const [ecosystem, setEcosystem] = useState('npm')
   const [code, setCode] = useState('')
   const [loading, setLoading] = useState(false)
@@ -136,6 +137,40 @@ export default function Scanner() {
         </button>
       </div>
 
+    {/* <button
+      onClick={() => { setScanning(true); runScan(); }}
+      disabled={loading}
+      style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 10,
+          width: '100%',
+          padding: 13,
+          background: loading ? 'rgba(224,92,42,0.5)' : 'var(--orange)',
+          color: 'white',
+          border: 'none',
+          borderRadius: 'var(--radius)',
+          fontFamily: 'var(--font-ui)',
+          fontSize: 14,
+          fontWeight: 700,
+          cursor: loading ? 'not-allowed' : 'pointer',
+          marginTop: 14
+    }}
+>
+      {loading ? '⏳ Scanning...' : '🔍 Scan and Detect Vulnerabilities'}
+     </button>
+
+     {scanning && (
+  <div className="scan-overlay">
+    <div className="scan-box">
+      <div className="spinner"></div>
+      <h3>Scanning Dependencies...</h3>
+      <p>Analyzing vulnerabilities</p>
+    </div>
+  </div>
+)} */}
+
       {/* SIDEBAR */}
       <div style={{ overflowY: 'auto', background: 'var(--bg-panel)', padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
         {/* Severity Guide */}
@@ -207,3 +242,160 @@ function SidebarSection({ title, titleColor, extra, children }) {
     </div>
   )
 }
+
+
+// import { useState } from 'react'
+// import { useNavigate } from 'react-router-dom'
+// import { useScan } from '../App'
+// import axios from 'axios'
+// import API_BASE from '../config'
+// import { MOCKS } from '../data/mocks'
+// import ECOSYSTEMS from '../data/ecosystems'
+
+// const SCAN_STEPS = ['Parsing manifest structure','Resolving dependency tree','Fetching NVD + OSV data','Cross-referencing CVEs','Generating risk report']
+
+// const EXAMPLE = `{
+//   "dependencies": {
+//     "express": "4.17.1",
+//     "lodash": "4.17.4",
+//     "axios": "0.21.1",
+//     "ejs": "3.1.5"
+//   }
+// }`
+
+// export default function Scanner() {
+//   const navigate = useNavigate()
+//   const { setScanning, setScanProject } = useScan()
+
+//   const [ecosystem, setEcosystem] = useState('npm')
+//   const [code, setCode] = useState('')
+//   const [loading, setLoading] = useState(false)
+//   const [scanStep, setScanStep] = useState(0)
+//   const [error, setError] = useState('')
+//   const eco = ECOSYSTEMS[ecosystem]
+
+//   async function runScan() {
+//     if (!code.trim()) { setError('Paste a dependency file first'); return }
+//     setLoading(true)
+//     setError('')
+//     setScanStep(0)
+//     setScanning(true)
+//     setScanProject(eco?.label || 'project')
+
+//     const interval = setInterval(
+//       () => setScanStep(s => Math.min(s + 1, SCAN_STEPS.length - 1)),
+//       900
+//     )
+
+//     try {
+//       const res = await axios.post(`${API_BASE}/api/scan`, {
+//         content: code,
+//         ecosystem
+//       })
+
+//       clearInterval(interval)
+//       setLoading(false)
+//       setScanning(false)
+
+//       navigate('/results', { state: { result: res.data } })
+//     } catch {
+//       clearInterval(interval)
+//       setLoading(false)
+//       setScanning(false)
+
+//       try {
+//         const mock = MOCKS[ecosystem]
+//         navigate('/results', { state: { result: mock } })
+//       } catch {
+//         setError('Scan failed — backend unavailable')
+//       }
+//     }
+//   }
+
+//   const progress = loading
+//     ? Math.round(((scanStep + 1) / SCAN_STEPS.length) * 100)
+//     : 0
+
+//   return (
+//     <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', height: 'calc(100vh - 52px)' }}>
+//       {/* MAIN */}
+//       <div style={{ overflowY: 'auto', padding: '28px 32px', borderRight: '1px solid var(--border)' }}>
+//         <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 700, letterSpacing: -0.5, marginBottom: 4 }}>
+//           Dependency Vulnerability Scanner
+//         </h1>
+
+//         <textarea
+//           value={code}
+//           onChange={e => setCode(e.target.value)}
+//           rows={10}
+//           placeholder="Paste your package.json here..."
+//           style={{
+//             width: '100%',
+//             background: 'var(--code-bg)',
+//             border: '1px solid var(--border)',
+//             borderRadius: 'var(--radius)',
+//             padding: 14,
+//             fontFamily: 'var(--font-mono)',
+//             fontSize: 12,
+//             color: 'var(--text)'
+//           }}
+//         />
+
+//         {loading && (
+//           <div style={{ marginTop: 16 }}>
+//             <div>Scanning… {progress}% complete</div>
+//           </div>
+//         )}
+
+//         {error && <div style={{ color: 'red', marginTop: 10 }}>{error}</div>}
+
+//         <button
+//           onClick={runScan}
+//           disabled={loading}
+//           style={{
+//             width: '100%',
+//             padding: 13,
+//             background: loading ? 'rgba(224,92,42,0.5)' : 'var(--orange)',
+//             color: 'white',
+//             border: 'none',
+//             borderRadius: 'var(--radius)',
+//             marginTop: 14,
+//             cursor: loading ? 'not-allowed' : 'pointer'
+//           }}
+//         >
+//           {loading ? 'Scanning...' : 'Scan and Detect Vulnerabilities'}
+//         </button>
+
+//         {scanning && (
+//           <div className="scan-overlay">
+//             <div className="scan-box">
+//               <div className="spinner"></div>
+//               <h3>Scanning Dependencies...</h3>
+//               <p>Analyzing vulnerabilities</p>
+//             </div>
+//           </div>
+//         )}
+//       </div>
+
+//       {/* SIDEBAR */}
+//       <div style={{ overflowY: 'auto', background: 'var(--bg-panel)', padding: 20 }}>
+//         <SidebarSection title="Severity Guide">
+//           <p>Guide content here</p>
+//         </SidebarSection>
+//       </div>
+//     </div>
+//   )
+// }
+
+// function SidebarSection({ title, titleColor, extra, children }) {
+//   return (
+//     <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius)' }}>
+//       <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--border)' }}>
+//         <span style={{ fontSize: 11, fontWeight: 700, color: titleColor || 'var(--text-secondary)' }}>
+//           {title}
+//         </span>
+//       </div>
+//       <div style={{ padding: '8px 14px' }}>{children}</div>
+//     </div>
+//   )
+// }
