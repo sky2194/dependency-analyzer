@@ -65,6 +65,12 @@
   --text-secondary: #495057;
   --text-muted: #adb5bd;
   --muted: #adb5bd;
+  --orange-dim: rgba(224,92,42,0.15);
+  --orange: #c84a1d;
+  --red-dim: rgba(239,68,68,0.12);
+  --yellow-dim: rgba(245,158,11,0.15);
+  --green-dim: rgba(34,197,94,0.12);
+  --blue-dim: rgba(59,130,246,0.12);
   --code-bg: #f1f5f9;
   --vuln-bg: rgba(239,68,68,0.04);
   --vuln-border: rgba(239,68,68,0.15);

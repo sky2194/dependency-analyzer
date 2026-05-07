@@ -44,7 +44,7 @@ export default function Landing() {
     }
   }, [])
 
-  const sample = () => navigate('/results', { state: { result: MOCKS.npm } })
+  const sample = () => navigate('/results', { state: { result: { ...MOCKS.npm, is_mock: true } } })
 
   return (
     <div className="landing-page">
@@ -291,6 +291,8 @@ const landingCss = `
 .landing-page{--bg:#080b10;--bg-card:#0d1117;--bg-elevated:#131921;--border:rgba(255,255,255,.06);--border-mid:rgba(255,255,255,.10);--border-strong:rgba(255,255,255,.18);--text:#eef0f3;--text-2:#8b95a8;--text-3:#4a5568;--accent:#4f8ef7;--accent2:#7c3aed;--critical:#ff3b5c;--high:#ff8c42;--medium:#f5c842;--low:#3ecf8e;--font-d:'Syne',sans-serif;--font-b:'DM Sans',sans-serif;--font-m:'DM Mono',monospace;background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:15px;line-height:1.6;overflow-x:hidden;min-height:100vh}
 .landing-page:after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:.3}
 .landing-page button{font-family:var(--font-b)}
+[data-theme="light"] .landing-page{--bg:#ffffff;--bg-card:#f8f9fa;--bg-elevated:#eef0f3;--border:rgba(0,0,0,.08);--border-mid:rgba(0,0,0,.12);--border-strong:rgba(0,0,0,.2);--text:#1a1a2e;--text-2:#495057;--text-3:#8b95a8}
+
 .lp-nav{position:fixed;top:0;left:0;right:0;z-index:100;height:60px;display:flex;align-items:center;padding:0 48px;border-bottom:1px solid transparent;transition:background .3s,border-color .3s}
 .lp-nav.scrolled{background:rgba(8,11,16,.92);border-color:var(--border);backdrop-filter:blur(16px)}
 .lp-nav-logo{font-family:var(--font-d);font-size:17px;font-weight:700;display:flex;align-items:center;gap:9px;text-decoration:none;color:var(--text);background:none;border:0;cursor:pointer}

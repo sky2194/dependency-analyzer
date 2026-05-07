@@ -46,7 +46,6 @@ export default function App() {
                   Scanning {scanProject}...
                 </div>
               )}
-              <span style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>Demo Mode</span>
               <button onClick={toggleTheme} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 6, padding: '5px 10px', cursor: 'pointer', fontSize: 14, color: 'var(--text-muted)' }}>
                 {theme === 'dark' ? '☀️' : '🌙'}
               </button>

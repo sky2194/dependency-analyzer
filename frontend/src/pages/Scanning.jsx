@@ -40,7 +40,7 @@ export default function Scanning() {
         })
         result = res.data
       } catch (err) {
-        result = MOCKS[state.ecosystem] || MOCKS.npm
+        result = { ...(MOCKS[state.ecosystem] || MOCKS.npm), is_mock: true }
       }
       clearInterval(interval)
       setStep(STEPS.length - 1)

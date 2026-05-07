@@ -42,7 +42,14 @@ def _scan_node(deps, ecosystem, path, all_vulns, max_depth=2, current_depth=0):
         for v in vulns:
             v['path'] = current_path
             v['root_cause'] = _build_root_cause(current_path, dep.get('type', 'transitive'))
-        dep['vulnerabilities'] = [{'cve_id': v['cve_id']} for v in vulns]
+        # Attach full vuln data so frontend graph can show severity/cvss/fix without re-lookup
+        dep['vulnerabilities'] = [{
+            'cve_id': v.get('cve_id'),
+            'severity': v.get('severity'),
+            'cvss_score': v.get('cvss_score'),
+            'fix_version': v.get('fix_version'),
+            'source': v.get('source'),
+        } for v in vulns]
         return vulns, dep.get('dependencies', []), current_path
 
     with ThreadPoolExecutor(max_workers=MAX_SCAN_WORKERS) as ex:

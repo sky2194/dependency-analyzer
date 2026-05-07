@@ -8,7 +8,7 @@ function Node({ node, depth = 0, showVulnOnly }) {
   const hasChildren = node.dependencies?.length > 0
   const vulns = node.vulnerabilities || []
   const isVuln = vulns.length > 0
-  const topSev = vulns[0]?.severity
+  const topSev = vulns[0]?.severity?.toUpperCase()
   const topCvss = vulns[0]?.cvss_score
   const fixVersion = vulns[0]?.fix_version
 
