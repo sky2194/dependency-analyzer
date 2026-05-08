@@ -13,6 +13,15 @@ def get_latest_version(name):
     return None
 
 def parse(content):
+    # Reject content with no recognizable structure
+    has_valid_line = any(
+        re.match(r'^[A-Za-z][A-Za-z0-9_\-\.]*\s*[=><~!]', line.strip()) or
+        re.match(r'^[A-Za-z][A-Za-z0-9_\-\.]+$', line.strip())
+        for line in content.splitlines()
+        if line.strip() and not line.strip().startswith('#')
+    )
+    if not has_valid_line:
+        raise ValueError("No valid Python package declarations found")
     deps = []
     for line in content.splitlines():
         line = line.strip()
