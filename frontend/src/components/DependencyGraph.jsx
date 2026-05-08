@@ -147,7 +147,7 @@ export default function DependencyGraph({ data }) {
           {directs.map((d, i) => (
             <g key={`re-${i}`}>
               <line x1={root.x} y1={root.y + 22} x2={d.x} y2={d.y - 22}
-                stroke="var(--border-mid)" strokeWidth="1" strokeDasharray="3 4" opacity="0.6" />
+                stroke="var(--text-muted)" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.7" />
               <text x={(root.x + d.x) / 2} y={(root.y + d.y) / 2 - 4}
                 fontSize="10" fill="var(--text-muted)" textAnchor="middle">direct</text>
             </g>
@@ -155,10 +155,13 @@ export default function DependencyGraph({ data }) {
 
           {/* direct → transitive edges */}
           {transitives.map((t, i) => (
-            <line key={`te-${i}`}
-              x1={t.parentX} y1={t.parentY + 22}
-              x2={t.x} y2={t.y - 22}
-              stroke="var(--border-mid)" strokeWidth="1" strokeDasharray="3 4" opacity="0.4" />
+            <g key={`te-${i}`}>
+              <line x1={t.parentX} y1={t.parentY + 22}
+                x2={t.x} y2={t.y - 22}
+                stroke="var(--text-muted)" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.6" />
+              <text x={(t.parentX + t.x) / 2} y={(t.parentY + t.y) / 2 - 4}
+                fontSize="9" fill="var(--text-muted)" textAnchor="middle" opacity="0.8">transitive</text>
+            </g>
           ))}
 
           {/* root */}
