@@ -149,7 +149,7 @@ export default function Results() {
       {/* Clickable summary cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: 10, marginBottom: 28 }}>
         <SummaryCard value={summary.total_packages} label="Total Packages" color="var(--info)" onClick={goToGraph} hint="View Graph" />
-        <SummaryCard value={summary.vulnerabilities} label="Vulnerabilities" color="var(--critical)" onClick={() => goToVulns('ALL')} hint="View All" />
+        <SummaryCard value={summary.vulnerabilities} label="Vulnerabilities" color="var(--critical)" onClick={() => goToVulns('ALL')} hint="View Details" />
         {SEVS.map(s => (
           <SummaryCard key={s} value={counts[s]} label={<SeverityBadge level={s} />} color={SEV_COLORS[s]} onClick={() => goToVulns(s)} hint={`Filter ${s}`} />
         ))}
@@ -159,7 +159,7 @@ export default function Results() {
       <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', marginBottom: 24 }}>
         {TABS.map((t, i) => (
           <button key={t} onClick={() => setTab(i)} style={{ padding: '9px 20px', background: 'none', border: 'none', borderBottom: `2px solid ${tab === i ? 'var(--accent)' : 'transparent'}`, color: tab === i ? 'var(--accent)' : 'var(--muted)', fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 13, cursor: 'pointer', marginBottom: -1 }}>
-            {t} {i === 1 && summary.vulnerabilities > 0 && <span style={{ background: 'var(--critical)', color: 'var(--white)', borderRadius: 10, padding: '1px 6px', fontSize: 10, marginLeft: 4 }}>{summary.vulnerabilities}</span>}
+            {t}
           </button>
         ))}
       </div>

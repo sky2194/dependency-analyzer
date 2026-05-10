@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
-  testDir: './tests',
+  testDir: '.',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: 0, // Strict mode - no retries
@@ -24,6 +24,21 @@ export default defineConfig({
     },
     {
       name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
+    },
+    {
+      name: 'responsive-chromium',
+      testMatch: /responsive\/.*\.spec\.ts/,
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'responsive-firefox',
+      testMatch: /responsive\/.*\.spec\.ts/,
+      use: { ...devices['Desktop Firefox'] },
+    },
+    {
+      name: 'responsive-webkit',
+      testMatch: /responsive\/.*\.spec\.ts/,
       use: { ...devices['Desktop Safari'] },
     },
   ],

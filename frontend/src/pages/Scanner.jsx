@@ -57,9 +57,9 @@ export default function Scanner() {
         {/* Ecosystem tabs */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginBottom: 16 }}>
           {[{id:'npm',label:'npm',sub:'package.json',color:'var(--npm-color)'},{id:'pypi',label:'PyPI',sub:'requirements.txt',color:'var(--pypi-color)'},{id:'maven',label:'Maven',sub:'pom.xml',color:'var(--maven-color)'}].map(e => (
-            <div key={e.id} onClick={() => setEcosystem(e.id)} style={{ background: ecosystem===e.id ? 'var(--orange-dim)' : 'var(--bg-card)', border: `1px solid ${ecosystem===e.id ? 'var(--orange)' : 'var(--border)'}`, borderRadius: 'var(--radius-sm)', padding: '10px 14px', cursor: 'pointer', transition: 'all 0.15s' }}>
-              <div style={{ fontSize: 13, fontWeight: 700, fontFamily: 'var(--font-mono)', color: ecosystem===e.id ? 'var(--orange)' : e.color }}>● {e.label}</div>
-              <div style={{ fontSize: 10, color: ecosystem===e.id ? 'var(--orange)' : 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginTop: 2 }}>{e.sub}</div>
+            <div key={e.id} onClick={() => setEcosystem(e.id)} style={{ background: ecosystem===e.id ? `${e.color}20` : 'var(--bg-card)', border: `1px solid ${ecosystem===e.id ? e.color : 'var(--border)'}`, borderRadius: 'var(--radius-sm)', padding: '10px 14px', cursor: 'pointer', transition: 'all 0.15s' }}>
+              <div style={{ fontSize: 13, fontWeight: 700, fontFamily: 'var(--font-mono)', color: ecosystem===e.id ? e.color : e.color }}>● {e.label}</div>
+              <div style={{ fontSize: 10, color: ecosystem===e.id ? e.color : 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginTop: 2 }}>{e.sub}</div>
             </div>
           ))}
         </div>
@@ -69,16 +69,8 @@ export default function Scanner() {
           onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--orange)'; e.currentTarget.style.background = 'var(--orange-dim)' }}
           onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-light)'; e.currentTarget.style.background = 'var(--bg-card)' }}>
           <div style={{ fontSize: 28, marginBottom: 8 }}>📂</div>
-          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Drop file or click to browse</div>
+          <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>Drop file or click to load example</div>
           <div style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>package.json · package-lock.json · requirements.txt · pom.xml</div>
-        </div>
-
-        {/* Example link */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Need an example?</span>
-          <span onClick={() => setCode(ECOSYSTEMS[ecosystem]?.sampleContent || '')} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: `${eco?.color}20`, border: `1px solid ${eco?.color}`, padding: '4px 10px', borderRadius: 4, fontSize: 11, fontWeight: 600, color: eco?.color, fontFamily: 'var(--font-mono)', cursor: 'pointer' }}>
-            ↓ Load {eco?.file || 'package.json'} example
-          </span>
         </div>
 
         {code && eco && (
