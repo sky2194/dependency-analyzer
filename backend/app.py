@@ -7,6 +7,7 @@ import sys
 import uuid
 import logging
 import copy
+import time
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
 log = logging.getLogger(__name__)
@@ -291,8 +292,8 @@ def run_analysis(body):
     graph = {'name': project_name, 'version': parsed.get('project_version', '1.0.0'),
              'type': 'root', 'dependencies': graph_deps, 'vulnerabilities': []}
 
-    # Generate scan_id for session isolation
-    scan_id = str(uuid.uuid4())
+    # Generate transaction_id for session isolation
+    transaction_id = str(uuid.uuid4())
     
     # Calculate consistent package count with cycle detection
     total_packages = _count_packages(graph_deps)
@@ -310,30 +311,54 @@ def run_analysis(body):
             counts[sev] += 1
     risk_score = min(100, round(counts['CRITICAL']*25 + counts['HIGH']*10 + counts['MEDIUM']*4 + counts['LOW']*1))
     
-    # Build immutable transaction snapshot
-    transaction_id = str(uuid.uuid4())
+    # Calculate risk label for frontend display
+    if risk_score >= 90:
+        risk_label = 'Critical'
+    elif risk_score >= 70:
+        risk_label = 'High'
+    elif risk_score >= 40:
+        risk_label = 'Medium'
+    elif risk_score >= 1:
+        risk_label = 'Low'
+    else:
+        risk_label = 'Secure'
+
+    # Calculate priority fix count (critical + high severity)
+    priority_fix_count = counts['CRITICAL'] + counts['HIGH']
+    
+    # Calculate secure package count
+    secure_package_count = total_packages - len(grouped_vulns)
+    
+    # Calculate vulnerable package count
+    vulnerable_package_count = len(grouped_vulns)
+
+    # Build immutable transaction snapshot with canonical data contract
     scan_result = {
         'transaction_id': transaction_id,
+        'snapshot_version': 1,
         'status': 'COMPLETED',
-        'snapshot': True,
-        'immutable_snapshot': True,
         'ecosystem': 'npm' if ecosystem == 'npm-lock' else ecosystem,
         'project_name': project_name,
-        'input_packages': len(direct_deps),
-        'resolved_packages': total_packages,
-        'direct_dependencies': len([d for d in direct_deps if d.get('type') != 'transitive']),
-        'transitive_dependencies': total_packages - len([d for d in direct_deps if d.get('type') != 'transitive']),
+        'summary': {
+            'risk_score': risk_score,
+            'risk_label': risk_label,
+            'total_packages': total_packages,
+            'direct_dependencies': len([d for d in direct_deps if d.get('type') != 'transitive']),
+            'transitive_dependencies': total_packages - len([d for d in direct_deps if d.get('type') != 'transitive']),
+            'vulnerabilities': len(vulnerabilities),
+            'critical': counts['CRITICAL'],
+            'high': counts['HIGH'],
+            'medium': counts['MEDIUM'],
+            'low': counts['LOW'],
+            'secure_package_count': total_packages - len(grouped_vulns),
+            'vulnerable_package_count': len(grouped_vulns),
+            'priority_fix_count': counts['CRITICAL'] + counts['HIGH'],
+        },
+        'grouped_packages': [],  # STRICT: Always array, even when empty
+        'vulnerabilities': copy.deepcopy(vulnerabilities),
         'graph': copy.deepcopy(graph),
         'dependency_tree': copy.deepcopy(graph),
-        'mediation': copy.deepcopy(mediation),
-        'vulnerabilities': copy.deepcopy(vulnerabilities),
-        'warnings': copy.deepcopy(warnings),
         'scan_timestamp': int(time.time()),
-        'grouped_vulnerabilities': copy.deepcopy(grouped_vulns),
-        'risk_score': risk_score,
-        'raw_vulnerability_count': len(vulnerabilities),
-        'grouped_vulnerability_count': len(grouped_vulns),
-        'explanation': f'Includes direct dependencies and all their transitive dependencies (2 levels deep). Use the "All Packages" tab to see the complete list.',
     }
     
     return jsonify(copy.deepcopy(scan_result))
@@ -399,18 +424,35 @@ def scan_package_deep():
                 counts[sev] += 1
         risk_score = min(100, round(counts['CRITICAL']*25 + counts['HIGH']*10 + counts['MEDIUM']*4 + counts['LOW']*1))
         
+        # Group vulnerabilities by package for frontend display
+        grouped_vulns = group_vulns_by_package(vulnerabilities)
+        
         return jsonify({
+            'transaction_id': str(uuid.uuid4()),
+            'snapshot_version': 1,
+            'status': 'COMPLETED',
             'ecosystem': ecosystem,
-            'package_name': package_name,
-            'total_packages': _count_packages(graph_deps),
+            'project_name': package_name,
+            'summary': {
+                'risk_score': risk_score,
+                'risk_label': 'High' if risk_score >= 70 else 'Medium' if risk_score >= 40 else 'Low',
+                'total_packages': _count_packages(graph_deps),
+                'direct_dependencies': len([d for d in direct_deps if d.get('type') != 'transitive']),
+                'transitive_dependencies': _count_packages(graph_deps) - len([d for d in direct_deps if d.get('type') != 'transitive']),
+                'vulnerabilities': len(vulnerabilities),
+                'critical': counts['CRITICAL'],
+                'high': counts['HIGH'],
+                'medium': counts['MEDIUM'],
+                'low': counts['LOW'],
+                'secure_package_count': _count_packages(graph_deps) - len(grouped_vulns),
+                'vulnerable_package_count': len(grouped_vulns),
+                'priority_fix_count': counts['CRITICAL'] + counts['HIGH'],
+            },
+            'grouped_packages': [],
+            'vulnerabilities': vulnerabilities,
             'graph': graph,
             'dependency_tree': graph,
-            'mediation': mediation,
-            'vulnerabilities': vulnerabilities,
-            'warnings': [],
             'scan_timestamp': int(time.time()),
-            'grouped_vulnerabilities': group_vulns_by_package(vulnerabilities),
-            'risk_score': risk_score,
         })
     except Exception as e:
         log.error(f"Deep scan error: {e}")
