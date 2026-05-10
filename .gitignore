@@ -90,3 +90,14 @@ dist/
 build/
 .env
 *.log
+# Playwright test results
+playwright-report/
+test-results/
+playwright/.cache/
+blob-report/
+playwright/.auth/
+
+# Optional traces/videos/screenshots (if you don’t want them in git)
+**/trace.zip
+**/*.webm
+**/*.png
