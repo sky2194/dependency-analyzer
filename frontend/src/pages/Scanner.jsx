@@ -39,7 +39,7 @@ export default function Scanner() {
   return (
     <div className="scanner-layout" style={{ display: 'grid', gridTemplateColumns: '1fr 320px', minHeight: 'calc(100vh - 52px)' }}>
       {/* MAIN */}
-      <div style={{ padding: '28px 32px', borderRight: '1px solid var(--border)', overflowX: 'auto' }}>
+      <div style={{ padding: '28px 32px', borderRight: '1px solid var(--border)', overflowX: 'hidden', width: '100%', maxWidth: '100%' }}>
         <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 700, letterSpacing: -0.5, marginBottom: 4 }}>Dependency Vulnerability Scanner</h1>
         <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 24, lineHeight: 1.5 }}>
           Upload or paste your manifest file. We resolve the full dependency tree and cross-reference against NVD + OSV databases.
@@ -84,7 +84,7 @@ export default function Scanner() {
           onChange={e => setCode(e.target.value)}
           rows={10}
           placeholder={`Paste your ${eco?.file || "manifest"} here...\n\n${eco?.sampleContent || ""}`}
-          style={{ width: '100%', background: 'var(--code-bg)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 14, fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text)', lineHeight: 1.6, minHeight: 180, outline: 'none', resize: 'vertical', transition: 'border-color 0.2s' }}
+          style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box', background: 'var(--code-bg)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 14, fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text)', lineHeight: 1.6, minHeight: 180, outline: 'none', resize: 'vertical', transition: 'border-color 0.2s', overflowX: 'hidden', wordWrap: 'break-word', whiteSpace: 'pre-wrap' }}
           onFocus={e => e.target.style.borderColor = 'var(--orange)'}
           onBlur={e => e.target.style.borderColor = 'var(--border)'}
         />

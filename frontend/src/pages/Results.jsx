@@ -102,7 +102,7 @@ export default function Results() {
   const goToVulns = (sev = 'ALL') => { setTab(1); setSevFilter(sev) }
 
   return (
-    <div className="page-container-md">
+    <div className="page-container-md" style={{ overflowX: 'hidden', width: '100%', maxWidth: '100%' }}>
 
       {/* Header: title left, actions right */}
       <div className="results-header" style={{ display: 'flex', alignItems: 'flex-start', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>

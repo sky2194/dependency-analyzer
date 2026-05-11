@@ -210,6 +210,7 @@ export async function assertMobileNavigationUsable(page: Page, navSelector: stri
  * Assert form inputs are accessible
  */
 export async function assertFormInputsAccessible(page: Page, formSelector: string): Promise<void> {
+  // Use descendant selector (space) instead of direct child (>) to find nested inputs
   const inputs = await page.locator(`${formSelector} input, ${formSelector} textarea, ${formSelector} select`).count()
   if (inputs === 0) {
     throw new Error(`Form "${formSelector}" has no input fields`)

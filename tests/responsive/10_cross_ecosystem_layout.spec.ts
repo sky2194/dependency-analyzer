@@ -54,8 +54,6 @@ require (
 }
 
 test.describe('Cross-Ecosystem Layout Validation', () => {
-  const ALL_DEVICES = [...MOBILE_DEVICES, ...TABLET_DEVICES, ...DESKTOP_VIEWPORTS]
-
   test.describe('NPM - Large Dependency Trees', () => {
     test('should render large dependency trees safely on mobile', async ({ page }) => {
       await setViewport(page, MOBILE_DEVICES[0].viewport)
@@ -103,7 +101,7 @@ test.describe('Cross-Ecosystem Layout Validation', () => {
       await page.waitForLoadState('networkidle')
       
       await assertNoHorizontalOverflow(page)
-      await assertNoTextOverflow(page, 'h1, h2, h3, [class*="package"]')
+      await assertNoTextOverflow(page, ['h1', 'h2', 'h3', '[class*="package"]'])
     })
 
     test('should wrap long artifact names correctly on tablet', async ({ page }) => {
@@ -384,8 +382,6 @@ require (
   })
 
   test.describe('Ecosystem-Specific Layout Validation', () => {
-    const ALL_DEVICES = [...MOBILE_DEVICES, ...TABLET_DEVICES, ...DESKTOP_VIEWPORTS]
-
     test('npm should handle package.json format correctly', async ({ page }) => {
       await setViewport(page, DESKTOP_VIEWPORTS[0].viewport)
       await page.goto(BASE_URL)

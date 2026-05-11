@@ -55,8 +55,9 @@ const ECOSYSTEM_CONFIGS = [
   { id: 'go', file: 'go.mod', sample: ECOSYSTEM_SAMPLES.go },
 ]
 
+const ALL_DEVICES = [...MOBILE_DEVICES, ...TABLET_DEVICES, ...DESKTOP_VIEWPORTS]
+
 test.describe('Scan Flow Responsiveness', () => {
-  const ALL_DEVICES = [...MOBILE_DEVICES, ...TABLET_DEVICES, ...DESKTOP_VIEWPORTS]
 
   ALL_DEVICES.forEach((device) => {
     test.describe(`${device.name}`, () => {
@@ -71,7 +72,7 @@ test.describe('Scan Flow Responsiveness', () => {
         if (!config) return
 
         // Select npm tab
-        const npmTab = page.locator('div:has-text("npm")')
+        const npmTab = page.locator('button, div').filter({ hasText: 'npm' }).first()
         const tabVisible = await npmTab.isVisible()
         if (tabVisible) {
           await npmTab.click()
@@ -87,7 +88,7 @@ test.describe('Scan Flow Responsiveness', () => {
         }
 
         // Click scan button (may navigate to results)
-        const scanButton = page.locator('button:has-text("Scan")')
+        const scanButton = page.locator('button').filter({ hasText: 'Scan' }).first()
         const scanVisible = await scanButton.isVisible()
         if (scanVisible) {
           await scanButton.click()
@@ -214,8 +215,6 @@ test.describe('Scan Flow Responsiveness', () => {
 })
 
 test.describe('Scan Flow Stability Across Ecosystems', () => {
-  const ALL_DEVICES = [...MOBILE_DEVICES, ...TABLET_DEVICES, ...DESKTOP_VIEWPORTS]
-
   ECOSYSTEM_CONFIGS.forEach((config) => {
     test.describe(`${config.id} ecosystem`, () => {
       test('should render correctly on mobile', async ({ page }) => {
