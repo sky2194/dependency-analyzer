@@ -226,7 +226,7 @@ export default function Dashboard() {
 
       {error && <div style={{ background: 'var(--vuln-bg)', border: '1px solid var(--vuln-border)', borderRadius: 'var(--radius)', padding: '10px 14px', color: 'var(--red)', fontSize: 12, marginBottom: 16 }}>⚠️ {error}</div>}
       
-      <div style={{ marginBottom: 16, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      {/* <div style={{ marginBottom: 16, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <button onClick={() => loadExample('npm')} style={{ padding: '8px 16px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 12, cursor: 'pointer', color: 'var(--text)', transition: 'all 0.15s' }}>
           📦 Load npm example
         </button>
@@ -234,9 +234,9 @@ export default function Dashboard() {
           🐍 Load Python example
         </button>
         <button onClick={() => loadExample('maven')} style={{ padding: '8px 16px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 12, cursor: 'pointer', color: 'var(--text)', transition: 'all 0.15s' }}>
-          ☕ Load Maven example
+          ☕ Maven Dependency Mediation rules
         </button>
-      </div>
+      </div> */}
       
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 24, alignItems: 'start' }}>
         <FileUpload onAnalyze={analyze} loading={loading} onEcosystemChange={setEco} />
