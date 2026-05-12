@@ -118,7 +118,7 @@ export default function Scanning() {
 
   return (
     <div style={{ minHeight: 'calc(100vh - 52px)', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)', padding: 20 }}>
-      <div style={{ width: '100%', maxWidth: 480, padding: 40, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, boxShadow: '0 24px 64px var(--overlay-bg)' }}>
+      <div style={{ width: '100%', maxWidth: 480, width: '90%', padding: 40, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, boxShadow: '0 24px 64px var(--overlay-bg)' }}>
 
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <div style={{ fontSize: 40, marginBottom: 12 }}>🔐</div>

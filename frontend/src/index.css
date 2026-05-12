@@ -479,3 +479,86 @@ body {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+/* ── Missing Variable Aliases ─────────────────────────────────── */
+:root {
+  --text-2: var(--text-secondary);
+  --text-3: var(--text-muted);
+  --font-d: var(--font-display);
+  --font-m: var(--font-mono);
+  --font-b: var(--font-body);
+  --accent-dim: var(--orange-dim);
+  --border-strong: var(--border-light);
+}
+[data-theme="light"] {
+  --text-2: var(--text-secondary);
+  --text-3: var(--text-muted);
+  --font-d: var(--font-display);
+  --font-m: var(--font-mono);
+  --font-b: var(--font-body);
+  --accent-dim: var(--orange-dim);
+  --border-strong: var(--border-light);
+}
+
+/* ── Dashboard Scanner Grid Responsive ─────────────────────────── */
+@media (max-width: 768px) {
+  .page-container > div[style*="gridTemplateColumns"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── Nav Mobile Fix ─────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  nav {
+    gap: 2px !important;
+    padding: 0 8px !important;
+  }
+  nav a, nav button {
+    font-size: 11px !important;
+    padding: 4px 6px !important;
+  }
+}
+
+/* ── Landing Light Mode Fixes ───────────────────────────────────── */
+[data-theme="light"] .lp-problem-num {
+  color: var(--border) !important;
+}
+[data-theme="light"] .lp-showcase {
+  background: linear-gradient(180deg, var(--bg) 0%, var(--bg-panel) 50%, var(--bg) 100%) !important;
+}
+[data-theme="light"] .lp-showcase-screen {
+  box-shadow: 0 40px 80px rgba(0,0,0,.15), 0 0 0 1px var(--border) !important;
+}
+[data-theme="light"] .lp-terminal {
+  box-shadow: 0 20px 60px rgba(0,0,0,.1) !important;
+}
+[data-theme="light"] .lp-vuln-row {
+  background: var(--bg-elevated) !important;
+}
+[data-theme="light"] .lp-integration-badge:hover {
+  background: var(--bg-hover) !important;
+}
+
+/* ── FileUpload textarea mobile ─────────────────────────────────── */
+@media (max-width: 768px) {
+  textarea {
+    font-size: 11px !important;
+    min-height: 120px;
+  }
+}
+
+/* ── Analytics mobile sidebar ───────────────────────────────────── */
+@media (max-width: 768px) {
+  .analytics-layout > div:last-child {
+    display: none !important;
+  }
+  .analytics-layout > div:first-child {
+    padding: 16px !important;
+  }
+}
+
+/* ── Learn page mobile ──────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .learn-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
