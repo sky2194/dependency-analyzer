@@ -3,13 +3,7 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "rewrites": [
-    { 
-      "source": "/api/(.*)", 
-      "destination": "http://159.203.30.43/api/$1",
-      "headers": {
-        "X-Signature": "$http_x_signature"
-      }
-    },
+    { "source": "/api/(.*)", "destination": "http://159.203.30.43/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
