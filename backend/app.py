@@ -200,6 +200,48 @@ def group_vulns_by_package(vulnerabilities):
         g['cves'].sort(key=lambda v: sev_order.get(v['severity'], 3))
     return result
 
+
+def _build_all_packages(graph_deps, grouped_vulns):
+    """Build complete package list with vulnerability info for each package."""
+    vuln_map = {}
+    for g in grouped_vulns:
+        key = f"{g['package']}@{g['version']}"
+        vuln_map[key] = g
+
+    all_pkgs = []
+    visited = set()
+    
+    def walk(deps):
+        for dep in deps:
+            key = f"{dep.get('name')}@{dep.get('version')}"
+            if key in visited:
+                continue
+            visited.add(key)
+            g = vuln_map.get(key)
+            if g:
+                all_pkgs.append({
+                    'package': g['package'],
+                    'version': g['version'],
+                    'vulnerabilities': g['cves'],
+                    'highestSeverity': g['highest_severity'],
+                    'recommended_fix': g['recommended_fix'],
+                })
+            else:
+                all_pkgs.append({
+                    'package': dep.get('name'),
+                    'version': dep.get('version'),
+                    'vulnerabilities': [],
+                    'highestSeverity': None,
+                    'recommended_fix': None,
+                })
+            walk(dep.get('dependencies', []))
+    
+    walk(deps)
+    # Sort: vulnerable first (by severity), then secure
+    sev_order = {'CRITICAL': 0, 'HIGH': 1, 'MEDIUM': 2, 'LOW': 3, None: 99}
+    all_pkgs.sort(key=lambda p: sev_order.get(p['highestSeverity'], 99))
+    return all_pkgs
+
 def _count_packages(deps, visited=None):
     """Count packages with cycle detection to prevent infinite recursion."""
     if visited is None:
@@ -354,7 +396,8 @@ def run_analysis(body):
             'vulnerable_package_count': len(grouped_vulns),
             'priority_fix_count': counts['CRITICAL'] + counts['HIGH'],
         },
-        'grouped_packages': [],  # STRICT: Always array, even when empty
+        'grouped_packages': _build_all_packages(graph_deps, grouped_vulns),
+        'fixes': [v for v in vulnerabilities if v.get('fix_version')],
         'vulnerabilities': copy.deepcopy(vulnerabilities),
         'graph': copy.deepcopy(graph),
         'dependency_tree': copy.deepcopy(graph),

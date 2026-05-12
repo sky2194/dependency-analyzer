@@ -287,7 +287,7 @@ body {
   .app-container { padding: 12px; }
   
   /* Reduce sidebar width on tablet */
-  .analytics-layout {
+  .analytics-layout-OLD {
     grid-template-columns: 1fr 450px !important;
   }
   
@@ -306,7 +306,7 @@ body {
   
   /* Stack grid layouts */
   .scanner-layout,
-  .analytics-layout {
+  .analytics-layout-OLD {
     grid-template-columns: 1fr !important;
     height: auto !important;
   }
@@ -443,7 +443,7 @@ body {
 }
 
 /* ANALYTICS SAFE FLEX AREA */
-.analytics-layout {
+.analytics-layout-OLD {
   display: grid !important;
   grid-template-columns: 1fr 400px !important;
   min-height: calc(100vh - 52px);
@@ -600,7 +600,7 @@ body {
 
 /* ── Analytics Page Styles ──────────────────────────────────────── */
 .analytics-main { padding: 24px 28px; overflow-x: hidden; overflow-y: auto; }
-.analytics-right { border-left: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; gap: 16px; background: var(--bg-panel); overflow-y: auto; max-height: calc(100vh - 52px); position: sticky; top: 52px; }
+.analytics-right { border-left: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; gap: 16px; background: var(--bg-panel); overflow-y: auto; }
 .analytics-btn { padding: 8px 14px; font-size: 12; font-weight: 600; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-secondary); cursor: pointer; }
 .analytics-btn:hover { background: var(--bg-elevated); color: var(--text); }
 .export-item { padding: 8px 12px; cursor: pointer; font-size: 12px; color: var(--text); }
@@ -637,4 +637,36 @@ body {
   .analytics-divider-v { display: none !important; }
   .analytics-severity-pills { width: 100%; justify-content: space-around; }
   .priority-fix-row { gap: 8px; }
+}
+
+/* ── Analytics Layout Override ──────────────────────────────────── */
+.analytics-layout {
+  display: grid !important;
+  grid-template-columns: 1fr 380px !important;
+  height: calc(100vh - 52px);
+  overflow: hidden;
+}
+.analytics-main {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding: 24px 28px !important;
+}
+.analytics-right {
+  overflow-y: auto !important;
+  border-left: 1px solid var(--border) !important;
+  padding: 20px !important;
+  background: var(--bg-panel) !important;
+}
+@media (max-width: 900px) {
+  .analytics-layout {
+    grid-template-columns: 1fr !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  .analytics-right {
+    display: none !important;
+  }
+  .analytics-main {
+    padding: 16px !important;
+  }
 }
