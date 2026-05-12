@@ -176,44 +176,37 @@ export default function Analytics() {
           </div>
         </div>
 
-        {/* Summary Cards */}
-        <div className="analytics-summary-grid">
-          <div className="analytics-stat-card">
-            <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--blue)', fontFamily: 'var(--font-mono)' }}>{totalPackages}</div>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Total Packages</div>
-            <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 4 }}>{directDeps} direct + {transitiveDeps} transitive</div>
-          </div>
-          <div className="analytics-stat-card">
-            <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--critical)', fontFamily: 'var(--font-mono)' }}>{summary.vulnerable_package_count || 0}</div>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Vulnerable</div>
-          </div>
-          <div className="analytics-stat-card">
-            <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--green)', fontFamily: 'var(--font-mono)' }}>{summary.secure_package_count || 0}</div>
-            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Secure</div>
-          </div>
-        </div>
-
-        {/* Risk Score Bar */}
-        <div className="analytics-risk-bar">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <div style={{ width: 56, height: 56, borderRadius: '50%', background: `conic-gradient(${SEV_COLOR[riskLabel?.toUpperCase()] || 'var(--critical)'} 0% ${riskScore}%, var(--border) ${riskScore}% 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', flexShrink: 0 }}>
-              <div style={{ position: 'absolute', inset: 5, borderRadius: '50%', background: 'var(--bg-card)' }} />
-              <span style={{ position: 'relative', zIndex: 1, fontFamily: 'var(--font-mono)', fontSize: 16, fontWeight: 700, color: SEV_COLOR[riskLabel?.toUpperCase()] || 'var(--critical)' }}>{riskScore}</span>
-            </div>
-            <div>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 22, fontWeight: 700, color: SEV_COLOR[riskLabel?.toUpperCase()] || 'var(--critical)', letterSpacing: -1 }}>{riskScore}<span style={{ fontSize: 14, color: 'var(--text-muted)' }}>/100</span></div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: SEV_COLOR[riskLabel?.toUpperCase()] || 'var(--critical)', background: SEV_DIM[riskLabel?.toUpperCase()] || 'var(--red-dim)', padding: '2px 8px', borderRadius: 3, fontFamily: 'var(--font-mono)', display: 'inline-block', textTransform: 'capitalize' }}>{riskLabel || 'Unknown'} Risk</div>
-            </div>
-          </div>
-          <div style={{ width: 1, background: 'var(--border)', height: 40, flexShrink: 0 }} className="analytics-divider-v" />
-          <div className="analytics-severity-pills">
-            {[{v:totalPackages,l:'Packages',c:'var(--text)',icon:'📦'},{v:totalVulns,l:'Vulns',c:'var(--high)',icon:'⚠️'},{v:counts.CRITICAL,l:'Critical',c:'var(--critical)',icon:'🔴'},{v:counts.HIGH,l:'High',c:'var(--high)',icon:'🟡'}].map(({v,l,c,icon}) => (
-              <div key={l} style={{ textAlign: 'center', padding: '0 6px' }}>
-                <div style={{ fontSize: 10, marginBottom: 2 }}>{icon}</div>
-                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 20, fontWeight: 700, color: c }}>{v}</div>
-                <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{l}</div>
+        {/* Unified Risk + Stats Card */}
+        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: 20, marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
+            {/* Risk Ring */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0 }}>
+              <div style={{ width: 60, height: 60, borderRadius: '50%', background: `conic-gradient(${SEV_COLOR[riskLabel?.toUpperCase()] || 'var(--critical)'} 0% ${riskScore}%, var(--border) ${riskScore}% 100%)`, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                <div style={{ position: 'absolute', inset: 6, borderRadius: '50%', background: 'var(--bg-card)' }} />
+                <span style={{ position: 'relative', zIndex: 1, fontFamily: 'var(--font-mono)', fontSize: 18, fontWeight: 700, color: SEV_COLOR[riskLabel?.toUpperCase()] || 'var(--critical)' }}>{riskScore}</span>
               </div>
-            ))}
+              <div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Risk Score</div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 22, fontWeight: 700, color: SEV_COLOR[riskLabel?.toUpperCase()] || 'var(--critical)', letterSpacing: -1 }}>{riskScore}<span style={{ fontSize: 13, color: 'var(--text-muted)' }}>/100</span></div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: SEV_COLOR[riskLabel?.toUpperCase()] || 'var(--critical)', background: SEV_DIM[riskLabel?.toUpperCase()] || 'var(--red-dim)', padding: '1px 7px', borderRadius: 3, fontFamily: 'var(--font-mono)', display: 'inline-block', textTransform: 'capitalize' }}>{riskLabel || 'Unknown'}</div>
+              </div>
+            </div>
+            <div style={{ width: 1, height: 48, background: 'var(--border)', flexShrink: 0 }} className="analytics-divider-v" />
+            {/* Stats */}
+            <div style={{ display: 'flex', gap: 20, flex: 1, flexWrap: 'wrap' }}>
+              {[
+                { v: totalPackages, l: 'Packages', sub: `${directDeps} direct · ${transitiveDeps} transitive`, c: 'var(--blue)' },
+                { v: totalVulns, l: 'Vulnerabilities', sub: `${summary.vulnerable_package_count || 0} packages affected`, c: 'var(--high)' },
+                { v: counts.CRITICAL, l: 'Critical', sub: counts.CRITICAL > 0 ? 'Requires action' : 'None found', c: 'var(--critical)' },
+                { v: counts.HIGH, l: 'High', sub: counts.HIGH > 0 ? 'Review recommended' : 'None found', c: 'var(--high)' },
+              ].map(({ v, l, sub, c }) => (
+                <div key={l} style={{ minWidth: 80 }}>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: 22, fontWeight: 700, color: c, lineHeight: 1 }}>{v}</div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text)', marginTop: 2 }}>{l}</div>
+                  <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{sub}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -317,22 +310,28 @@ export default function Analytics() {
             )}
 
             {/* Filters */}
-            <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+            <div className="filter-toolbar">
+              <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginRight: 4 }}>Severity</span>
               {['ALL','CRITICAL','HIGH','MEDIUM','LOW'].map(s => (
                 <button key={s} onClick={() => dispatch({ type: 'SET_SEV_FILTER', payload: s })} className={`filter-pill ${state.sevFilter===s ? 'active' : ''}`}>
                   {s}{s!=='ALL' && ` (${counts[s]||0})`}
                 </button>
               ))}
+              <div className="filter-divider" />
+              <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginRight: 4 }}>View</span>
               <button onClick={() => dispatch({ type: 'TOGGLE_SHOW_DIRECT_ONLY' })} className={`filter-pill ${state.showDirectOnly ? 'active' : ''}`}>
-                {state.showDirectOnly ? '✓' : '○'} Direct Only
+                {state.showDirectOnly ? '✓ Direct' : 'Direct Only'}
               </button>
               <button onClick={() => dispatch({ type: 'SET_VIEW_MODE', payload: state.viewMode === 'list' ? 'grouped' : 'list' })} className="filter-pill">
-                {state.viewMode === 'list' ? '📋 Group' : '📄 List'}
+                {state.viewMode === 'list' ? '▦ Grouped' : '☰ List'}
               </button>
               {directOnlyFiltered.length > 5 && (
-                <button onClick={() => dispatch({ type: 'TOGGLE_VULN_EXPANDED' })} className={`filter-pill ${state.vulnExpanded ? 'active' : ''}`}>
-                  {state.vulnExpanded ? '▼ Less' : '▶ All'} ({directOnlyFiltered.length})
-                </button>
+                <>
+                  <div className="filter-divider" />
+                  <button onClick={() => dispatch({ type: 'TOGGLE_VULN_EXPANDED' })} className={`filter-pill ${state.vulnExpanded ? 'active' : ''}`}>
+                    {state.vulnExpanded ? '▼ Collapse' : `▶ Show All (${directOnlyFiltered.length})`}
+                  </button>
+                </>
               )}
             </div>
 

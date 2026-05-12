@@ -185,8 +185,6 @@ button { font-family: var(--font-ui); -webkit-appearance: none; -moz-appearance:
 /* Mobile */
 @media (max-width: 768px) {
   .scanner-layout { grid-template-columns: 1fr !important; height: auto !important; }
-  .analytics-layout { grid-template-columns: 1fr !important; height: auto !important; }
-  .analytics-right { display: none !important; }
   nav { padding: 0 12px !important; }
   
   /* Hide sidebars on mobile */
@@ -286,10 +284,7 @@ body {
   .nav { flex-wrap: wrap; }
   .app-container { padding: 12px; }
   
-  /* Reduce sidebar width on tablet */
-  .analytics-layout-OLD {
-    grid-template-columns: 1fr 450px !important;
-  }
+  
   
   /* Remove attribute selectors that might conflict */
   [style*="gridTemplateColumns"] {
@@ -306,10 +301,7 @@ body {
   
   /* Stack grid layouts */
   .scanner-layout,
-  .analytics-layout-OLD {
-    grid-template-columns: 1fr !important;
-    height: auto !important;
-  }
+  
   
   /* Remove attribute selectors that might conflict */
   [style*="gridTemplateColumns"] {
@@ -318,7 +310,6 @@ body {
   }
   
   /* Stack right panel below main content on mobile */
-  .analytics-right,
   .scanner-layout > div:nth-child(2) {
     grid-column: 1 !important;
     grid-row: auto !important;
@@ -442,12 +433,7 @@ body {
   gap: 16px;
 }
 
-/* ANALYTICS SAFE FLEX AREA */
-.analytics-layout-OLD {
-  display: grid !important;
-  grid-template-columns: 1fr 400px !important;
-  min-height: calc(100vh - 52px);
-}
+
 .scan-overlay {
   position: fixed;
   inset: 0;
@@ -598,10 +584,31 @@ body {
   }
 }
 
-/* ── Analytics Page Styles ──────────────────────────────────────── */
-.analytics-main { padding: 24px 28px; overflow-x: hidden; overflow-y: auto; }
-.analytics-right { border-left: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; gap: 16px; background: var(--bg-panel); overflow-y: auto; }
-.analytics-btn { padding: 8px 14px; font-size: 12; font-weight: 600; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-secondary); cursor: pointer; }
+
+/* ══════════════════════════════════════════════════════════════════
+   Analytics Page — Single Source of Truth
+   ══════════════════════════════════════════════════════════════════ */
+.analytics-layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  height: calc(100vh - 52px);
+  overflow: hidden;
+}
+.analytics-main {
+  padding: 24px 28px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.analytics-right {
+  border-left: 1px solid var(--border);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: var(--bg-panel);
+  overflow-y: auto;
+}
+.analytics-btn { padding: 8px 14px; font-size: 12px; font-weight: 600; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-secondary); cursor: pointer; }
 .analytics-btn:hover { background: var(--bg-elevated); color: var(--text); }
 .export-item { padding: 8px 12px; cursor: pointer; font-size: 12px; color: var(--text); }
 .export-item:hover { background: var(--bg-elevated); }
@@ -631,42 +638,21 @@ body {
 .panel-field { padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid var(--border); }
 .panel-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; font-family: var(--font-mono); margin-bottom: 4px; }
 
-@media (max-width: 768px) {
-  .analytics-main { padding: 16px !important; }
-  .analytics-risk-bar { flex-direction: column; align-items: flex-start; }
-  .analytics-divider-v { display: none !important; }
-  .analytics-severity-pills { width: 100%; justify-content: space-around; }
-  .priority-fix-row { gap: 8px; }
-}
+/* Filter toolbar */
+.filter-toolbar { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; align-items: center; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 14px; }
+.filter-divider { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
 
-/* ── Analytics Layout Override ──────────────────────────────────── */
-.analytics-layout {
-  display: grid !important;
-  grid-template-columns: 1fr 380px !important;
-  height: calc(100vh - 52px);
-  overflow: hidden;
-}
-.analytics-main {
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-  padding: 24px 28px !important;
-}
-.analytics-right {
-  overflow-y: auto !important;
-  border-left: 1px solid var(--border) !important;
-  padding: 20px !important;
-  background: var(--bg-panel) !important;
-}
 @media (max-width: 900px) {
   .analytics-layout {
     grid-template-columns: 1fr !important;
     height: auto !important;
     overflow: visible !important;
   }
-  .analytics-right {
-    display: none !important;
-  }
-  .analytics-main {
-    padding: 16px !important;
-  }
+  .analytics-right { display: none !important; }
+  .analytics-main { padding: 16px !important; }
+  .analytics-risk-bar { flex-direction: column; align-items: flex-start; }
+  .analytics-divider-v { display: none !important; }
+  .analytics-severity-pills { width: 100%; justify-content: space-around; }
+  .priority-fix-row { gap: 8px; }
+  .filter-toolbar { padding: 8px 10px; }
 }
