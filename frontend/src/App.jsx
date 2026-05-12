@@ -61,7 +61,7 @@ export default function App() {
           {/* Nav tabs */}
           {[
             { to: '/',      label: 'Scanner',        end: true },
-            { to: '/learn', label: 'Knowledge Base' },
+            { to: '/learn', label: 'Resource Centre' },
           ].map(({ to, label, end }) => (
             <NavLink key={to} to={to} end={end} style={({ isActive }) => ({
               padding: '6px 13px', fontSize: 13, fontWeight: 600, borderRadius: 6,
