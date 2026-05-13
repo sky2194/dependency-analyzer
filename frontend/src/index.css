@@ -577,7 +577,7 @@ body {
 }
 
 /* ══ Analytics Page ══════════════════════════════════════════════ */
-.a-layout { display: grid; grid-template-columns: 1fr 360px; height: calc(100vh - 52px); overflow: hidden; }
+.a-layout { display: grid; grid-template-columns: 1fr 360px; height: calc(100vh - 52px); max-height: calc(100vh - 52px); overflow: hidden; position: sticky; top: 52px; }
 .a-main { padding: 24px 28px; overflow-y: auto; overflow-x: hidden; min-height: 0; }
 .a-right { border-left: 1px solid var(--border); padding: 16px; overflow-y: auto; background: var(--bg-panel); display: flex; flex-direction: column; gap: 14px; min-height: 0; }
 
