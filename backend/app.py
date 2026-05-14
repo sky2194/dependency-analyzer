@@ -208,6 +208,12 @@ def _build_all_packages(graph_deps, grouped_vulns):
         key = f"{g['package']}@{g['version']}"
         vuln_map[key] = g
 
+    # Top-level deps are direct
+    direct_names = set()
+    for dep in graph_deps:
+        if dep.get('type') == 'direct':
+            direct_names.add(dep.get('name'))
+
     all_pkgs = []
     visited = set()
     
@@ -217,6 +223,7 @@ def _build_all_packages(graph_deps, grouped_vulns):
             if key in visited:
                 continue
             visited.add(key)
+            is_direct = dep.get('name') in direct_names
             g = vuln_map.get(key)
             if g:
                 all_pkgs.append({
@@ -225,6 +232,7 @@ def _build_all_packages(graph_deps, grouped_vulns):
                     'vulnerabilities': g['cves'],
                     'highestSeverity': g['highest_severity'],
                     'recommended_fix': g['recommended_fix'],
+                    'is_direct': is_direct,
                 })
             else:
                 all_pkgs.append({
@@ -233,6 +241,7 @@ def _build_all_packages(graph_deps, grouped_vulns):
                     'vulnerabilities': [],
                     'highestSeverity': None,
                     'recommended_fix': None,
+                    'is_direct': is_direct,
                 })
             walk(dep.get('dependencies', []))
     
