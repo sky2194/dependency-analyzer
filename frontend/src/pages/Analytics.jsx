@@ -150,7 +150,7 @@ export default function Analytics() {
         </div>
 
         {/* Quick explanation */}
-        <div style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '16px', marginBottom: 20 }}>
+        <div style={{ background: 'var(--bg-panel)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '16px', marginBottom: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
           <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
             <span style={{ fontSize: 20 }}>💡</span>
             <div>
