@@ -5,7 +5,7 @@ test.describe('PHASE 8 — Theme Stability Under Load Test', () => {
   test('should toggle dark/light mode without flicker', async ({ page }) => {
     await page.goto('/');
     
-    const themeButton = page.locator('button').filter({ hasText: /☀️|🌙/ });
+    const themeButton = page.locator('button[aria-label="Toggle theme"]');
     
     // Toggle theme multiple times
     for (let i = 0; i < 5; i++) {
@@ -26,7 +26,7 @@ test.describe('PHASE 8 — Theme Stability Under Load Test', () => {
     await page.waitForURL('/scanning');
     
     // Toggle theme during scan
-    const themeButton = page.locator('button').filter({ hasText: /☀️|🌙/ });
+    const themeButton = page.locator('button[aria-label="Toggle theme"]');
     await themeButton.click();
     
     // Wait for scan to complete
@@ -43,7 +43,7 @@ test.describe('PHASE 8 — Theme Stability Under Load Test', () => {
     await page.waitForURL('/scanning');
     
     // Rapid theme switching during loading
-    const themeButton = page.locator('button').filter({ hasText: /☀️|🌙/ });
+    const themeButton = page.locator('button[aria-label="Toggle theme"]');
     for (let i = 0; i < 3; i++) {
       await themeButton.click();
       await page.waitForTimeout(200);
@@ -58,7 +58,7 @@ test.describe('PHASE 8 — Theme Stability Under Load Test', () => {
   test('should navigate during theme change', async ({ page }) => {
     await page.goto('/');
     
-    const themeButton = page.locator('button').filter({ hasText: /☀️|🌙/ });
+    const themeButton = page.locator('button[aria-label="Toggle theme"]');
     
     // Toggle theme and navigate simultaneously
     await themeButton.click();
@@ -89,7 +89,7 @@ test.describe('PHASE 8 — Theme Stability Under Load Test', () => {
     await page.waitForURL('/results', { timeout: 120000 });
     
     // Toggle theme
-    const themeButton = page.locator('button').filter({ hasText: /☀️|🌙/ });
+    const themeButton = page.locator('button[aria-label="Toggle theme"]');
     await themeButton.click();
     await page.waitForTimeout(200);
     
@@ -107,7 +107,7 @@ test.describe('PHASE 8 — Theme Stability Under Load Test', () => {
   test('should not have mixed theme state', async ({ page }) => {
     await page.goto('/');
     
-    const themeButton = page.locator('button').filter({ hasText: /☀️|🌙/ });
+    const themeButton = page.locator('button[aria-label="Toggle theme"]');
     
     // Rapid theme toggles
     for (let i = 0; i < 10; i++) {
@@ -127,7 +127,7 @@ test.describe('PHASE 8 — Theme Stability Under Load Test', () => {
     await page.goto('/');
     
     // Set theme to light
-    const themeButton = page.locator('button').filter({ hasText: /☀️|🌙/ });
+    const themeButton = page.locator('button[aria-label="Toggle theme"]');
     await themeButton.click();
     await page.waitForTimeout(100);
     

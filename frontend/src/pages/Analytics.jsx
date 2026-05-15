@@ -95,13 +95,21 @@ export default function Analytics() {
   const riskColor = SEV_COLOR[riskLabel?.toUpperCase()] || 'var(--critical)'
   const riskDim = SEV_DIM[riskLabel?.toUpperCase()] || 'var(--red-dim)'
 
+  const [exportStatus, setExportStatus] = useState(null) // 'loading' | 'error' | 'success'
+
   const exportReport = async (type) => {
+    setExportStatus('loading')
     try {
       const res = await fetch(`${API_BASE}/api/export/${type}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(result) })
+      if (!res.ok) throw new Error(`Export failed: ${res.status}`)
       const blob = await res.blob(); const url = URL.createObjectURL(blob)
       Object.assign(document.createElement('a'), { href: url, download: `sca-report.${type === 'pdf' ? 'html' : type}` }).click()
-      URL.revokeObjectURL(url); setShowExportMenu(false)
-    } catch { }
+      URL.revokeObjectURL(url); setShowExportMenu(false); setExportStatus('success')
+      setTimeout(() => setExportStatus(null), 2000)
+    } catch {
+      setExportStatus('error')
+      setTimeout(() => setExportStatus(null), 3000)
+    }
   }
 
   const Paginator = ({ page, pages, setPage, total, label }) => {
@@ -132,7 +140,9 @@ export default function Analytics() {
           </div>
           <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
             <div ref={exportRef} style={{ position: 'relative' }}>
-              <button onClick={() => setShowExportMenu(!showExportMenu)} className="a-btn">Export</button>
+              <button onClick={() => setShowExportMenu(!showExportMenu)} className="a-btn">
+                {exportStatus === 'loading' ? 'Exporting...' : exportStatus === 'error' ? 'Failed' : exportStatus === 'success' ? 'Done!' : 'Export'}
+              </button>
               {showExportMenu && <div className="a-dropdown">{['pdf', 'csv', 'json'].map(t => <div key={t} onClick={() => exportReport(t)} className="a-dropdown-item">{t.toUpperCase()}</div>)}</div>}
             </div>
             <button onClick={() => navigate('/scan')} className="a-btn-primary">New Scan</button>

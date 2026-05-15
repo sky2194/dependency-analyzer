@@ -376,6 +376,7 @@ body {
 }
 
 /* Shared UI Utility Classes */
+.scanner-layout { display: grid; grid-template-columns: 1fr 300px; gap: 24px; align-items: start; }
 .page-container { max-width: 1400px; margin: 0 auto; padding: 36px 40px; }
 .page-container-md { max-width: 1200px; margin: 0 auto; padding: 32px 40px; }
 .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); }

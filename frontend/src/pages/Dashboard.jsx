@@ -238,7 +238,7 @@ export default function Dashboard() {
         </button>
       </div> */}
       
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 24, alignItems: 'start' }}>
+      <div className="scanner-layout">
         <FileUpload onAnalyze={analyze} loading={loading} onEcosystemChange={setEco} />
         <RightPanel eco={eco} />
       </div>
