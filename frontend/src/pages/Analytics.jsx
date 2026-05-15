@@ -149,6 +149,7 @@ export default function Analytics() {
               <div style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Risk Score</div>
               <div style={{ fontFamily: 'var(--font-mono)', fontSize: 20, fontWeight: 700, color: riskColor }}>{riskScore}<span style={{ fontSize: 12, color: 'var(--text-muted)' }}>/100</span></div>
               <span className="a-risk-label" style={{ background: riskDim, color: riskColor }}>{riskLabel}</span>
+              <div style={{ fontSize: 9, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginTop: 4, lineHeight: 1.4 }}>Logarithmic scale based on severity counts</div>
             </div>
           </div>
           <div className="a-risk-divider" />
@@ -350,6 +351,12 @@ export default function Analytics() {
         <div className="a-panel">
           <div className="a-panel-hdr"><span>Risk Insights</span></div>
           <div style={{ padding: '10px 14px', fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.7 }}>
+            <div style={{ marginBottom: 12, padding: '8px 10px', background: 'var(--code-bg)', borderRadius: 6, border: '1px solid var(--border)' }}>
+              <div style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', marginBottom: 4 }}>How Risk Score is Calculated</div>
+              <div style={{ fontSize: 11, lineHeight: 1.6 }}>
+                Uses logarithmic weighting: <span style={{ color: 'var(--critical)' }}>Critical</span> (max 40pts), <span style={{ color: 'var(--high)' }}>High</span> (max 30pts), <span style={{ color: 'var(--medium)' }}>Medium</span> (max 20pts), <span style={{ color: 'var(--low)' }}>Low</span> (max 10pts). More vulnerabilities increase score with diminishing returns to avoid immediate cap.
+              </div>
+            </div>
             {vulnPackages.length > 0 && (
               <div style={{ marginBottom: 8 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
