@@ -96,7 +96,7 @@ export default function Landing() {
             <button onClick={() => navigate('/scan')} className="lp-btn-hero">{shield}Start Scanning Free</button>
           </div>
           <div className="lp-hero-stats">
-            {['10,000+|Packages supported','< 2s|Average scan time','3 CVE DBs|NVD, OSV, GitHub','npm · PyPI · Maven|Ecosystems covered'].map(item => {
+            {['2 CVE DBs|NVD + OSV','3 Ecosystems|npm · PyPI · Maven','Full Tree|Direct + Transitive','Real-time|Live vulnerability data'].map(item => {
               const [val, label] = item.split('|')
               return <div className="lp-hero-stat" key={item}><div className="lp-hero-stat-val">{val}</div><div className="lp-hero-stat-label">{label}</div></div>
             })}
@@ -136,7 +136,7 @@ export default function Landing() {
               <p className="lp-section-sub" style={{ marginBottom: 28 }}>DepAnalyzer doesn't just list CVEs. It ranks vulnerabilities by real-world exploitability, maps fix impact, and gives you exact commands to resolve each issue.</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <CheckRow title="Full transitive tree analysis" text="Maps every nested dependency, not just what's in your manifest" />
-                <CheckRow title="CVSS × Exposure scoring" text="Combines severity, attack vector, and fix complexity into a single risk score" />
+                <CheckRow title="Logarithmic risk scoring" text="Weighs critical, high, medium, and low vulnerabilities with diminishing returns into a single prioritized risk score" />
                 <CheckRow title="One-command fix suggestions" text="Exact npm/pip/mvn commands with safe upgrade paths, ready to copy" />
               </div>
             </div>
@@ -150,7 +150,7 @@ export default function Landing() {
                   })}
                 </div>
                 {[
-                  ['lodash@4.17.15','Prototype Pollution via merge()','critical','9.8'],
+                  ['lodash@4.17.15','Prototype Pollution via merge()','critical','7.4'],
                   ['axios@0.21.1','Server-Side Request Forgery','high','7.5'],
                   ['ejs@3.1.5','Template injection → RCE','critical','9.8'],
                   ['path-parse@1.0.6','ReDoS vulnerability','medium','5.3'],
@@ -167,7 +167,7 @@ export default function Landing() {
               <div><strong>✓</strong> Queried NVD + OSV databases</div>
               <div><strong>✓</strong> Risk scoring complete</div>
               <br />
-              <div><mark>✗ CRITICAL</mark> lodash@4.17.15 <i>CVE-2021-23337 · CVSS 9.8</i></div>
+              <div><mark>✗ CRITICAL</mark> lodash@4.17.15 <i>CVE-2020-28500 · CVSS 7.4</i></div>
               <div><mark>✗ CRITICAL</mark> ejs@3.1.7 <i>CVE-2022-29078 · CVSS 9.8</i></div>
               <div><u>⚠ HIGH</u> axios@0.21.1 <i>CVE-2021-3749 · CVSS 7.5</i></div>
               <br />
@@ -191,12 +191,12 @@ export default function Landing() {
         </div>
         <div className="lp-features-grid">
           {[
-            ['🔬','Deep Transitive Analysis','Traverses the full dependency tree — not just your direct installs. Catches the 78% of CVEs that hide in nested packages your team never touched.'],
+            ['🔬','Deep Transitive Analysis','Traverses the full dependency tree — not just your direct installs. Catches CVEs that hide in nested packages your team never explicitly installed.'],
             ['🧠','Intelligent Risk Scoring','Combines CVSS scores, attack vector, authentication requirements, and fix availability into a single prioritized risk score.'],
             ['⚡','Actionable Fix Commands','Exact install commands, safe version ranges, and dependency override strategies — ready to copy-paste or automate.'],
             ['🗺️','Visual Dependency Graph','See your full dependency tree visualized with vulnerability highlighting. Instantly understand which packages are the source of transitive CVEs.'],
             // ['🔁','CI/CD Gate Integration','Block builds on critical CVEs. Integrate with GitHub Actions, GitLab CI, Jenkins, or CircleCI in minutes.'],
-            ['📊','Scan History & Comparison','Track your security posture over time. Compare scans to see if new vulnerabilities were introduced between deploys.'],
+            ['📋','SBOM-Ready Output','Export scan results in structured formats. Every component, version, and vulnerability mapped for compliance and audit workflows.'],
           ].map(([icon, title, text], i) => <div className={`lp-feat-card reveal reveal-delay-${(i % 3) + 1}`} key={title}><div className="lp-feat-icon">{icon}</div><div className="lp-feat-title">{title}</div><div className="lp-feat-text">{text}</div></div>)}
         </div>
       </section>
@@ -210,7 +210,7 @@ export default function Landing() {
           <p className="lp-section-sub" style={{ margin: '0 auto' }}>No agents to install. No config files. Just upload your manifest and get results.</p>
         </div>
         <div className="lp-hiw-steps">
-          {['Upload manifest|Drop your package.json, requirements.txt, or pom.xml — any ecosystem.','Tree resolution|We build the complete dependency graph including all transitive packages.','CVE matching|Each package-version pair is cross-referenced against NVD, OSV, and GitHub Advisory.','Risk report|Receive a prioritized report with risk scores, impact analysis, and exact fix commands.'].map((item, i) => {
+          {['Upload manifest|Drop your package.json, requirements.txt, or pom.xml — any ecosystem.','Tree resolution|We build the complete dependency graph including all transitive packages.','CVE matching|Each package-version pair is cross-referenced against NVD and OSV vulnerability databases.','Risk report|Receive a prioritized report with risk scores, impact analysis, and exact fix commands.'].map((item, i) => {
             const [title, text] = item.split('|')
             return <div className={`lp-hiw-step reveal reveal-delay-${i + 1}`} key={title}><div className="lp-hiw-num">{i + 1}</div><div className="lp-hiw-title">{title}</div><div className="lp-hiw-text">{text}</div></div>
           })}
@@ -274,9 +274,9 @@ export default function Landing() {
       <footer>
         <div className="lp-footer">
           <div><div className="lp-nav-logo" style={{ marginBottom: 14 }}><div className="lp-nav-logo-icon">{shield}</div>DepAnalyzer</div><p className="lp-footer-desc">Real-time dependency vulnerability intelligence for modern engineering teams.</p></div>
-          {['Product|Scanner||Integrations|','Databases|NVD|OSV|GitHub Advisory','Resources|Docs|Knowledge Base|API Reference'].map(col => {
+          {['Product|Scanner|Knowledge Base','Databases|NVD|OSV','Resources|GitHub'].map(col => {
             const [title, ...links] = col.split('|')
-            return <div key={title}><div className="lp-footer-col-title">{title}</div><div className="lp-footer-links">{links.filter(l => l).map(l => <button key={l} onClick={() => l === 'Scanner' ? navigate('/scan') : null}>{l}</button>)}</div></div>
+            return <div key={title}><div className="lp-footer-col-title">{title}</div><div className="lp-footer-links">{links.filter(l => l).map(l => <button key={l} onClick={() => l === 'Scanner' ? navigate('/scan') : l === 'Knowledge Base' ? navigate('/learn') : l === 'GitHub' ? window.open('https://github.com/sky2194/dependency-analyzer', '_blank') : l === 'NVD' ? window.open('https://nvd.nist.gov', '_blank') : l === 'OSV' ? window.open('https://osv.dev', '_blank') : null}>{l}</button>)}</div></div>
           })}
         </div>
         <div className="lp-footer-bottom"><div>© 2026 DepAnalyzer. All rights reserved.</div><div>Powered by NVD + OSV · Updated continuously</div></div>
