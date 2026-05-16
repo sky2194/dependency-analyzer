@@ -8,7 +8,7 @@ const SECTIONS = [
     content: [
       { type: 'text', text: 'Software Composition Analysis (SCA) is a security practice that automatically identifies all open-source libraries in your codebase and checks them against known vulnerability databases.' },
       { type: 'text', text: 'Modern applications are built on hundreds of third-party packages. Each package is a potential attack surface. SCA tools give you complete visibility into every component you are shipping.' },
-      { type: 'callout', color: 'info', text: '📌 Industry fact: Over 80% of modern application code comes from open-source packages — making SCA a critical first line of defence.' },
+      { type: 'callout', color: 'info', text: '📌 Industry fact: Over 75% of modern application code comes from open-source packages (Synopsys OSSRA 2023) — making SCA a critical first line of defence.' },
     ]
   },
   {
@@ -40,17 +40,17 @@ const SECTIONS = [
       ]},
       { type: 'text', text: 'Real-World Examples with Timelines:' },
       { type: 'table', headers: ['CVE ID', 'Product', 'Discovered', 'Patched', 'Impact'], rows: [
-        ['CVE-2021-44228', 'Apache Log4j', 'Dec 9, 2021', 'Dec 10, 2021', '93% Fortune 500, billions in remediation costs, CVSS 10.0'],
-        ['CVE-2014-0160', 'OpenSSL (Heartbleed)', 'Apr 1, 2014', 'Apr 7, 2014', '2+ billion devices, CVSS 7.5, 2+ year exploitation window'],
-        ['CVE-2022-26134', 'Spring4Shell', 'Mar 29, 2022', 'Mar 30, 2022', 'Spring Framework, CVSS 9.8, RCE in web apps'],
-        ['CVE-2024-3156', 'XZ Utils (liblzma)', 'Mar 29, 2024', 'Mar 30, 2024', 'Linux backdoor, sophisticated 2-year campaign, near-widespread'],
+        ['CVE-2021-44228', 'Apache Log4j (Log4Shell)', 'Dec 9, 2021', 'Dec 10, 2021', 'Widespread enterprise impact, billions in remediation costs, CVSS 10.0'],
+        ['CVE-2014-0160', 'OpenSSL (Heartbleed)', 'Apr 7, 2014', 'Apr 7, 2014', '2+ billion devices, CVSS 7.5, memory leak exposing private keys'],
+        ['CVE-2022-22965', 'Spring Framework (Spring4Shell)', 'Mar 31, 2022', 'Mar 31, 2022', 'Spring Framework RCE, CVSS 9.8, affected Java web apps'],
+        ['CVE-2024-3094', 'XZ Utils (liblzma)', 'Mar 29, 2024', 'Mar 29, 2024', 'Linux backdoor, sophisticated 2-year supply chain campaign'],
       ]},
     ]
   },
   {
     id: 'cvss', icon: '📊', title: 'CVSS Scoring',
     content: [
-      { type: 'text', text: 'CVSS (Common Vulnerability Scoring System) is an open framework for rating the severity of security vulnerabilities. Version 3.1 is the current standard, scoring vulnerabilities on a 0–10 scale across three metric groups: Base, Temporal, and Environmental.' },
+      { type: 'text', text: 'CVSS (Common Vulnerability Scoring System) is an open framework for rating the severity of security vulnerabilities. Version 4.0 was released in 2023, though version 3.1 remains widely used. Scores range from 0–10 across metric groups: Base, Temporal, and Environmental.' },
       { type: 'text', text: 'Base metrics assess attack vector, attack complexity, privileges required, user interaction, and the impact on confidentiality, integrity, and availability.' },
       { type: 'table', headers: ['Score Range', 'Severity', 'Recommended Action'], rows: [
         ['9.0 – 10.0', 'CRITICAL', 'Patch immediately — treat as an incident'],
@@ -69,7 +69,7 @@ const SECTIONS = [
         ['Direct',      'A package you explicitly declared in your manifest file',          'Fully visible — you chose it'],
         ['Transitive',  'A package pulled in automatically by one of your dependencies',   'Hidden — most CVEs live here'],
       ]},
-      { type: 'text', text: 'Key Statistic: 90% of vulnerabilities discovered in modern applications are in transitive dependencies, not direct ones. This is why SCA is critical — these hidden risks would never be caught by manual review.' },
+      { type: 'text', text: 'Key Statistic: The majority of vulnerabilities discovered in modern applications (estimated 80%+) are in transitive dependencies, not direct ones. This is why SCA is critical — these hidden risks would never be caught by manual review.' },
       { type: 'text', text: 'Real Example (4-level nesting):' },
       { type: 'code', text: 'Your Application (my-app@1.0.0)\n  └── express@4.17.0                    ← direct (you explicitly added)\n        └── body-parser@1.19.0          ← transitive (express depends on it)\n              └── qs@6.7.0              ← transitive (body-parser depends on it)\n                    └── CVE-2022-24999  ← vulnerability found here (CVSS 7.5)' },
       { type: 'text', text: 'In this example, you never explicitly imported qs. But a critical vulnerability in qs affects your app through three layers of dependencies. Without SCA, you would never know.' },
@@ -135,7 +135,7 @@ const SECTIONS = [
       ]},
       
       { type: 'text', text: 'CycloneDX JSON Example:' },
-      { type: 'code', text: '{\n  "bomFormat": "CycloneDX",\n  "specVersion": "1.4",\n  "components": [\n    {\n      "type": "library",\n      "name": "express",\n      "version": "4.17.0",\n      "purl": "pkg:npm/express@4.17.0",\n      "licenses": [{"license": {"name": "MIT"}}]\n    },\n    {\n      "type": "library",\n      "name": "lodash",\n      "version": "4.17.21",\n      "purl": "pkg:npm/lodash@4.17.21",\n      "licenses": [{"license": {"name": "MIT"}}]\n    }\n  ]\n}' },
+      { type: 'code', text: '{\n  "bomFormat": "CycloneDX",\n  "specVersion": "1.6",\n  "components": [\n    {\n      "type": "library",\n      "name": "express",\n      "version": "4.17.0",\n      "purl": "pkg:npm/express@4.17.0",\n      "licenses": [{"license": {"name": "MIT"}}]\n    },\n    {\n      "type": "library",\n      "name": "lodash",\n      "version": "4.17.21",\n      "purl": "pkg:npm/lodash@4.17.21",\n      "licenses": [{"license": {"name": "MIT"}}]\n    }\n  ]\n}' },
       
       { type: 'text', text: 'Compliance Requirements:' },
       { type: 'table', headers: ['Requirement', 'Year', 'Scope', 'Impact'], rows: [
