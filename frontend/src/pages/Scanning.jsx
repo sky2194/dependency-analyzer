@@ -104,7 +104,7 @@ export default function Scanning() {
           <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 20, lineHeight: 1.6 }}>
             This page only renders during a live scan. Start one from the Scanner.
           </p>
-          <button onClick={() => navigate('/scan')} style={{ padding: '10px 20px', borderRadius: 8, background: 'var(--orange)', color: 'var(--white)', border: 'none', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+          <button onClick={() => navigate('/scan')} aria-label="Go to scanner" style={{ padding: '10px 20px', borderRadius: 8, background: 'var(--orange)', color: 'var(--white)', border: 'none', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
             ← Go to Scanner
           </button>
         </div>
@@ -190,7 +190,7 @@ export default function Scanning() {
           })}
         </div>
 
-        <div style={{ background: 'var(--bg-elevated)', borderRadius: 8, height: 4, overflow: 'hidden', marginBottom: 10 }}>
+        <div role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} aria-label="Scan progress" style={{ background: 'var(--bg-elevated)', borderRadius: 8, height: 4, overflow: 'hidden', marginBottom: 10 }}>
           <div style={{
             height: '100%', background: 'var(--orange)',
             width: `${progress}%`, transition: 'width 0.6s ease', borderRadius: 8
@@ -200,7 +200,7 @@ export default function Scanning() {
           <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
             Step {step + 1} of {STEPS.length}
           </span>
-          <button onClick={handleCancel} style={{
+          <button onClick={handleCancel} aria-label="Cancel scan" style={{
             fontSize: 12, color: 'var(--text-muted)', background: 'none', border: 'none',
             cursor: 'pointer', textDecoration: 'underline', padding: 0
           }}>

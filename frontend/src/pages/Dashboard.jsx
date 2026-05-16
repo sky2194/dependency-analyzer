@@ -1,20 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import axios from 'axios'
-import API_BASE from '../config'
 import ECOSYSTEMS, { detectEcosystem } from '../data/ecosystems'
-import { useScan } from '../App'
 import FileUpload from '../components/FileUpload'
 import Tooltip from '../components/Tooltip'
-
-const LOADING_STEPS = [
-  'Parsing dependency file...',
-  'Resolving transitive dependencies...',
-  'Building dependency graph...',
-  'Scanning NVD database...',
-  'Scanning OSV database...',
-  'Calculating CVE paths...',
-]
 
 const SEVS = [
   { level: 'CRITICAL', score: '9–10', color: 'var(--critical)', desc: 'Fix immediately' },
@@ -114,12 +102,9 @@ function RightPanel({ eco }) {
 export default function Dashboard() {
   const location = useLocation()
   const lastEco = location.state?.lastEcosystem
-  const [loading, setLoading] = useState(false)
-  const [loadingStep, setLoadingStep] = useState(0)
   const [error, setError] = useState('')
   const [code, setCode] = useState('')
   const [file, setFile] = useState('')
-  const { setScanning, setScanProject } = useScan()
   const navigate = useNavigate()
   const [eco, setEco] = useState(lastEco ? (ECOSYSTEMS[lastEco] || ECOSYSTEMS.npm) : ECOSYSTEMS.npm)
 
@@ -168,25 +153,9 @@ export default function Dashboard() {
   }
 
   const analyze = async (content, filename) => {   
-    setLoading(true); setScanning(true); setScanProject(filename); setError(''); setLoadingStep(0)
+    setError('')
     const detectedEco = detectEcosystem(filename)
-    
-    const interval = setInterval(() => setLoadingStep(s => Math.min(s + 1, LOADING_STEPS.length - 1)), 2000)
-    try {
-      const res = await axios.post(`${API_BASE}/api/scan`, { content, ecosystem: detectedEco?.label?.toLowerCase() || 'npm' }, { timeout: 180000 })
-      clearInterval(interval)
-      setLoading(false); setScanning(false); setScanProject('')
-      
-      navigate('/results', { state: { result: res.data } })
-    } catch (err) {
-      clearInterval(interval)
-      setLoading(false); setScanning(false); setScanProject('')
-      const status = err?.response?.status
-      if (status === 408) { setError('Scan timed out — try a smaller file'); return }
-      if (status === 413) { setError('File too large — maximum 512KB'); return }
-      if (status === 429) { setError('Too many requests — wait 60s and try again'); return }
-      setError('Scan failed — please try again')
-    }
+    navigate('/scanning', { state: { code: content, ecosystem: detectedEco?.label?.toLowerCase() || 'npm' } })
   }
 
   return (
@@ -201,45 +170,10 @@ export default function Dashboard() {
         </p>
       </div>
 
-      {/* Fullscreen loading overlay */}
-      {loading && (
-        <div style={{ position: 'fixed', inset: 0, background: 'var(--overlay-bg)', backdropFilter: 'blur(8px)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '40px 48px', maxWidth: 520, width: '90%', boxShadow: '0 20px 60px var(--overlay-bg)' }}>
-            <div style={{ textAlign: 'center', marginBottom: 32 }}>
-              <div style={{ fontSize: 40, marginBottom: 16, display: 'inline-block', animation: 'spin 2s linear infinite' }}>⚙️</div>
-              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, marginBottom: 8 }}>Scanning Dependencies</h2>
-              <p style={{ color: 'var(--muted)', fontSize: 13 }}>Checking against NVD + OSV databases...</p>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {LOADING_STEPS.map((step, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 13 }}>
-                  <div style={{ width: 24, height: 24, borderRadius: '50%', border: `2px solid ${i < loadingStep ? 'var(--ok)' : i === loadingStep ? 'var(--accent)' : 'var(--border)'}`, background: i < loadingStep ? 'var(--ok)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, flexShrink: 0, transition: 'all 0.3s', color: i < loadingStep ? 'var(--white)' : 'var(--accent)' }}>
-                    {i < loadingStep ? '✓' : i === loadingStep ? '●' : ''}
-                  </div>
-                  <span style={{ color: i < loadingStep ? 'var(--ok)' : i === loadingStep ? 'var(--text)' : 'var(--muted)', transition: 'color 0.3s' }}>{step}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
       {error && <div style={{ background: 'var(--vuln-bg)', border: '1px solid var(--vuln-border)', borderRadius: 'var(--radius)', padding: '10px 14px', color: 'var(--red)', fontSize: 12, marginBottom: 16 }}>⚠️ {error}</div>}
       
-      {/* <div style={{ marginBottom: 16, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-        <button onClick={() => loadExample('npm')} style={{ padding: '8px 16px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 12, cursor: 'pointer', color: 'var(--text)', transition: 'all 0.15s' }}>
-          📦 Load npm example
-        </button>
-        <button onClick={() => loadExample('pypi')} style={{ padding: '8px 16px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 12, cursor: 'pointer', color: 'var(--text)', transition: 'all 0.15s' }}>
-          🐍 Load Python example
-        </button>
-        <button onClick={() => loadExample('maven')} style={{ padding: '8px 16px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 12, cursor: 'pointer', color: 'var(--text)', transition: 'all 0.15s' }}>
-          ☕ Maven Dependency Mediation rules
-        </button>
-      </div> */}
-      
       <div className="scanner-layout">
-        <FileUpload onAnalyze={analyze} loading={loading} onEcosystemChange={setEco} />
+        <FileUpload onAnalyze={analyze} loading={false} onEcosystemChange={setEco} />
         <RightPanel eco={eco} />
       </div>
     </div>
