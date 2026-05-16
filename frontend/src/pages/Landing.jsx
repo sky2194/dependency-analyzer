@@ -188,7 +188,6 @@ export default function Landing() {
             ['🧠','Intelligent Risk Scoring','Uses logarithmic weighting of CVSS severity counts to produce a single prioritized risk score from 0 to 100.'],
             ['⚡','Actionable Fix Commands','Exact install commands, safe version ranges, and dependency override strategies — ready to copy-paste into your terminal.'],
             ['🗺️','Visual Dependency Graph','See your full dependency tree visualized with vulnerability highlighting. Instantly understand which packages are the source of transitive CVEs.'],
-            // ['🔁','CI/CD Gate Integration','Block builds on critical CVEs. Integrate with GitHub Actions, GitLab CI, Jenkins, or CircleCI in minutes.'],
             ['📋','Export Reports','Download scan results as PDF, CSV, or JSON. Share findings with your team or attach to compliance documentation.'],
             ['🔗','Direct vs Transitive','Every package is tagged as direct or transitive. See exactly which dependency introduced each vulnerability via the full dependency path.'],
           ].map(([icon, title, text], i) => <div className={`lp-feat-card reveal reveal-delay-${(i % 3) + 1}`} key={title}><div className="lp-feat-icon">{icon}</div><div className="lp-feat-title">{title}</div><div className="lp-feat-text">{text}</div></div>)}
@@ -215,7 +214,7 @@ export default function Landing() {
 
       <div className="lp-cta-band reveal">
         <div><div className="lp-cta-title">Stop guessing.<br />Start securing.</div><div className="lp-cta-sub">Scan your first project — no account required.</div></div>
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}><button onClick={() => navigate('/scan')} className="lp-btn-hero">→ Scan Now for Free</button></div>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}><button onClick={() => navigate('/scan')} className="lp-btn-hero">→ Scan Now</button></div>
       </div>
 
       <footer>
