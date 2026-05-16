@@ -190,6 +190,7 @@ export default function Landing() {
             ['🗺️','Visual Dependency Graph','See your full dependency tree visualized with vulnerability highlighting. Instantly understand which packages are the source of transitive CVEs.'],
             // ['🔁','CI/CD Gate Integration','Block builds on critical CVEs. Integrate with GitHub Actions, GitLab CI, Jenkins, or CircleCI in minutes.'],
             ['📋','Export Reports','Download scan results as PDF, CSV, or JSON. Share findings with your team or attach to compliance documentation.'],
+            ['🔗','Direct vs Transitive','Every package is tagged as direct or transitive. See exactly which dependency introduced each vulnerability via the full dependency path.'],
           ].map(([icon, title, text], i) => <div className={`lp-feat-card reveal reveal-delay-${(i % 3) + 1}`} key={title}><div className="lp-feat-icon">{icon}</div><div className="lp-feat-title">{title}</div><div className="lp-feat-text">{text}</div></div>)}
         </div>
       </section>
