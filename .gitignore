@@ -101,3 +101,43 @@ playwright/.auth/
 **/trace.zip
 **/*.webm
 **/*.png
+# Playwright generated artifacts
+playwright-report/
+test-results/
+blob-report/
+
+# Screenshots / videos / traces
+*.png
+*.webm
+*.trace
+*.zip
+
+# Coverage
+coverage/
+
+# Cache
+.playwright/
+playwright/.cache/
+
+# Playwright outputs
+test-results/
+playwright-report/
+blob-report/
+tests/test-results/
+tests/playwright-report/
+
+# artifacts
+*.png
+*.webm
+*.trace
+*.zip
+
+# runtime
+test-results.json
+
+
+# Playwright generated artifacts
+test-results.json
+tests/test-results.json
+test-results/
+playwright-report/
