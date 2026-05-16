@@ -21,6 +21,10 @@ def validate_package_name(name):
     if any(char in name.lower() for char in ['<script', '</script>', 'javascript:', 'onerror', 'onload', 'onclick']):
         raise ValueError(f"Invalid package name '{name}': contains potentially malicious content")
     
+    # Block path traversal
+    if '..' in name or name.startswith('/'):
+        raise ValueError(f"Invalid package name '{name}': path traversal not allowed")
+    
     # Validate against allowed pattern
     if not re.match(PACKAGE_NAME_PATTERN, name):
         raise ValueError(f"Invalid package name '{name}': contains invalid characters. Only alphanumeric, dots, dashes, underscores, and forward slashes are allowed")

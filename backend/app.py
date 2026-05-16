@@ -49,7 +49,7 @@ ALLOW_VERCEL_PREVIEWS = os.environ.get('ALLOW_VERCEL_PREVIEWS', 'true').lower() 
 CORS(app, origins=ALLOWED_ORIGINS, allow_headers=['Content-Type'], methods=['GET', 'POST', 'OPTIONS'])
 
 MAX_CONTENT_SIZE = 512 * 1024
-RATE_LIMIT       = 30
+RATE_LIMIT       = 20
 RATE_WINDOW      = 60
 MAX_DIRECT_DEPS  = 50
 
@@ -286,6 +286,11 @@ def add_cors_headers(response):
         response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
         response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
         response.headers['Vary'] = 'Origin'
+    # Security headers
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
     return response
 
 def run_analysis(body):
@@ -455,6 +460,20 @@ def scan_package_deep():
     
     if not package_name:
         return jsonify({'error': 'package name required'}), 400
+    
+    # Validate package name
+    try:
+        from utils.validation import validate_package_name
+        validate_package_name(package_name)
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    
+    if package_version:
+        try:
+            from utils.validation import validate_version
+            validate_version(package_version)
+        except ValueError as e:
+            return jsonify({'error': str(e)}), 400
     
     try:
         # Build dependency tree with depth=2 to get transitive dependencies
