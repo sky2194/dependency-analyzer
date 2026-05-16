@@ -10,7 +10,7 @@ test.describe('PHASE 4 — Backend Contract Drift Test', () => {
     
     await page.goto('/scan');
     await page.fill('textarea', MOCK_DEPENDENCIES.npm);
-    await page.click('button:has-text("Scan")');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     
     // Should reject invalid schema
     await page.waitForTimeout(5000);
@@ -25,7 +25,7 @@ test.describe('PHASE 4 — Backend Contract Drift Test', () => {
     
     await page.goto('/scan');
     await page.fill('textarea', MOCK_DEPENDENCIES.npm);
-    await page.click('button:has-text("Scan")');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     
     await page.waitForTimeout(5000);
     
@@ -39,7 +39,7 @@ test.describe('PHASE 4 — Backend Contract Drift Test', () => {
     
     await page.goto('/scan');
     await page.fill('textarea', MOCK_DEPENDENCIES.npm);
-    await page.click('button:has-text("Scan")');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     
     await page.waitForTimeout(5000);
     
@@ -53,7 +53,7 @@ test.describe('PHASE 4 — Backend Contract Drift Test', () => {
     
     await page.goto('/scan');
     await page.fill('textarea', MOCK_DEPENDENCIES.npm);
-    await page.click('button:has-text("Scan")');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     
     await page.waitForTimeout(5000);
     
@@ -67,7 +67,7 @@ test.describe('PHASE 4 — Backend Contract Drift Test', () => {
     
     await page.goto('/scan');
     await page.fill('textarea', MOCK_DEPENDENCIES.npm);
-    await page.click('button:has-text("Scan")');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     
     await page.waitForTimeout(5000);
     
@@ -81,7 +81,7 @@ test.describe('PHASE 4 — Backend Contract Drift Test', () => {
     
     await page.goto('/scan');
     await page.fill('textarea', MOCK_DEPENDENCIES.npm);
-    await page.click('button:has-text("Scan")');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     
     await page.waitForTimeout(5000);
     
@@ -95,7 +95,7 @@ test.describe('PHASE 4 — Backend Contract Drift Test', () => {
     
     await page.goto('/scan');
     await page.fill('textarea', MOCK_DEPENDENCIES.npm);
-    await page.click('button:has-text("Scan")');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     
     await page.waitForTimeout(5000);
     

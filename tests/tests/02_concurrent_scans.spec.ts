@@ -18,8 +18,7 @@ test.describe('PHASE 2 — Concurrent Scans Stress Test', () => {
     const scanPromises = pages.map(async (p, i) => {
       await p.goto('/scan');
       await p.fill('textarea', MOCK_DEPENDENCIES.npm);
-      await p.click('button:has-text("Scan")');
-      await p.waitForURL('/scanning');
+      await p.click('button:has-text("Scan & Detect Vulnerabilities")');
       await p.waitForURL('/results', { timeout: 120000 });
       return getTransactionIdFromPage(p);
     });
@@ -38,12 +37,12 @@ test.describe('PHASE 2 — Concurrent Scans Stress Test', () => {
     // First scan
     await page.goto('/scan');
     await page.fill('textarea', MOCK_DEPENDENCIES.npm);
-    await page.click('button:has-text("Scan")');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     
     // Immediately start second scan (cancel first)
     await page.goto('/scan');
     await page.fill('textarea', MOCK_DEPENDENCIES.python);
-    await page.click('button:has-text("Scan")');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     
     await page.waitForURL('/results', { timeout: 120000 });
     
@@ -66,7 +65,7 @@ test.describe('PHASE 2 — Concurrent Scans Stress Test', () => {
     for (let i = 0; i < 3; i++) {
       await page.goto('/scan');
       await page.fill('textarea', MOCK_DEPENDENCIES.npm);
-      await page.click('button:has-text("Scan")');
+      await page.click('button:has-text("Scan & Detect Vulnerabilities")');
       await page.waitForURL('/results', { timeout: 120000 });
     }
 
@@ -84,7 +83,7 @@ test.describe('PHASE 2 — Concurrent Scans Stress Test', () => {
     for (let i = 0; i < 3; i++) {
       await page.goto('/scan');
       await page.fill('textarea', MOCK_DEPENDENCIES.npm);
-      await page.click('button:has-text("Scan")');
+      await page.click('button:has-text("Scan & Detect Vulnerabilities")');
       await page.waitForURL('/results', { timeout: 120000 });
       const tid = await getTransactionIdFromPage(page);
       transactionIds.push(tid);
@@ -110,7 +109,7 @@ test.describe('PHASE 2 — Concurrent Scans Stress Test', () => {
     const scanPromises = pages.map(async (p, i) => {
       await p.goto('/scan');
       await p.fill('textarea', MOCK_DEPENDENCIES[ecosystems[i] as keyof typeof MOCK_DEPENDENCIES]);
-      await p.click('button:has-text("Scan")');
+      await p.click('button:has-text("Scan & Detect Vulnerabilities")');
       await p.waitForURL('/results', { timeout: 120000 });
       return getTransactionIdFromPage(p);
     });

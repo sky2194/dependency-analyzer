@@ -174,7 +174,7 @@ export default function Analytics() {
             </div>
             <div>
               <div style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Risk Score</div>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 20, fontWeight: 700, color: riskColor }}>{riskScore}<span style={{ fontSize: 12, color: 'var(--text-muted)' }}>/100</span></div>
+              <div data-testid="risk-score" style={{ fontFamily: 'var(--font-mono)', fontSize: 20, fontWeight: 700, color: riskColor }}>{riskScore}<span style={{ fontSize: 12, color: 'var(--text-muted)' }}>/100</span></div>
               <span className="a-risk-label" style={{ background: riskDim, color: riskColor }}>{riskLabel}</span>
               <div style={{ fontSize: 9, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginTop: 4, lineHeight: 1.4 }}>Logarithmic scale based on severity counts</div>
             </div>
@@ -239,10 +239,10 @@ export default function Analytics() {
                         {isOpen && (
                           <div className="a-pkg-group-body">
                             {cves.map(v => (
-                              <div key={v.cve_id} onClick={() => setSelected(selected === v.cve_id ? null : v.cve_id)} className={`a-cve-row ${selected === v.cve_id ? 'selected' : ''}`}>
+                              <div key={v.cve_id} data-testid="vulnerability-row" onClick={() => setSelected(selected === v.cve_id ? null : v.cve_id)} className={`a-cve-row ${selected === v.cve_id ? 'selected' : ''}`}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                                   <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--blue)', fontWeight: 600 }}>{v.cve_id}</span>
-                                  <span className="sev-badge" style={{ background: SEV_DIM[v.severity], color: SEV_COLOR[v.severity] }}>{v.severity}</span>
+                                  <span data-severity={v.severity} className="sev-badge" style={{ background: SEV_DIM[v.severity], color: SEV_COLOR[v.severity] }}>{v.severity}</span>
                                   <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, color: SEV_COLOR[v.severity] }}>CVSS {v.cvss_score}</span>
                                   <span style={{ flex: 1 }} />
                                   {v.fix_version && <span style={{ fontSize: 10, color: 'var(--green)', fontFamily: 'var(--font-mono)' }}>Fix: v{v.fix_version}</span>}

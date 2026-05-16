@@ -14,7 +14,7 @@ test.describe('PHASE 3 — Network Failure Injection Test', () => {
     
     await page.goto('/scan');
     await page.fill('textarea', MOCK_DEPENDENCIES.npm);
-    await page.click('button:has-text("Scan")');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     
     // Should show error, not crash
     await page.waitForTimeout(5000);
@@ -29,7 +29,7 @@ test.describe('PHASE 3 — Network Failure Injection Test', () => {
     
     await page.goto('/scan');
     await page.fill('textarea', MOCK_DEPENDENCIES.npm);
-    await page.click('button:has-text("Scan")');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     
     // Should show error, not crash
     await page.waitForTimeout(5000);
@@ -43,7 +43,7 @@ test.describe('PHASE 3 — Network Failure Injection Test', () => {
     
     await page.goto('/scan');
     await page.fill('textarea', MOCK_DEPENDENCIES.npm);
-    await page.click('button:has-text("Scan")');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     
     // Should complete despite delay
     await page.waitForURL('/results', { timeout: 150000 });
@@ -56,7 +56,7 @@ test.describe('PHASE 3 — Network Failure Injection Test', () => {
     
     await page.goto('/scan');
     await page.fill('textarea', MOCK_DEPENDENCIES.npm);
-    await page.click('button:has-text("Scan")');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     
     // Should handle partial response gracefully
     await page.waitForTimeout(5000);
@@ -71,7 +71,7 @@ test.describe('PHASE 3 — Network Failure Injection Test', () => {
     
     await page.goto('/scan');
     await page.fill('textarea', MOCK_DEPENDENCIES.npm);
-    await page.click('button:has-text("Scan")');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     
     // Should handle malformed JSON
     await page.waitForTimeout(5000);
@@ -85,7 +85,7 @@ test.describe('PHASE 3 — Network Failure Injection Test', () => {
     
     await page.goto('/scan');
     await page.fill('textarea', MOCK_DEPENDENCIES.npm);
-    await page.click('button:has-text("Scan")');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     
     await page.waitForTimeout(5000);
     
@@ -106,7 +106,7 @@ test.describe('PHASE 3 — Network Failure Injection Test', () => {
     
     await page.goto('/scan');
     await page.fill('textarea', MOCK_DEPENDENCIES.npm);
-    await page.click('button:has-text("Scan")');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     
     // Should show error, not crash
     await page.waitForTimeout(3000);

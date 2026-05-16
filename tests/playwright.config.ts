@@ -7,6 +7,7 @@ export default defineConfig({
   retries: 0, // Strict mode - no retries
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
+  timeout: 200000, // 200s global timeout to accommodate 180s scan timeout + buffer
   use: {
     baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',

@@ -23,17 +23,15 @@ test.describe('PHASE 6 — React Render Stability Test', () => {
     // Complete a scan first
     await page.goto('/scan');
     await page.fill('textarea', MOCK_DEPENDENCIES.npm);
-    await page.click('button:has-text("Scan")');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     await page.waitForURL('/results', { timeout: 120000 });
     
-    // Repeatedly navigate to Analytics
+    // Repeatedly navigate between scan and results
     for (let i = 0; i < 10; i++) {
-      await page.click('text=Analytics');
-      await page.waitForURL('/analytics');
+      await page.goto('/scan');
       await page.waitForTimeout(50);
       
-      await page.click('text=Results');
-      await page.waitForURL('/results');
+      await page.goto('/results');
       await page.waitForTimeout(50);
     }
     
@@ -54,7 +52,7 @@ test.describe('PHASE 6 — React Render Stability Test', () => {
     for (let i = 0; i < 5; i++) {
       await page.goto('/scan');
       await page.fill('textarea', MOCK_DEPENDENCIES.npm);
-      await page.click('button:has-text("Scan")');
+      await page.click('button:has-text("Scan & Detect Vulnerabilities")');
       await page.waitForURL('/results', { timeout: 120000 });
       
       await page.goto('/');
@@ -79,7 +77,7 @@ test.describe('PHASE 6 — React Render Stability Test', () => {
     
     await page.goto('/scan');
     await page.fill('textarea', MOCK_DEPENDENCIES.npm);
-    await page.click('button:has-text("Scan")');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     await page.waitForURL('/results', { timeout: 120000 });
     
     // Should have only one API call for the scan
@@ -110,7 +108,7 @@ test.describe('PHASE 6 — React Render Stability Test', () => {
     
     await page.goto('/scan');
     await page.fill('textarea', MOCK_DEPENDENCIES.npm);
-    await page.click('button:has-text("Scan")');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     
     // Should complete without errors
     await page.waitForURL('/results', { timeout: 120000 });

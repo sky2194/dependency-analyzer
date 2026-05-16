@@ -14,12 +14,9 @@ test.describe('PHASE 1 — Full User Journey Simulation', () => {
     await page.fill('textarea', MOCK_DEPENDENCIES.npm);
     
     // Start scan
-    await page.click('button:has-text("Scan")');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     
-    // Navigate to scanning page
-    await page.waitForURL('/scanning');
-    
-    // Wait for scan to complete
+    // Wait for scan to complete (loading overlay on /scan, then navigates to /results)
     await page.waitForURL('/results', { timeout: 120000 });
     
     // Verify results page loaded
@@ -31,14 +28,12 @@ test.describe('PHASE 1 — Full User Journey Simulation', () => {
     // First scan
     await page.goto('/scan');
     await page.fill('textarea', MOCK_DEPENDENCIES.npm);
-    await page.click('button:has-text("Scan")');
-    await page.waitForURL('/scanning');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     
     // Immediately trigger second scan (navigate back to scan)
     await page.goto('/scan');
     await page.fill('textarea', MOCK_DEPENDENCIES.python);
-    await page.click('button:has-text("Scan")');
-    await page.waitForURL('/scanning');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     await page.waitForURL('/results', { timeout: 120000 });
     
     // Only latest scan should be visible
@@ -54,18 +49,16 @@ test.describe('PHASE 1 — Full User Journey Simulation', () => {
     // Complete a scan
     await page.goto('/scan');
     await page.fill('textarea', MOCK_DEPENDENCIES.npm);
-    await page.click('button:has-text("Scan")');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     await page.waitForURL('/results', { timeout: 120000 });
     
     const originalTransactionId = await getTransactionIdFromPage(page);
     
-    // Navigate to Analytics
-    await page.click('text=Analytics');
-    await page.waitForURL('/analytics');
+    // Navigate to scan page (no separate analytics route)
+    await page.goto('/scan');
     
     // Navigate back to Results
-    await page.click('text=Results');
-    await page.waitForURL('/results');
+    await page.goto('/results');
     
     // Transaction ID should remain the same
     const currentTransactionId = await getTransactionIdFromPage(page);
@@ -75,13 +68,12 @@ test.describe('PHASE 1 — Full User Journey Simulation', () => {
   test('should handle page reload mid-scan gracefully', async ({ page }) => {
     await page.goto('/scan');
     await page.fill('textarea', MOCK_DEPENDENCIES.npm);
-    await page.click('button:has-text("Scan")');
-    await page.waitForURL('/scanning');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     
-    // Reload page mid-scan
+    // Reload page immediately (during loading overlay)
     await page.reload();
     
-    // Should show error or redirect to scan page
+    // Should redirect to scan page
     const currentUrl = page.url();
     expect(currentUrl).toMatch(/\/scan/);
   });
@@ -89,10 +81,9 @@ test.describe('PHASE 1 — Full User Journey Simulation', () => {
   test('should handle navigation back during loading', async ({ page }) => {
     await page.goto('/scan');
     await page.fill('textarea', MOCK_DEPENDENCIES.npm);
-    await page.click('button:has-text("Scan")');
-    await page.waitForURL('/scanning');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     
-    // Navigate back immediately
+    // Navigate back immediately (during loading overlay)
     await page.goBack();
     
     // Should return to scan page without crash
@@ -104,14 +95,14 @@ test.describe('PHASE 1 — Full User Journey Simulation', () => {
     // First scan
     await page.goto('/scan');
     await page.fill('textarea', MOCK_DEPENDENCIES.npm);
-    await page.click('button:has-text("Scan")');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     await page.waitForURL('/results', { timeout: 120000 });
     const firstTransactionId = await getTransactionIdFromPage(page);
     
     // Second scan
     await page.goto('/scan');
     await page.fill('textarea', MOCK_DEPENDENCIES.python);
-    await page.click('button:has-text("Scan")');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     await page.waitForURL('/results', { timeout: 120000 });
     const secondTransactionId = await getTransactionIdFromPage(page);
     

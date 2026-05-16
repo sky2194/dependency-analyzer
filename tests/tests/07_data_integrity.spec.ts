@@ -5,7 +5,7 @@ test.describe('PHASE 7 — Data Integrity Validation Test', () => {
   test('snapshot.summary should match UI display', async ({ page }) => {
     await page.goto('/scan');
     await page.fill('textarea', MOCK_DEPENDENCIES.npm);
-    await page.click('button:has-text("Scan")');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     await page.waitForURL('/results', { timeout: 120000 });
     
     const snapshot = await getSnapshotFromPage(page);
@@ -39,7 +39,7 @@ test.describe('PHASE 7 — Data Integrity Validation Test', () => {
   test('grouped_packages should always be array', async ({ page }) => {
     await page.goto('/scan');
     await page.fill('textarea', MOCK_DEPENDENCIES.npm);
-    await page.click('button:has-text("Scan")');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     await page.waitForURL('/results', { timeout: 120000 });
     
     const snapshot = await getSnapshotFromPage(page);
@@ -51,7 +51,7 @@ test.describe('PHASE 7 — Data Integrity Validation Test', () => {
   test('vulnerabilities should always be array', async ({ page }) => {
     await page.goto('/scan');
     await page.fill('textarea', MOCK_DEPENDENCIES.npm);
-    await page.click('button:has-text("Scan")');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     await page.waitForURL('/results', { timeout: 120000 });
     
     const snapshot = await getSnapshotFromPage(page);
@@ -63,7 +63,7 @@ test.describe('PHASE 7 — Data Integrity Validation Test', () => {
   test('should have no frontend-derived metrics', async ({ page }) => {
     await page.goto('/scan');
     await page.fill('textarea', MOCK_DEPENDENCIES.npm);
-    await page.click('button:has-text("Scan")');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     await page.waitForURL('/results', { timeout: 120000 });
     
     const snapshot = await getSnapshotFromPage(page);
@@ -82,7 +82,7 @@ test.describe('PHASE 7 — Data Integrity Validation Test', () => {
   test('graph should always be object', async ({ page }) => {
     await page.goto('/scan');
     await page.fill('textarea', MOCK_DEPENDENCIES.npm);
-    await page.click('button:has-text("Scan")');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     await page.waitForURL('/results', { timeout: 120000 });
     
     const snapshot = await getSnapshotFromPage(page);
@@ -94,7 +94,7 @@ test.describe('PHASE 7 — Data Integrity Validation Test', () => {
   test('dependency_tree should always be object', async ({ page }) => {
     await page.goto('/scan');
     await page.fill('textarea', MOCK_DEPENDENCIES.npm);
-    await page.click('button:has-text("Scan")');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     await page.waitForURL('/results', { timeout: 120000 });
     
     const snapshot = await getSnapshotFromPage(page);
@@ -106,7 +106,7 @@ test.describe('PHASE 7 — Data Integrity Validation Test', () => {
   test('transaction_id should be string', async ({ page }) => {
     await page.goto('/scan');
     await page.fill('textarea', MOCK_DEPENDENCIES.npm);
-    await page.click('button:has-text("Scan")');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     await page.waitForURL('/results', { timeout: 120000 });
     
     const snapshot = await getSnapshotFromPage(page);
@@ -119,7 +119,7 @@ test.describe('PHASE 7 — Data Integrity Validation Test', () => {
   test('snapshot_version should be number', async ({ page }) => {
     await page.goto('/scan');
     await page.fill('textarea', MOCK_DEPENDENCIES.npm);
-    await page.click('button:has-text("Scan")');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     await page.waitForURL('/results', { timeout: 120000 });
     
     const snapshot = await getSnapshotFromPage(page);

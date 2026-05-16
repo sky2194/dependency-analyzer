@@ -7,13 +7,12 @@ test.describe('PHASE 5 — Transaction Race Condition Test', () => {
     // Start scan A
     await page.goto('/scan');
     await page.fill('textarea', MOCK_DEPENDENCIES.npm);
-    await page.click('button:has-text("Scan")');
-    await page.waitForURL('/scanning');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     
     // Immediately start scan B (cancels scan A)
     await page.goto('/scan');
     await page.fill('textarea', MOCK_DEPENDENCIES.python);
-    await page.click('button:has-text("Scan")');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     await page.waitForURL('/results', { timeout: 120000 });
     
     // Scan B should be rendered
@@ -29,21 +28,21 @@ test.describe('PHASE 5 — Transaction Race Condition Test', () => {
     
     await page.goto('/scan');
     await page.fill('textarea', MOCK_DEPENDENCIES.npm);
-    await page.click('button:has-text("Scan")');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     
     // Should reject stale response
     await page.waitForTimeout(5000);
     
     const currentUrl = page.url();
     // Should either show error or redirect
-    expect(currentUrl).toMatch(/\/(scan|scanning)/);
+    expect(currentUrl).toMatch(/\/scan/);
   });
 
   test('should not overwrite state with stale data', async ({ page }) => {
     // First successful scan
     await page.goto('/scan');
     await page.fill('textarea', MOCK_DEPENDENCIES.npm);
-    await page.click('button:has-text("Scan")');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     await page.waitForURL('/results', { timeout: 120000 });
     
     const firstTransactionId = await getTransactionIdFromPage(page);
@@ -63,9 +62,11 @@ test.describe('PHASE 5 — Transaction Race Condition Test', () => {
       });
     });
     
-    // Navigate to analytics
-    await page.click('text=Analytics');
-    await page.waitForURL('/analytics');
+    // Navigate to scan page (no separate analytics route)
+    await page.goto('/scan');
+    
+    // Navigate back to results
+    await page.goto('/results');
     
     // Transaction ID should remain the same (not overwritten)
     const currentTransactionId = await getTransactionIdFromPage(page);
@@ -79,7 +80,7 @@ test.describe('PHASE 5 — Transaction Race Condition Test', () => {
     for (let i = 0; i < 3; i++) {
       await page.goto('/scan');
       await page.fill('textarea', MOCK_DEPENDENCIES.npm);
-      await page.click('button:has-text("Scan")');
+      await page.click('button:has-text("Scan & Detect Vulnerabilities")');
       await page.waitForURL('/results', { timeout: 120000 });
       const tid = await getTransactionIdFromPage(page);
       transactionIds.push(tid);
@@ -106,15 +107,14 @@ test.describe('PHASE 5 — Transaction Race Condition Test', () => {
     // Start scan
     await page.goto('/scan');
     await page.fill('textarea', MOCK_DEPENDENCIES.npm);
-    await page.click('button:has-text("Scan")');
-    await page.waitForURL('/scanning');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     
-    // Cancel by navigating away
+    // Cancel by navigating away immediately (during loading overlay)
     await page.goto('/scan');
     
     // Start new scan
     await page.fill('textarea', MOCK_DEPENDENCIES.python);
-    await page.click('button:has-text("Scan")');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     await page.waitForURL('/results', { timeout: 150000 });
     
     // Only latest scan should be visible

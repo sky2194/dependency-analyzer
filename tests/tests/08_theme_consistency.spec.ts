@@ -22,8 +22,7 @@ test.describe('PHASE 8 — Theme Stability Under Load Test', () => {
     await page.fill('textarea', MOCK_DEPENDENCIES.npm);
     
     // Start scan
-    await page.click('button:has-text("Scan")');
-    await page.waitForURL('/scanning');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     
     // Toggle theme during scan
     const themeButton = page.locator('button[aria-label="Toggle theme"]');
@@ -39,8 +38,7 @@ test.describe('PHASE 8 — Theme Stability Under Load Test', () => {
   test('should switch theme during loading', async ({ page }) => {
     await page.goto('/scan');
     await page.fill('textarea', MOCK_DEPENDENCIES.npm);
-    await page.click('button:has-text("Scan")');
-    await page.waitForURL('/scanning');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     
     // Rapid theme switching during loading
     const themeButton = page.locator('button[aria-label="Toggle theme"]');
@@ -85,7 +83,7 @@ test.describe('PHASE 8 — Theme Stability Under Load Test', () => {
     // Complete a scan
     await page.goto('/scan');
     await page.fill('textarea', MOCK_DEPENDENCIES.npm);
-    await page.click('button:has-text("Scan")');
+    await page.click('button:has-text("Scan & Detect Vulnerabilities")');
     await page.waitForURL('/results', { timeout: 120000 });
     
     // Toggle theme

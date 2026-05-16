@@ -60,12 +60,9 @@ export async function performScan(
   await page.fill('textarea', code);
   
   // Click scan button
-  await page.click('button:has-text("Scan")');
+  await page.click('button:has-text("Scan & Detect Vulnerabilities")');
   
-  // Navigate to scanning page
-  await page.waitForURL('/scanning');
-  
-  // Wait for scan to complete
+  // Wait for scan to complete (loading overlay on /scan, then navigates to /results)
   await page.waitForURL('/results', { timeout: 120000 });
   
   // Get transaction_id from URL state
