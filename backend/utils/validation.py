@@ -1,7 +1,7 @@
 import re
 
-# Valid package name pattern: alphanumeric, dots, dashes, underscores, forward slashes (for scoped packages)
-PACKAGE_NAME_PATTERN = r'^[a-zA-Z0-9._\-\/]+$'
+# Valid package name pattern: alphanumeric, dots, dashes, underscores, forward slashes, @ (for scoped packages)
+PACKAGE_NAME_PATTERN = r'^[@a-zA-Z0-9._\-\/]+$'
 
 # Valid version pattern: semver with optional operators
 VERSION_PATTERN = r'^[~^<>=]*\d+(\.\d+){0,2}([\-+a-zA-Z0-9.]*)?$|^[*x]$|^latest$'

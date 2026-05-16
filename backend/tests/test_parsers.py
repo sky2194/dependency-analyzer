@@ -18,7 +18,7 @@ class TestParsers(unittest.TestCase):
         
         self.assertEqual(result['project_name'], 'test')
         self.assertEqual(result['project_version'], '1.0.0')
-        self.assertIn('express', result['dependencies'])
+        self.assertIn('express', [d['name'] for d in result['deps']])
     
     def test_npm_parser_malformed_input(self):
         """Test npm parser with malformed JSON"""
@@ -31,22 +31,20 @@ class TestParsers(unittest.TestCase):
         empty_json = '{"name":"test","version":"1.0.0"}'
         result = npm_parser.parse(empty_json)
         
-        self.assertEqual(len(result['dependencies']), 0)
+        self.assertEqual(len(result['deps']), 0)
     
     def test_pypi_parser_valid_input(self):
         """Test PyPI parser with valid requirements.txt"""
         valid_reqs = 'requests==2.28.0\nflask>=2.0.0'
         result = pypi_parser.parse(valid_reqs)
         
-        self.assertEqual(len(result['dependencies']), 2)
+        self.assertEqual(len(result['deps']), 2)
     
     def test_pypi_parser_malformed_input(self):
         """Test PyPI parser with malformed input"""
         malformed_reqs = ''
-        result = pypi_parser.parse(malformed_reqs)
-        
-        # Should handle gracefully
-        self.assertEqual(len(result['dependencies']), 0)
+        with self.assertRaises(ValueError):
+            pypi_parser.parse(malformed_reqs)
     
     def test_maven_parser_valid_input(self):
         """Test Maven parser with valid pom.xml"""
@@ -65,8 +63,8 @@ class TestParsers(unittest.TestCase):
 </project>'''
         result = maven_parser.parse(valid_pom)
         
-        self.assertEqual(result['project_name'], 'test')
-        self.assertIn('spring-core', [d['name'] for d in result['dependencies']])
+        self.assertEqual(result['project_name'], 'com.example:test')
+        self.assertIn('org.springframework:spring-core', [d['name'] for d in result['deps']])
     
     def test_maven_parser_malformed_input(self):
         """Test Maven parser with malformed XML"""
