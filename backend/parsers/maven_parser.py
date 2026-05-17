@@ -1,5 +1,12 @@
 import xmltodict
 import requests
+import sys
+import os
+import logging
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils.validation import validate_maven_coordinate, validate_version
+
+log = logging.getLogger(__name__)
 
 MAVEN_SEARCH = 'https://search.maven.org/solrsearch/select'
 
@@ -10,11 +17,24 @@ def get_latest_version(group, artifact):
             docs = res.json().get('response', {}).get('docs', [])
             if docs:
                 return docs[0].get('latestVersion')
-    except Exception:
-        pass
+    except requests.exceptions.Timeout as e:
+        log.warning(f"Timeout fetching latest version for {group}:{artifact}: {e}")
+        return None
+    except requests.exceptions.RequestException as e:
+        log.warning(f"Network error fetching latest version for {group}:{artifact}: {e}")
+        return None
+    except Exception as e:
+        log.error(f"Error fetching latest version for {group}:{artifact}: {e}")
+        return None
     return None
 
 def parse(content):
+    # Pre-validate content for XML/script injection before parsing
+    # Allow standard XML declaration but block script tags
+    content_lower = content.lower()
+    if '<script' in content_lower or '</script>' in content_lower:
+        raise ValueError("Invalid pom.xml: contains potentially malicious content")
+    
     try:
         data = xmltodict.parse(content)
     except Exception as e:
@@ -24,6 +44,18 @@ def parse(content):
     group_id = project.get('groupId', 'com.example')
     artifact_id = project.get('artifactId', 'my-app')
     version = project.get('version', '1.0.0')
+
+    # Validate Maven coordinates
+    try:
+        validate_maven_coordinate(group_id, 'groupId')
+    except ValueError:
+        raise ValueError(f"Invalid groupId: contains invalid characters")
+
+    try:
+        validate_maven_coordinate(artifact_id, 'artifactId')
+    except ValueError:
+        raise ValueError(f"Invalid artifactId: contains invalid characters")
+
     project_name = f"{group_id}:{artifact_id}"
 
     props = {k: v for k, v in project.get('properties', {}).items() if isinstance(v, str)}
@@ -40,8 +72,28 @@ def parse(content):
         g = dep.get('groupId', '')
         a = dep.get('artifactId', '')
         v = dep.get('version', '')
+
+        # Validate Maven coordinates
+        try:
+            validate_maven_coordinate(g, 'groupId')
+        except ValueError:
+            raise ValueError(f"Invalid dependency groupId: contains invalid characters")
+
+        try:
+            validate_maven_coordinate(a, 'artifactId')
+        except ValueError:
+            raise ValueError(f"Invalid dependency artifactId: contains invalid characters")
+
         if v.startswith('${'):
             v = props.get(v.strip('${}'), '')
+
+        # Validate version string
+        if v and not v.startswith('${'):
+            try:
+                validate_version(v)
+            except ValueError:
+                v = 'unknown'
+
         name = f"{g}:{a}"
         pinned = bool(v and '${' not in v)
         warning = None

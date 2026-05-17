@@ -52,7 +52,7 @@ export default function Tooltip({ termKey, children }) {
           fontSize: 12,
           lineHeight: 1.6,
           color: 'var(--text)',
-          boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+          boxShadow: '0 8px 24px var(--overlay-bg)',
           pointerEvents: 'none',
         }}>
           <div style={{ fontSize: 10, fontFamily: 'var(--font-mono)', color: 'var(--accent)', letterSpacing: 1, marginBottom: 5, fontWeight: 600 }}>

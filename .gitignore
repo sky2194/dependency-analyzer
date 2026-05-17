@@ -56,6 +56,8 @@ ssh-keygen
 # Security - never commit these
 .env
 .env.*
+!.env.example
+!**/.env.example
 *.pem
 *.key
 *.p12
@@ -83,3 +85,102 @@ backend/venv/
 frontend/node_modules/
 *.backups
 .backups/.backups/
+node_modules/
+dist/
+build/
+.env
+*.log
+# Playwright test results
+playwright-report/
+test-results/
+playwright/.cache/
+blob-report/
+playwright/.auth/
+
+# Optional traces/videos/screenshots (if you don’t want them in git)
+**/trace.zip
+**/*.webm
+**/*.png
+# Playwright generated artifacts
+playwright-report/
+test-results/
+blob-report/
+
+# Screenshots / videos / traces
+*.png
+*.webm
+*.trace
+*.zip
+
+# Coverage
+coverage/
+
+# Cache
+.playwright/
+playwright/.cache/
+
+# Playwright outputs
+test-results/
+playwright-report/
+blob-report/
+tests/test-results/
+tests/playwright-report/
+
+# artifacts
+*.png
+*.webm
+*.trace
+*.zip
+
+# runtime
+test-results.json
+
+
+# Playwright generated artifacts
+test-results.json
+tests/test-results.json
+test-results/
+playwright-report/
+# Node
+node_modules/
+
+# Build
+dist/
+build/
+
+# Python
+__pycache__/
+.pytest_cache/
+*.pyc
+
+# Playwright
+playwright-report/
+test-results/
+blob-report/
+*.trace
+*.webm
+
+# Coverage
+coverage/
+
+# Mac
+.DS_Store
+
+# Logs
+*.log
+# Environment
+.env
+*.env
+
+# SSH keys
+ssh-keygen
+ssh-keygen.pub
+
+# Python virtual env
+venv/
+backend/venv/
+
+# Node modules
+node_modules/
+frontend/node_modules/
+tests/node_modules/

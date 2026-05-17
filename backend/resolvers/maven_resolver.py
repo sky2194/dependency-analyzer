@@ -2,11 +2,16 @@ import requests
 import xml.etree.ElementTree as ET
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
+import logging
+
+log = logging.getLogger(__name__)
 
 MAVEN_REPO = 'https://repo1.maven.org/maven2'
 MAVEN_SEARCH = 'https://search.maven.org/solrsearch/select'
 _cache = {}
 _cache_lock = Lock()
+_CACHE_TTL = 3600
+_MAX_CACHE_SIZE = 500
 
 def _fetch_deps(group, artifact, version):
     key = f"{group}:{artifact}:{version}"
@@ -34,8 +39,19 @@ def _fetch_deps(group, artifact, version):
             deps[f"{g}:{a}"] = {'group': g, 'artifact': a, 'version': v}
         with _cache_lock:
             _cache[key] = deps
+            # Evict oldest entries if cache exceeds max size
+            while len(_cache) >= _MAX_CACHE_SIZE:
+                oldest_key = next(iter(_cache))
+                del _cache[oldest_key]
         return deps
-    except Exception:
+    except requests.exceptions.Timeout as e:
+        log.warning(f"Timeout fetching Maven deps for {group}:{artifact}@{version}: {e}")
+        return {}
+    except requests.exceptions.RequestException as e:
+        log.warning(f"Network error fetching Maven deps for {group}:{artifact}@{version}: {e}")
+        return {}
+    except Exception as e:
+        log.error(f"Error fetching Maven deps for {group}:{artifact}@{version}: {e}")
         return {}
 
 def _build_tree(name, version, dep_type, depth, max_depth, visited):
@@ -48,18 +64,18 @@ def _build_tree(name, version, dep_type, depth, max_depth, visited):
 
     deps_map = _fetch_deps(group, artifact, version)
     children = []
-    child_items = [(n, d) for n, d in deps_map.items() if f"{n}@{d['version']}" not in visited]
-    visited = visited | {f"{d[0]}@{d[1]['version']}" for d in child_items}
+    child_items = [(n, d['version']) for n, d in deps_map.items() if f"{n}@{d['version']}" not in visited]
+    visited = visited | {f"{n}@{v}" for n, v in child_items}
 
     if child_items:
         with ThreadPoolExecutor(max_workers=8) as ex:
-            futures = {ex.submit(_build_tree, n, d['version'], 'transitive', depth+1, max_depth, visited): (n, d) for n, d in child_items}
+            futures = {ex.submit(_build_tree, n, v, 'transitive', depth+1, max_depth, visited): (n, v) for n, v in child_items}
             for future in as_completed(futures):
                 try:
                     children.append(future.result())
-                except Exception:
-                    n, d = futures[future]
-                    children.append({'name': n, 'version': d['version'], 'type': 'transitive', 'dependencies': [], 'vulnerabilities': []})
+                except Exception as e:
+                    log.error(f"Error building tree for {n}@{v}: {e}")
+                    children.append({'name': n, 'version': v, 'type': 'transitive', 'dependencies': [], 'vulnerabilities': []})
 
     return {'name': name, 'version': version, 'type': dep_type, 'dependencies': children, 'vulnerabilities': []}
 
@@ -78,8 +94,8 @@ def resolve(direct_deps, max_depth=2):
                 graph_deps.append(node)
                 _collect(node['name'], node['version'], 1, 'root', version_map)
                 _collect_tree(node.get('dependencies', []), version_map, 2, node['name'])
-            except Exception:
-                d = futures[future]
+            except Exception as e:
+                log.error(f"Error resolving {d['name']}: {e}")
                 graph_deps.append({'name': d['name'], 'version': d['version'], 'type': 'direct', 'dependencies': [], 'vulnerabilities': []})
 
     return graph_deps, _resolve_conflicts(version_map)

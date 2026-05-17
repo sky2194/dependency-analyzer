@@ -1,7 +1,7 @@
-// In production, calls go directly to Railway backend
-// In development, Vite proxy handles /api → localhost:5000
-const API_BASE = import.meta.env.VITE_API_URL 
-  ? `${import.meta.env.VITE_API_URL}`
+// Production: set VITE_API_URL to the DigitalOcean backend origin.
+// Development: leave empty so Vite proxies /api to localhost:5000.
+const API_BASE = import.meta.env.VITE_API_URL
+  ? import.meta.env.VITE_API_URL.replace(/\/$/, '')
   : ''
 
 export default API_BASE

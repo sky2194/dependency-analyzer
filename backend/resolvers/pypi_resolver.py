@@ -2,10 +2,15 @@ import requests
 import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
+import logging
+
+log = logging.getLogger(__name__)
 
 PYPI = 'https://pypi.org/pypi'
 _cache = {}
 _cache_lock = Lock()
+_CACHE_TTL = 3600
+_MAX_CACHE_SIZE = 500
 
 def _fetch_deps(name, version):
     key = f"{name}@{version}"
@@ -31,8 +36,19 @@ def _fetch_deps(name, version):
             deps[dep_name] = ver_match.group(0) if ver_match else 'latest'
         with _cache_lock:
             _cache[key] = deps
+            # Evict oldest entries if cache exceeds max size
+            while len(_cache) >= _MAX_CACHE_SIZE:
+                oldest_key = next(iter(_cache))
+                del _cache[oldest_key]
         return deps
-    except Exception:
+    except requests.exceptions.Timeout as e:
+        log.warning(f"Timeout fetching PyPI deps for {name}@{version}: {e}")
+        return {}
+    except requests.exceptions.RequestException as e:
+        log.warning(f"Network error fetching PyPI deps for {name}@{version}: {e}")
+        return {}
+    except Exception as e:
+        log.error(f"Error fetching PyPI deps for {name}@{version}: {e}")
         return {}
 
 def _build_tree(name, version, dep_type, depth, max_depth, visited):
@@ -50,8 +66,8 @@ def _build_tree(name, version, dep_type, depth, max_depth, visited):
             for future in as_completed(futures):
                 try:
                     children.append(future.result())
-                except Exception:
-                    n, v = futures[future]
+                except Exception as e:
+                    log.error(f"Error building tree for {n}@{v}: {e}")
                     children.append({'name': n, 'version': v, 'type': 'transitive', 'dependencies': [], 'vulnerabilities': []})
 
     return {'name': name, 'version': version, 'type': dep_type, 'dependencies': children, 'vulnerabilities': []}
@@ -71,8 +87,8 @@ def resolve(direct_deps, max_depth=2):
                 graph_deps.append(node)
                 _collect(node['name'], node['version'], 1, 'root', version_map)
                 _collect_tree(node.get('dependencies', []), version_map, 2, node['name'])
-            except Exception:
-                d = futures[future]
+            except Exception as e:
+                log.error(f"Error resolving {d['name']}: {e}")
                 graph_deps.append({'name': d['name'], 'version': d['version'], 'type': 'direct', 'dependencies': [], 'vulnerabilities': []})
 
     return graph_deps, _resolve_conflicts(version_map)

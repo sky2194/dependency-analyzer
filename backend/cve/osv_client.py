@@ -1,21 +1,41 @@
 import requests
 import re
 from packaging.version import Version, InvalidVersion
+import logging
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils.circuit_breaker import CircuitBreaker, retry_with_backoff
+
+log = logging.getLogger(__name__)
 
 OSV_URL = 'https://api.osv.dev/v1'
 ECOSYSTEM_MAP = {'npm': 'npm', 'pypi': 'PyPI', 'maven': 'Maven', 'lockfile': 'npm', 'npm-lock': 'npm'}
 
+# Circuit breaker for OSV API
+osv_circuit_breaker = CircuitBreaker(failure_threshold=5, timeout=60, recovery_timeout=30)
+
+@osv_circuit_breaker.call
+@retry_with_backoff(max_retries=1, base_delay=0.5, max_delay=3)
 def query_package(name, version, ecosystem):
     eco = ECOSYSTEM_MAP.get(ecosystem, 'npm')
     try:
         res = requests.post(f"{OSV_URL}/query", json={
             'version': version,
             'package': {'name': name, 'ecosystem': eco}
-        }, timeout=8)
+        }, timeout=5)
         if res.status_code != 200:
+            log.warning(f"OSV API returned {res.status_code} for {name}@{version}")
             return []
         return res.json().get('vulns', [])
-    except Exception:
+    except requests.exceptions.Timeout as e:
+        log.warning(f"Timeout querying OSV for {name}@{version}: {e}")
+        return []
+    except requests.exceptions.RequestException as e:
+        log.warning(f"Network error querying OSV for {name}@{version}: {e}")
+        return []
+    except Exception as e:
+        log.error(f"Error querying OSV for {name}@{version}: {e}")
         return []
 
 def _parse_ver(v):
@@ -76,6 +96,14 @@ def _get_fix_version(installed_ver, affected):
             if introduced is not None and installed >= introduced:
                 if fixed and installed < fixed:
                     candidates.append(fixed)
+                # Also check for exact version matches in affected versions list
+                for affected_ver in a.get('versions', []):
+                    try:
+                        av = _parse_ver(affected_ver)
+                        if av and av > installed:
+                            candidates.append(av)
+                    except InvalidVersion:
+                        pass
 
     if candidates:
         return str(min(candidates))
@@ -149,6 +177,7 @@ def format_vuln(vuln, package, version):
 
     return {
         'cve_id': cve_id,
+        'source': 'OSV',
         'osv_id': vuln.get('id'),
         'package': package,
         'version': version,

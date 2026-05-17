@@ -63,7 +63,7 @@ export default function FileUpload({ onAnalyze, loading, onEcosystemChange }) {
         onDrop={e => { e.preventDefault(); setDrag(false); handleFile(e.dataTransfer.files[0]) }}
         onDragOver={e => { e.preventDefault(); setDrag(true) }}
         onDragLeave={() => setDrag(false)}
-        style={{ border: `2px dashed ${drag ? 'var(--accent)' : 'var(--border)'}`, borderRadius: 'var(--radius)', padding: '16px', textAlign: 'center', cursor: 'pointer', background: drag ? '#1e1510' : 'var(--surface)', marginBottom: 10, transition: 'all 0.2s' }}>
+        style={{ border: `2px dashed ${drag ? 'var(--accent)' : 'var(--border)'}`, borderRadius: 'var(--radius)', padding: '16px', textAlign: 'center', cursor: 'pointer', background: drag ? 'var(--vuln-bg)' : 'var(--surface)', marginBottom: 10, transition: 'all 0.2s' }}>
         <div style={{ fontSize: 20, marginBottom: 4 }}>📁</div>
         <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 13 }}>Drop file or click to browse</div>
         <div style={{ color: 'var(--muted)', fontSize: 11, marginTop: 2 }}>package.json / package-lock.json · requirements.txt · pom.xml</div>
@@ -90,13 +90,13 @@ export default function FileUpload({ onAnalyze, loading, onEcosystemChange }) {
       />
 
       {content.trim() && content.length > 512000 && (
-        <div style={{ marginTop: 10, padding: '8px 12px', background: '#2d1515', border: '1px solid #7f1d1d', borderRadius: 6, fontSize: 12, color: '#ef4444' }}>
+        <div style={{ marginTop: 10, padding: '8px 12px', background: 'var(--vuln-bg)', border: '1px solid var(--vuln-border)', borderRadius: 6, fontSize: 12, color: 'var(--red)' }}>
           ⚠️ File too large ({Math.round(content.length/1024)}KB). Maximum is 512KB.
         </div>
       )}
       <button onClick={() => onAnalyze(content, eco.file)} disabled={!content.trim() || loading || content.length > 512000}
-        style={{ marginTop: 14, padding: '11px 28px', background: content.trim() ? 'var(--accent)' : 'var(--border)', color: '#fff', border: 'none', borderRadius: 'var(--radius)', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14, cursor: content.trim() ? 'pointer' : 'not-allowed' }}>
-        {loading ? '⏳ Scanning...' : '🔍 Analyze Dependencies'}
+        style={{ marginTop: 14, padding: '11px 28px', background: content.trim() ? 'var(--accent)' : 'var(--border)', color: 'var(--white)', border: 'none', borderRadius: 'var(--radius)', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14, cursor: content.trim() ? 'pointer' : 'not-allowed' }}>
+        {loading ? '⏳ Scanning...' : '🔍 Scan & Detect Vulnerabilities'}
       </button>
     </div>
   )

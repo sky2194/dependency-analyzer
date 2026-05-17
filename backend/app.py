@@ -1,8 +1,16 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, g
 from flask_cors import CORS
 from functools import wraps
 from collections import defaultdict
-import os, time, logging
+import os
+import sys
+import uuid
+import logging
+import copy
+import time
+
+# Ensure backend directory is in Python path for local imports
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
 log = logging.getLogger(__name__)
@@ -32,30 +40,96 @@ from export.csv_export import generate_csv
 
 app = Flask(__name__)
 
-ALLOWED_ORIGINS = os.environ.get('ALLOWED_ORIGINS', 'https://dependency-analyzer-eight.vercel.app,http://localhost:3000').split(',')
+def parse_allowed_origins():
+    origins = os.environ.get(
+        'ALLOWED_ORIGINS',
+        'https://dependency-analyzer-sky2194s-projects.vercel.app,https://dependency-analyzer-eight.vercel.app,http://localhost:3000,http://localhost:5173'
+    )
+    return [origin.strip().rstrip('/') for origin in origins.split(',') if origin.strip()]
+
+ALLOWED_ORIGINS = parse_allowed_origins()
+ALLOW_VERCEL_PREVIEWS = os.environ.get('ALLOW_VERCEL_PREVIEWS', 'true').lower() == 'true'
 CORS(app, origins=ALLOWED_ORIGINS, allow_headers=['Content-Type'], methods=['GET', 'POST', 'OPTIONS'])
 
 MAX_CONTENT_SIZE = 512 * 1024
-RATE_LIMIT       = 30
+RATE_LIMIT       = 20
 RATE_WINDOW      = 60
 MAX_DIRECT_DEPS  = 50
 
-_rate_store = defaultdict(list)
+# Abstract rate limiter interface
+class RateLimiter:
+    def __init__(self, use_redis=False):
+        self.use_redis = use_redis
+        if use_redis:
+            try:
+                import redis
+                self.redis = redis.from_url(os.environ.get('REDIS_URL', 'redis://localhost:6379'))
+                self.redis.ping()
+            except Exception as e:
+                log.warning(f"Redis unavailable, falling back to in-memory rate limiting: {e}")
+                self.use_redis = False
+                self._store = defaultdict(list)
+        else:
+            self._store = defaultdict(list)
+    
+    def is_allowed(self, client_id):
+        now = time.time()
+        if self.use_redis:
+            key = f"rate_limit:{client_id}"
+            try:
+                pipe = self.redis.pipeline()
+                pipe.zremrangebyscore(key, 0, now - RATE_WINDOW)
+                pipe.zcard(key)
+                pipe.zadd(key, {str(now): now})
+                pipe.expire(key, RATE_WINDOW)
+                results = pipe.execute()
+                count = results[1]
+                return count < RATE_LIMIT, RATE_LIMIT - count if count >= RATE_LIMIT else None
+            except Exception as e:
+                log.error(f"Redis rate limit error: {e}")
+                return True, None
+        else:
+            # In-memory fallback
+            self._store[client_id] = [t for t in self._store[client_id] if now - t < RATE_WINDOW]
+            if len(self._store[client_id]) >= RATE_LIMIT:
+                retry = int(RATE_WINDOW - (now - self._store[client_id][0]))
+                return False, retry
+            self._store[client_id].append(now)
+            return True, None
+
+_rate_limiter = RateLimiter(use_redis=os.environ.get('USE_REDIS_RATE_LIMIT', 'false').lower() == 'true')
 
 def get_client_id():
     return request.headers.get('X-Forwarded-For', request.remote_addr)
+
+def is_origin_allowed(origin):
+    if not origin:
+        return False
+    origin = origin.rstrip('/')
+    if '*' in ALLOWED_ORIGINS or origin in ALLOWED_ORIGINS:
+        return True
+    return ALLOW_VERCEL_PREVIEWS and origin.startswith('https://') and origin.endswith('.vercel.app')
 
 def rate_limited(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         client = get_client_id()
-        now = time.time()
-        _rate_store[client] = [t for t in _rate_store[client] if now - t < RATE_WINDOW]
-        if len(_rate_store[client]) >= RATE_LIMIT:
-            retry = int(RATE_WINDOW - (now - _rate_store[client][0]))
-            return jsonify({'error': f'Rate limit exceeded. Try again in {retry}s.'}), 429
-        _rate_store[client].append(now)
+        allowed, retry_after = _rate_limiter.is_allowed(client)
+        if not allowed:
+            return jsonify({'error': f'Rate limit exceeded. Try again in {retry_after}s.'}), 429
         return f(*args, **kwargs)
+    return decorated
+
+def request_id_middleware(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        request_id = request.headers.get('X-Request-ID', str(uuid.uuid4()))
+        g.request_id = request_id
+        log.info(f"Request {request_id}: {request.method} {request.path}")
+        response = f(*args, **kwargs)
+        if hasattr(response, 'headers'):
+            response.headers['X-Request-ID'] = request_id
+        return response
     return decorated
 
 def detect_ecosystem(filename):
@@ -64,6 +138,14 @@ def detect_ecosystem(filename):
     if filename.endswith('.txt') or 'requirements' in filename: return 'pypi'
     if filename.endswith('.xml') or 'pom' in filename: return 'maven'
     return 'npm'
+
+def filename_for_ecosystem(ecosystem):
+    return {
+        'npm': 'package.json',
+        'npm-lock': 'package-lock.json',
+        'pypi': 'requirements.txt',
+        'maven': 'pom.xml',
+    }.get(ecosystem, 'package.json')
 
 def validate_content(content, filename):
     if not content or not content.strip():
@@ -80,14 +162,18 @@ def validate_content(content, filename):
 def deduplicate_vulns(vulnerabilities):
     seen = {}
     for v in vulnerabilities:
-        key = f"{v['cve_id']}:{v['package']}:{v.get('version','')}"
+        # Use CVE ID as the unique key (same CVE can affect multiple packages, but we want to track per-package)
+        key = f"{v['cve_id'].lower()}:{v['package'].lower()}"
         if key not in seen:
             seen[key] = v
         else:
             existing = seen[key]
+            # Keep the entry with the shorter path (closer to root) and merge paths
             if len(v.get('path', [])) < len(existing.get('path', [])):
-                v['transitive_path'] = existing.get('path')
+                v['all_paths'] = [existing.get('path', []), v.get('path', [])]
                 seen[key] = v
+            else:
+                existing['all_paths'] = [v.get('path', []), existing.get('path', [])]
     return list(seen.values())
 
 def group_vulns_by_package(vulnerabilities):
@@ -117,8 +203,80 @@ def group_vulns_by_package(vulnerabilities):
         g['cves'].sort(key=lambda v: sev_order.get(v['severity'], 3))
     return result
 
-def _count_packages(deps):
-    return len(deps) + sum(_count_packages(d.get('dependencies', [])) for d in deps)
+
+def _build_all_packages(graph_deps, grouped_vulns):
+    """Build complete package list with vulnerability info for each package."""
+    vuln_map = {}
+    for g in grouped_vulns:
+        key = f"{g['package']}@{g['version']}"
+        vuln_map[key] = g
+
+    # Track which packages are direct (top-level only)
+    direct_names = set()
+    for dep in graph_deps:
+        if dep.get('type') == 'direct':
+            direct_names.add(dep.get('name'))
+
+    all_pkgs = []
+    visited = set()
+    
+    def walk(deps, depth=0):
+        for dep in deps:
+            key = f"{dep.get('name')}@{dep.get('version')}"
+            if key in visited:
+                continue
+            visited.add(key)
+            # Only top-level deps (depth 0) can be direct
+            is_direct = depth == 0 and dep.get('name') in direct_names
+            g = vuln_map.get(key)
+            if g:
+                all_pkgs.append({
+                    'package': g['package'],
+                    'version': g['version'],
+                    'vulnerabilities': g['cves'],
+                    'highestSeverity': g['highest_severity'],
+                    'recommended_fix': g['recommended_fix'],
+                    'is_direct': is_direct,
+                })
+            else:
+                all_pkgs.append({
+                    'package': dep.get('name'),
+                    'version': dep.get('version'),
+                    'vulnerabilities': [],
+                    'highestSeverity': None,
+                    'recommended_fix': None,
+                    'is_direct': is_direct,
+                })
+            walk(dep.get('dependencies', []), depth + 1)
+    
+    walk(graph_deps)
+    # Sort: vulnerable first (by severity), then secure
+    sev_order = {'CRITICAL': 0, 'HIGH': 1, 'MEDIUM': 2, 'LOW': 3, None: 99}
+    all_pkgs.sort(key=lambda p: sev_order.get(p['highestSeverity'], 99))
+    return all_pkgs
+
+def _count_packages(deps, visited=None):
+    """Count packages with cycle detection to prevent infinite recursion."""
+    if visited is None:
+        visited = set()
+    
+    count = 0
+    for dep in deps:
+        dep_key = f"{dep.get('name')}@{dep.get('version')}"
+        if dep_key in visited:
+            log.warning(f"Cycle detected: {dep_key} already visited")
+            continue
+        visited.add(dep_key)
+        count += 1
+        count += _count_packages(dep.get('dependencies', []), visited)
+    return count
+
+def add_ui_aliases(vulnerabilities):
+    for v in vulnerabilities:
+        v.setdefault('package_name', v.get('package'))
+        v.setdefault('installed_version', v.get('version'))
+        v.setdefault('recommended_fix', v.get('fix_version') or v.get('fix'))
+    return vulnerabilities
 
 PARSERS   = {'npm': parse_npm, 'pypi': parse_pypi, 'maven': parse_maven, 'npm-lock': parse_lockfile}
 RESOLVERS = {'npm': resolve_npm, 'pypi': resolve_pypi, 'maven': resolve_maven, 'npm-lock': resolve_lockfile}
@@ -126,30 +284,40 @@ RESOLVERS = {'npm': resolve_npm, 'pypi': resolve_pypi, 'maven': resolve_maven, '
 @app.after_request
 def add_cors_headers(response):
     origin = request.headers.get('Origin', '')
-    if origin in ALLOWED_ORIGINS or '*' in ALLOWED_ORIGINS:
-        response.headers['Access-Control-Allow-Origin'] = origin
+    if is_origin_allowed(origin):
+        response.headers['Access-Control-Allow-Origin'] = origin.rstrip('/')
         response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
         response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+        response.headers['Vary'] = 'Origin'
+    # Security headers
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
     return response
 
-@app.route('/api/analyze', methods=['POST'])
-@rate_limited
-def analyze():
+def run_analysis(body):
     if request.content_length and request.content_length > MAX_CONTENT_SIZE * 2:
         return jsonify({'error': 'Request too large (max 512KB)'}), 413
 
-    body = request.get_json(silent=True)
-    if not body:
-        return jsonify({'error': 'Invalid JSON body'}), 400
-
     content  = body.get('content', '')
-    filename = body.get('filename', 'package.json')
+    filename = body.get('filename') or filename_for_ecosystem(body.get('ecosystem', 'npm'))
 
     error, status = validate_content(content, filename)
     if error:
         return jsonify({'error': error}), status
 
     ecosystem = detect_ecosystem(filename)
+
+    # Auto-detect npm lock-file shape from content
+    if ecosystem == 'npm':
+        try:
+            import json as _json
+            probe = _json.loads(content)
+            if 'lockfileVersion' in probe or ('packages' in probe and isinstance(probe['packages'], dict)):
+                ecosystem = 'npm-lock'
+        except Exception:
+            pass
 
     try:
         parsed = PARSERS[ecosystem](content)
@@ -167,36 +335,210 @@ def analyze():
     warnings = [d['warning'] for d in direct_deps if d.get('warning')]
 
     try:
-        graph_deps, mediation = RESOLVERS[ecosystem](direct_deps)
+        graph_deps, mediation = RESOLVERS[ecosystem](direct_deps, max_depth=2)
     except Exception as e:
         log.error(f"Resolver error: {e}")
         return jsonify({'error': 'Failed to resolve dependencies'}), 500
 
     try:
-        vulnerabilities = scan_tree(graph_deps, ecosystem, project_name)
+        vulnerabilities = scan_tree(graph_deps, ecosystem, project_name, max_depth=2)
     except Exception as e:
         log.error(f"Scan error: {e}")
         return jsonify({'error': 'Scan failed'}), 500
 
-    vulnerabilities = deduplicate_vulns(vulnerabilities)
+    vulnerabilities = add_ui_aliases(deduplicate_vulns(vulnerabilities))
     vulnerabilities.sort(key=lambda v: {'CRITICAL': 0, 'HIGH': 1, 'MEDIUM': 2, 'LOW': 3}.get(v.get('severity', 'LOW'), 3))
 
     graph = {'name': project_name, 'version': parsed.get('project_version', '1.0.0'),
              'type': 'root', 'dependencies': graph_deps, 'vulnerabilities': []}
 
-    log.info(f"Scan complete: {project_name} ({ecosystem}) — {len(vulnerabilities)} vulns in {_count_packages(graph_deps)} packages")
+    # Generate transaction_id for session isolation
+    transaction_id = str(uuid.uuid4())
+    
+    # Calculate consistent package count with cycle detection
+    total_packages = _count_packages(graph_deps)
+    
+    # Calculate vulnerability counts for clarity
+    grouped_vulns = group_vulns_by_package(vulnerabilities)
+    
+    log.info(f"Scan complete: {project_name} ({ecosystem}) — {len(vulnerabilities)} raw vulns, {len(grouped_vulns)} grouped in {total_packages} packages")
 
-    return jsonify({
+    # Calculate risk score with logarithmic scaling to prevent capping at 100
+    counts = {'CRITICAL': 0, 'HIGH': 0, 'MEDIUM': 0, 'LOW': 0}
+    for v in vulnerabilities:
+        sev = v.get('severity', 'LOW')
+        if sev in counts:
+            counts[sev] += 1
+    
+    # Use logarithmic scale: more vulns = higher score, but diminishing returns
+    import math
+    crit_impact = 40 * (1 - math.exp(-counts['CRITICAL'] / 3)) if counts['CRITICAL'] > 0 else 0
+    high_impact = 30 * (1 - math.exp(-counts['HIGH'] / 5)) if counts['HIGH'] > 0 else 0
+    med_impact = 20 * (1 - math.exp(-counts['MEDIUM'] / 8)) if counts['MEDIUM'] > 0 else 0
+    low_impact = 10 * (1 - math.exp(-counts['LOW'] / 10)) if counts['LOW'] > 0 else 0
+    
+    risk_score = min(100, round(crit_impact + high_impact + med_impact + low_impact))
+    
+    # Calculate risk label for frontend display
+    if risk_score >= 90:
+        risk_label = 'Critical'
+    elif risk_score >= 70:
+        risk_label = 'High'
+    elif risk_score >= 40:
+        risk_label = 'Medium'
+    elif risk_score >= 1:
+        risk_label = 'Low'
+    else:
+        risk_label = 'Secure'
+
+    # Calculate priority fix count (critical + high severity)
+    priority_fix_count = counts['CRITICAL'] + counts['HIGH']
+    
+    # Calculate secure package count
+    secure_package_count = total_packages - len(grouped_vulns)
+    
+    # Calculate vulnerable package count
+    vulnerable_package_count = len(grouped_vulns)
+
+    # Calculate vulnerable package counts by type
+    all_packages = _build_all_packages(graph_deps, grouped_vulns)
+    vulnerable_direct_count = len([p for p in all_packages if p.get('vulnerabilities') and len(p['vulnerabilities']) > 0 and p.get('is_direct')])
+    vulnerable_transitive_count = len([p for p in all_packages if p.get('vulnerabilities') and len(p['vulnerabilities']) > 0 and not p.get('is_direct')])
+
+    # Build immutable transaction snapshot with canonical data contract
+    scan_result = {
+        'transaction_id': transaction_id,
+        'snapshot_version': 1,
+        'status': 'COMPLETED',
         'ecosystem': 'npm' if ecosystem == 'npm-lock' else ecosystem,
         'project_name': project_name,
-        'total_packages': _count_packages(graph_deps),
-        'graph': graph,
-        'mediation': mediation,
-        'vulnerabilities': vulnerabilities,
-        'warnings': warnings,
+        'summary': {
+            'risk_score': risk_score,
+            'risk_label': risk_label,
+            'total_packages': total_packages,
+            'direct_dependencies': len([d for d in direct_deps if d.get('type') != 'transitive']),
+            'transitive_dependencies': total_packages - len([d for d in direct_deps if d.get('type') != 'transitive']),
+            'vulnerabilities': len(vulnerabilities),
+            'critical': counts['CRITICAL'],
+            'high': counts['HIGH'],
+            'medium': counts['MEDIUM'],
+            'low': counts['LOW'],
+            'secure_package_count': total_packages - len(grouped_vulns),
+            'vulnerable_package_count': len(grouped_vulns),
+            'vulnerable_direct_count': vulnerable_direct_count,
+            'vulnerable_transitive_count': vulnerable_transitive_count,
+            'priority_fix_count': counts['CRITICAL'] + counts['HIGH'],
+        },
+        'grouped_packages': all_packages,
+        'fixes': [v for v in vulnerabilities if v.get('fix_version')],
+        'vulnerabilities': copy.deepcopy(vulnerabilities),
+        'graph': copy.deepcopy(graph),
+        'dependency_tree': copy.deepcopy(graph),
         'scan_timestamp': int(time.time()),
-        'grouped_vulnerabilities': group_vulns_by_package(vulnerabilities),
-    })
+    }
+    
+    return jsonify(copy.deepcopy(scan_result))
+
+@app.route('/api/scan', methods=['POST'])
+@rate_limited
+def scan():
+    body = request.get_json(silent=True)
+    if not body:
+        return jsonify({'error': 'Invalid JSON body'}), 400
+    return run_analysis(body)
+
+@app.route('/api/scan-package', methods=['POST'])
+@rate_limited
+@request_id_middleware
+def scan_package_deep():
+    """Deep scan a specific package including its transitive dependencies."""
+    body = request.get_json(silent=True)
+    if not body:
+        return jsonify({'error': 'Invalid JSON body'}), 400
+    
+    package_name = body.get('package')
+    package_version = body.get('version')
+    ecosystem = body.get('ecosystem', 'npm')
+    
+    if not package_name:
+        return jsonify({'error': 'package name required'}), 400
+    
+    # Validate package name
+    try:
+        from utils.validation import validate_package_name
+        validate_package_name(package_name)
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    
+    if package_version:
+        try:
+            from utils.validation import validate_version
+            validate_version(package_version)
+        except ValueError as e:
+            return jsonify({'error': str(e)}), 400
+    
+    try:
+        # Build dependency tree with depth=2 to get transitive dependencies
+        from resolvers.npm_resolver import resolve as npm_resolve
+        from resolvers.pypi_resolver import resolve as pypi_resolve
+        from resolvers.maven_resolver import resolve as maven_resolve
+        
+        RESOLVERS = {'npm': npm_resolve, 'pypi': pypi_resolve, 'maven': maven_resolve}
+        
+        direct_deps = [{'name': package_name, 'version': package_version or 'latest', 'pinned': bool(package_version)}]
+        graph_deps, mediation = RESOLVERS[ecosystem](direct_deps, max_depth=2)
+        
+        # Scan with depth=2 to include transitive dependencies
+        vulnerabilities = scan_tree(graph_deps, ecosystem, package_name, max_depth=2)
+        vulnerabilities = add_ui_aliases(deduplicate_vulns(vulnerabilities))
+        vulnerabilities.sort(key=lambda v: {'CRITICAL': 0, 'HIGH': 1, 'MEDIUM': 2, 'LOW': 3}.get(v.get('severity', 'LOW'), 3))
+        
+        graph = {'name': package_name, 'version': package_version or 'latest',
+                 'type': 'root', 'dependencies': graph_deps, 'vulnerabilities': []}
+        
+        log.info(f"Deep scan complete: {package_name} ({ecosystem}) — {len(vulnerabilities)} vulns in {_count_packages(graph_deps)} packages")
+        
+        # Calculate risk score
+        counts = {'CRITICAL': 0, 'HIGH': 0, 'MEDIUM': 0, 'LOW': 0}
+        for v in vulnerabilities:
+            sev = v.get('severity', 'LOW')
+            if sev in counts:
+                counts[sev] += 1
+        risk_score = min(100, round(counts['CRITICAL']*25 + counts['HIGH']*10 + counts['MEDIUM']*4 + counts['LOW']*1))
+        
+        # Group vulnerabilities by package for frontend display
+        grouped_vulns = group_vulns_by_package(vulnerabilities)
+        
+        return jsonify({
+            'transaction_id': str(uuid.uuid4()),
+            'snapshot_version': 1,
+            'status': 'COMPLETED',
+            'ecosystem': ecosystem,
+            'project_name': package_name,
+            'summary': {
+                'risk_score': risk_score,
+                'risk_label': 'High' if risk_score >= 70 else 'Medium' if risk_score >= 40 else 'Low',
+                'total_packages': _count_packages(graph_deps),
+                'direct_dependencies': len([d for d in direct_deps if d.get('type') != 'transitive']),
+                'transitive_dependencies': _count_packages(graph_deps) - len([d for d in direct_deps if d.get('type') != 'transitive']),
+                'vulnerabilities': len(vulnerabilities),
+                'critical': counts['CRITICAL'],
+                'high': counts['HIGH'],
+                'medium': counts['MEDIUM'],
+                'low': counts['LOW'],
+                'secure_package_count': _count_packages(graph_deps) - len(grouped_vulns),
+                'vulnerable_package_count': len(grouped_vulns),
+                'priority_fix_count': counts['CRITICAL'] + counts['HIGH'],
+            },
+            'grouped_packages': [],
+            'vulnerabilities': vulnerabilities,
+            'graph': graph,
+            'dependency_tree': graph,
+            'scan_timestamp': int(time.time()),
+        })
+    except Exception as e:
+        log.error(f"Deep scan error: {e}")
+        return jsonify({'error': f'Deep scan failed: {str(e)}'}), 500
 
 @app.route('/api/cve/<cve_id>', methods=['GET'])
 def get_cve(cve_id):
