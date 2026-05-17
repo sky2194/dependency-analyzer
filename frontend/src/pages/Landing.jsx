@@ -55,9 +55,9 @@ export default function Landing() {
           DepAnalyzer
         </button>
         <div className="lp-nav-links">
-          <a href="#features" className="lp-nav-link">Features</a>
-          <a href="#how-it-works" className="lp-nav-link">How it works</a>
-          <button onClick={handleScan} className="lp-nav-link">Scan Now</button>
+          <a href="#features" className="lp-nav-link" aria-label="Jump to features section">Features</a>
+          <a href="#how-it-works" className="lp-nav-link" aria-label="Jump to how it works section">How it works</a>
+          <button onClick={handleScan} className="lp-nav-link" aria-label="Go to scanner">Scan Now</button>
         </div>
         <div className="lp-nav-cta"><button onClick={handleScan} className="lp-btn-primary" style={{fontSize:12,padding:"6px 14px"}}>{shield}Scan</button>
         </div>
@@ -86,7 +86,7 @@ export default function Landing() {
           <h1 className="lp-hero-title">Your Dependencies<br />Have <span>Hidden Vulnerabilities</span></h1>
           <p className="lp-hero-sub">DepAnalyzer scans your full dependency tree — direct <em>and</em> transitive — against <strong>NVD + OSV</strong> databases and delivers <strong>actionable fix commands</strong> so you can resolve issues before they become incidents.</p>
           <div className="lp-hero-actions">
-            <button onClick={() => navigate('/scan')} className="lp-btn-hero">{shield}Start Scanning</button>
+            <button onClick={() => navigate('/scan')} className="lp-btn-hero" aria-label="Start scanning your project">{shield}Start Scanning</button>
           </div>
           <div className="lp-hero-stats">
             {['2 CVE DBs|NVD + OSV','3 Ecosystems|npm · PyPI · Maven','Full Tree|Direct + Transitive','On-demand|Latest CVE data'].map(item => {
@@ -214,12 +214,12 @@ export default function Landing() {
 
       <div className="lp-cta-band reveal">
         <div><div className="lp-cta-title">Stop guessing.<br />Start securing.</div><div className="lp-cta-sub">Scan your first project — no account required.</div></div>
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}><button onClick={() => navigate('/scan')} className="lp-btn-hero">→ Scan Now</button></div>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}><button onClick={() => navigate('/scan')} className="lp-btn-hero" aria-label="Start scanning now">→ Scan Now</button></div>
       </div>
 
       <footer>
         <div className="lp-footer">
-          <div><div className="lp-nav-logo" style={{ marginBottom: 14 }}><div className="lp-nav-logo-icon">{shield}</div>DepAnalyzer</div><p className="lp-footer-desc">Real-time dependency vulnerability intelligence for modern engineering teams.</p></div>
+          <div><div className="lp-nav-logo" style={{ marginBottom: 14 }}><div className="lp-nav-logo-icon">{shield}</div>DepAnalyzer</div><p className="lp-footer-desc">On-demand dependency vulnerability scanning for modern engineering teams.</p></div>
           {['Product|Scanner|Knowledge Base','Databases|NVD|OSV'].map(col => {
             const [title, ...links] = col.split('|')
             return <div key={title}><div className="lp-footer-col-title">{title}</div><div className="lp-footer-links">{links.filter(l => l).map(l => <button key={l} onClick={() => l === 'Scanner' ? navigate('/scan') : l === 'Knowledge Base' ? navigate('/learn') : l === 'NVD' ? window.open('https://nvd.nist.gov', '_blank') : l === 'OSV' ? window.open('https://osv.dev', '_blank') : null}>{l}</button>)}</div></div>

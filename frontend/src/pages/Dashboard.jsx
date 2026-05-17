@@ -108,49 +108,7 @@ export default function Dashboard() {
   const navigate = useNavigate()
   const [eco, setEco] = useState(lastEco ? (ECOSYSTEMS[lastEco] || ECOSYSTEMS.npm) : ECOSYSTEMS.npm)
 
-  const loadExample = (type) => {
-    const examples = {
-      'npm': {
-        filename: 'package-lock.json',
-        content: JSON.stringify({
-          "name": "example-app",
-          "version": "1.0.0",
-          "lockfileVersion": 2,
-          "packages": {
-            "node_modules/lodash": {
-              "version": "4.17.21",
-              "resolved": "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz"
-            }
-          }
-        }, null, 2)
-      },
-      'pypi': {
-        filename: 'requirements.txt',
-        content: 'flask==2.0.1\nrequests==2.26.0\njinja2==3.0.1'
-      },
-      'maven': {
-        filename: 'pom.xml',
-        content: `<project>
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>com.example</groupId>
-  <artifactId>example-app</artifactId>
-  <version>1.0.0</version>
-  <dependencies>
-    <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-core</artifactId>
-      <version>5.3.8</version>
-    </dependency>
-  </dependencies>
-</project>`
-      }
-    }
-    
-    const example = examples[type] || examples['npm']
-    setCode(example.content)
-    setFile(example.filename)
-    setEco(ECOSYSTEMS[type] || ECOSYSTEMS.npm)
-  }
+
 
   const analyze = async (content, filename) => {   
     setError('')
