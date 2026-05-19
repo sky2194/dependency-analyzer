@@ -60,7 +60,7 @@ function RightPanel({ eco }) {
           </div>
         ))}
         <div style={{ marginTop: 8, fontSize: 11, color: 'var(--muted)', borderTop: '1px solid var(--border)', paddingTop: 8 }}>
-          Scores are <Tooltip termKey="cvss">CVSS</Tooltip> ratings from <Tooltip termKey="nvd">NVD</Tooltip> + <Tooltip termKey="osv">OSV</Tooltip>.
+          Scores are <Tooltip termKey="cvss">CVSS</Tooltip> ratings from <Tooltip termKey="osv">OSV</Tooltip>.
         </div>
       </div>
       <div className="scanner-card" style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: 16 }}>
@@ -124,7 +124,7 @@ export default function Dashboard() {
         </h1>
         <p style={{ color: 'var(--muted)', fontSize: 14, lineHeight: 1.7, maxWidth: 600 }}>
           Upload your dependency manifest to scan all direct and transitive packages for known CVEs.
-          Results are sourced from <strong style={{color:'var(--text)'}}>NVD</strong> and <strong style={{color:'var(--text)'}}>OSV</strong> — the industry-standard vulnerability databases.
+          Results are sourced from <strong style={{color:'var(--text)'}}>OSV</strong> — the industry-standard open-source vulnerability database.
         </p>
       </div>
 

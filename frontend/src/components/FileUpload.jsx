@@ -41,7 +41,7 @@ export default function FileUpload({ onAnalyze, loading, onEcosystemChange }) {
   return (
     <div>
       <StepBanner icon="📂" title="Upload your dependency file"
-        text={<>Your <Tooltip termKey="dependency">dependency</Tooltip> file lists every package your project uses. We parse it, build the full <Tooltip termKey="graph">dependency graph</Tooltip> including <Tooltip termKey="transitive">transitive dependencies</Tooltip>, then check each against <Tooltip termKey="nvd">NVD</Tooltip> + <Tooltip termKey="osv">OSV</Tooltip>.</>}
+        text={<>Your <Tooltip termKey="dependency">dependency</Tooltip> file lists every package your project uses. We parse it, build the full <Tooltip termKey="graph">dependency graph</Tooltip> including <Tooltip termKey="transitive">transitive dependencies</Tooltip>, then check each against the <Tooltip termKey="osv">OSV</Tooltip> vulnerability database.</>}
       />
 
       {/* Ecosystem tabs */}

@@ -84,12 +84,12 @@ export default function Landing() {
         <div className="lp-hero-content">
           <div className="lp-hero-badge"><div className="lp-hero-badge-dot" />Dependency vulnerability scanner for development teams</div>
           <h1 className="lp-hero-title">Your Dependencies<br />Have <span>Hidden Vulnerabilities</span></h1>
-          <p className="lp-hero-sub">DepAnalyzer scans your full dependency tree — direct <em>and</em> transitive — against <strong>NVD + OSV</strong> databases and delivers <strong>actionable fix commands</strong> so you can resolve issues before they become incidents.</p>
+          <p className="lp-hero-sub">DepAnalyzer scans your full dependency tree — direct <em>and</em> transitive — against <strong>OSV</strong> database with NVD fallback and delivers <strong>actionable fix commands</strong> so you can resolve issues before they become incidents.</p>
           <div className="lp-hero-actions">
             <button onClick={() => navigate('/scan')} className="lp-btn-hero" aria-label="Start scanning your project">{shield}Start Scanning</button>
           </div>
           <div className="lp-hero-stats">
-            {['2 CVE DBs|NVD + OSV','3 Ecosystems|npm · PyPI · Maven','Full Tree|Direct + Transitive','On-demand|Latest CVE data'].map(item => {
+            {['2 CVE DBs|OSV · NVD fallback','3 Ecosystems|npm · PyPI · Maven','Full Tree|Direct + Transitive','On-demand|Latest CVE data'].map(item => {
               const [val, label] = item.split('|')
               return <div className="lp-hero-stat" key={item}><div className="lp-hero-stat-val">{val}</div><div className="lp-hero-stat-label">{label}</div></div>
             })}
@@ -154,10 +154,10 @@ export default function Landing() {
           <div className="lp-terminal reveal">
             <div className="lp-terminal-bar"><span style={{ background: 'var(--critical)' }} /><span style={{ background: 'var(--high)' }} /><span style={{ background: 'var(--green)' }} /><div>depanalyzer scan</div></div>
             <div className="lp-terminal-body">
-              <div><i>></i> <b>Upload</b> package.json</div>
+              <div><i>&gt;</i> <b>Upload</b> package.json</div>
               <br />
               <div><strong>✓</strong> Resolved dependency tree <i>(10 packages, 43 transitive)</i></div>
-              <div><strong>✓</strong> Queried NVD + OSV databases</div>
+              <div><strong>✓</strong> Queried OSV database with NVD fallback</div>
               <div><strong>✓</strong> Risk scoring complete</div>
               <br />
               <div><mark>✗ CRITICAL</mark> lodash@4.17.15 <i>CVE-2020-28500 · CVSS 7.4</i></div>
@@ -188,7 +188,7 @@ export default function Landing() {
             ['🧠','Intelligent Risk Scoring','Uses logarithmic weighting of CVSS severity counts to produce a single prioritized risk score from 0 to 100.'],
             ['⚡','Actionable Fix Commands','Exact install commands, safe version ranges, and dependency override strategies — ready to copy-paste into your terminal.'],
             ['🗺️','Visual Dependency Graph','See your full dependency tree visualized with vulnerability highlighting. Instantly understand which packages are the source of transitive CVEs.'],
-            ['📋','Export Reports','Download scan results as PDF, CSV, or JSON. Share findings with your team or attach to compliance documentation.'],
+            ['📋','Export Reports','Download scan results as PDF or CSV. Share findings with your team or attach to compliance documentation.'],
             ['🔗','Direct vs Transitive','Every package is tagged as direct or transitive. See exactly which dependency introduced each vulnerability via the full dependency path.'],
           ].map(([icon, title, text], i) => <div className={`lp-feat-card reveal reveal-delay-${(i % 3) + 1}`} key={title}><div className="lp-feat-icon">{icon}</div><div className="lp-feat-title">{title}</div><div className="lp-feat-text">{text}</div></div>)}
         </div>
@@ -203,7 +203,7 @@ export default function Landing() {
           <p className="lp-section-sub" style={{ margin: '0 auto' }}>No agents to install. No config files. Just upload your manifest and get results.</p>
         </div>
         <div className="lp-hiw-steps">
-          {['Upload manifest|Drop your package.json, requirements.txt, or pom.xml — any ecosystem.','Tree resolution|We build the complete dependency graph including all transitive packages.','CVE matching|Each package-version pair is cross-referenced against NVD and OSV vulnerability databases.','Risk report|Receive a prioritized report with risk scores, severity breakdowns, and exact fix commands.'].map((item, i) => {
+          {['Upload manifest|Drop your package.json, requirements.txt, or pom.xml — any ecosystem.','Tree resolution|We build the complete dependency graph including all transitive packages.','CVE matching|Each package-version pair is cross-referenced against OSV database with NVD fallback.','Risk report|Receive a prioritized report with risk scores, severity breakdowns, and exact fix commands.'].map((item, i) => {
             const [title, text] = item.split('|')
             return <div className={`lp-hiw-step reveal reveal-delay-${i + 1}`} key={title}><div className="lp-hiw-num">{i + 1}</div><div className="lp-hiw-title">{title}</div><div className="lp-hiw-text">{text}</div></div>
           })}

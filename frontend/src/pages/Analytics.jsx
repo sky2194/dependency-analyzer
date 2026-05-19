@@ -145,7 +145,7 @@ export default function Analytics() {
               <button onClick={() => setShowExportMenu(!showExportMenu)} className="a-btn" aria-label="Export report">
                 {exportStatus === 'loading' ? 'Exporting...' : exportStatus === 'error' ? 'Failed' : exportStatus === 'success' ? 'Done!' : 'Export'}
               </button>
-              {showExportMenu && <div className="a-dropdown">{['pdf', 'csv', 'json'].map(t => <div key={t} onClick={() => exportReport(t)} className="a-dropdown-item">{t.toUpperCase()}</div>)}</div>}
+              {showExportMenu && <div className="a-dropdown">{['pdf', 'csv'].map(t => <div key={t} onClick={() => exportReport(t)} className="a-dropdown-item">{t.toUpperCase()}</div>)}</div>}
             </div>
             <button onClick={() => navigate('/scan')} className="a-btn-primary">New Scan</button>
           </div>
