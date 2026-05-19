@@ -28,9 +28,17 @@ export default function Analytics() {
   const [selected, setSelected] = useState(null)
   const [expanded, setExpanded] = useState(new Set())
   const [showExportMenu, setShowExportMenu] = useState(false)
+  const [copied, setCopied] = useState(null)
   const [pkgPage, setPkgPage] = useState(1)
   const [pkgSearch, setPkgSearch] = useState('')
   const exportRef = useRef(null)
+  
+  const handleCopy = (text, id) => {
+    navigator.clipboard?.writeText(text)
+    setCopied(id)
+    setTimeout(() => setCopied(null), 2000)
+  }
+  
   const result = locationState?.result
 
   useEffect(() => {
@@ -284,7 +292,7 @@ export default function Analytics() {
                     {v.fix_version && <span style={{ fontSize: 11, color: 'var(--green)', fontFamily: 'var(--font-mono)' }}>v{pkgVersion(v)} &#8594; v{v.fix_version}</span>}
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 8 }}>{v.description}</div>
-                  {v.fix_version && <div className="a-code-block"><span>{installCmd(v, snapshot.ecosystem)}</span><button onClick={() => navigator.clipboard?.writeText(installCmd(v, snapshot.ecosystem))} className="a-copy-btn">Copy</button></div>}
+                  {v.fix_version && <div className="a-code-block"><span>{installCmd(v, snapshot.ecosystem)}</span><button onClick={() => handleCopy(installCmd(v, snapshot.ecosystem), `fix-${i}`)} className="a-copy-btn">{copied === `fix-${i}` ? '✓ Copied' : 'Copy'}</button></div>}
                 </div>
               ))
             }
@@ -332,7 +340,7 @@ export default function Analytics() {
                   {selectedVuln.fix_version && (
                     <div style={{ background: 'var(--green-dim)', border: '1px solid var(--fix-border)', borderRadius: 6, padding: '10px 12px', marginBottom: 8 }}>
                       <div className="a-panel-label" style={{ color: 'var(--green)' }}>FIX</div>
-                      <div className="a-code-block"><span>{installCmd(selectedVuln, snapshot.ecosystem)}</span><button onClick={() => navigator.clipboard?.writeText(installCmd(selectedVuln, snapshot.ecosystem))} className="a-copy-btn">Copy</button></div>
+                      <div className="a-code-block"><span>{installCmd(selectedVuln, snapshot.ecosystem)}</span><button onClick={() => handleCopy(installCmd(selectedVuln, snapshot.ecosystem), 'sidebar')} className="a-copy-btn">{copied === 'sidebar' ? '✓ Copied' : 'Copy'}</button></div>
                     </div>
                   )}
                   <div className="a-panel-row">

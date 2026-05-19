@@ -186,7 +186,7 @@ export default function DependencyGraph({ data }) {
                   x1={root.x} y1={root.y + 26}
                   x2={d.x} y2={d.y - 26}
                   stroke={isVulnPath ? 'var(--critical)' : 'var(--border-mid)'}
-                  strokeWidth={isVulnPath ? '2.5' : '1.5'}
+                  strokeWidth={isVulnPath ? '1.5' : '1'}
                   strokeDasharray={isVulnPath ? '0' : '5 5'}
                   opacity={isVulnPath ? '0.8' : '0.5'}
                 />
@@ -209,7 +209,7 @@ export default function DependencyGraph({ data }) {
                   x1={t.parentX} y1={t.parentY + 26}
                   x2={t.x} y2={t.y - 26}
                   stroke={isVulnPath ? 'var(--high)' : 'var(--border-mid)'}
-                  strokeWidth={isVulnPath ? '2' : '1'}
+                  strokeWidth={isVulnPath ? '1.5' : '0.8'}
                   strokeDasharray="5 5"
                   opacity={isVulnPath ? '0.7' : '0.4'}
                 />

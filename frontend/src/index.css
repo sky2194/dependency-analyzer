@@ -82,11 +82,11 @@
   --border-mid: rgba(0,0,0,0.12);
   
   /* Text - improved contrast ratios */
-  --text: #1a202c;
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #64748b;
-  --muted: #64748b;
+  --text: #0a0e1a;
+  --text-primary: #050810;
+  --text-secondary: #1e293b;
+  --text-muted: #475569;
+  --muted: #475569;
   
   /* Primary accent - professional blue */
   --accent: #2563eb;
