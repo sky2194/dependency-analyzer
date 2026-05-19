@@ -5,6 +5,8 @@ import Dashboard from './pages/Dashboard'
 import Scanning from './pages/Scanning'
 import Analytics from './pages/Analytics'
 import Learn from './pages/Learn'
+import History from './pages/History'
+import Compare from './pages/Compare'
 import ErrorBoundary from './components/ErrorBoundary'
 
 export const ScanContext = createContext({ scanning: false, scanProject: '', setScanning: () => {}, setScanProject: () => {} })
@@ -51,7 +53,7 @@ export default function App() {
                 </div>
                 DepAnalyzer
               </NavLink>
-              {[{to:'/scan',label:'Scanner'},{to:'/learn',label:'📖 Knowledge Base'}].map(({to,label}) => (
+              {[{to:'/scan',label:'Scanner'},{to:'/learn',label:'📖 Knowledge Base'},{to:'/history',label:'📚 History'}].map(({to,label}) => (
                 <NavLink key={to} to={to} style={({isActive}) => ({ padding: '6px 12px', fontSize: 13, fontWeight: 600, borderRadius: 6, background: isActive ? 'var(--orange-dim)' : 'none', color: isActive ? 'var(--orange)' : 'var(--text-muted)', transition: 'all 0.15s', whiteSpace: 'nowrap' })}>
                   {label}
                 </NavLink>
@@ -75,6 +77,8 @@ export default function App() {
             <Route path="/scanning" element={<Scanning />} />
             <Route path="/results" element={<Analytics />} />
             <Route path="/learn" element={<Learn />} />
+            <Route path="/history" element={<History />} />
+            <Route path="/compare" element={<Compare />} />
           </Routes>
         </div>
       </ErrorBoundary>
