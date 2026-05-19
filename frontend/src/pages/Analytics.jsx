@@ -293,7 +293,7 @@ export default function Analytics() {
       </div>
 
       {/* RIGHT PANEL */}
-      <div className="a-right">
+      <div className={`a-right ${selected ? "has-selection" : ""}`}>
         <div className="a-panel">
           <div className="a-panel-hdr">
             <span>CVE Details</span>

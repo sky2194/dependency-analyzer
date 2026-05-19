@@ -707,3 +707,49 @@ body {
 [data-theme="light"] nav {
   box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
+
+/* ── Mobile CVE Details Fix ── */
+@media (max-width: 900px) {
+  .a-right {
+    display: block !important;
+    position: fixed !important;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60vh;
+    z-index: 1000;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+    border-radius: 16px 16px 0 0;
+    border: 1px solid var(--border);
+    border-bottom: none;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+  }
+  
+  .a-right.has-selection {
+    transform: translateY(0);
+  }
+  
+  .a-panel {
+    height: 100%;
+    overflow-y: auto;
+  }
+  
+  /* Add close handle at top */
+  .a-panel-hdr::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+  }
+  
+  .a-panel-hdr {
+    position: relative;
+    padding-top: 24px !important;
+  }
+}
