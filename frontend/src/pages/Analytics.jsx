@@ -182,10 +182,13 @@ export default function Analytics() {
               <div style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Risk Score</div>
               <div data-testid="risk-score" style={{ fontFamily: 'var(--font-mono)', fontSize: 20, fontWeight: 700, color: riskColor }}>{riskScore}<span style={{ fontSize: 12, color: 'var(--text-muted)' }}>/100</span></div>
               <span className="a-risk-label" style={{ background: riskDim, color: riskColor }}>{riskLabel}</span>
-            </div>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginTop: 4, lineHeight: 1.4, cursor: 'help' }} title="Formula: min(100, 10×Critical + 7×High + 4×Medium + 1×Low) with logarithmic scaling for 50+ vulnerabilities. Score ranges: 0-24 (Low), 25-49 (Medium), 50-74 (High), 75-100 (Critical)">
-                Logarithmic scale based on severity counts
+              <div style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginTop: 6, lineHeight: 1.5 }}>
+                <span style={{ color: 'var(--critical)' }}>Critical</span> ×10 · <span style={{ color: 'var(--high)' }}>High</span> ×7 · <span style={{ color: 'var(--medium)' }}>Medium</span> ×4 · <span style={{ color: 'var(--low)' }}>Low</span> ×1
               </div>
+              <div style={{ fontSize: 9, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginTop: 2, lineHeight: 1.4 }}>
+                Scaled 0–100 with diminishing returns
+              </div>
+            </div>
           </div>
           <div className="a-risk-divider" />
           <div className="a-risk-stats">
