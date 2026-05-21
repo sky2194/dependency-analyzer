@@ -95,11 +95,11 @@
   --orange-glow: rgba(37,99,235,0.20);
   --accent2: #7c3aed;
   
-  /* Severity colors - calibrated for light backgrounds */
-  --critical: #dc2626;
-  --high: #ea580c;
-  --medium: #d97706;
-  --low: #16a34a;
+  /* Severity colors - WCAG AA compliant on light backgrounds (all ≥4.5:1) */
+  --critical: #dc2626;  /* 4.83:1 ✅ */
+  --high: #c2410c;      /* 5.18:1 ✅ (was #ea580c = 3.56:1 ❌) */
+  --medium: #92400e;    /* 7.09:1 ✅ (was #d97706 = 3.19:1 ❌) */
+  --low: #15803d;       /* 5.02:1 ✅ (was #16a34a = 3.30:1 ❌) */
   
   /* Status colors */
   --red: #dc2626;

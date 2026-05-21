@@ -3,10 +3,25 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import API_BASE from '../config'
 import DependencyGraph from '../components/DependencyGraph'
 import validateContract from '../utils/validateSnapshot'
+import { generateFixAllScript } from '../utils/fixAll'
+import { saveProjectScan } from '../utils/projectStore'
 import normalizeSnapshot from '../utils/normalizeSnapshot'
 
 const SEV_COLOR = { CRITICAL: 'var(--critical)', HIGH: 'var(--high)', MEDIUM: 'var(--medium)', LOW: 'var(--low)' }
-const SEV_DIM = { CRITICAL: 'var(--red-dim)', HIGH: 'var(--yellow-dim)', MEDIUM: 'var(--blue-dim)', LOW: 'var(--green-dim)' }
+const SEV_DIM   = { CRITICAL: 'var(--red-dim)', HIGH: 'var(--yellow-dim)', MEDIUM: 'var(--blue-dim)', LOW: 'var(--green-dim)' }
+const SEV_ICON  = { CRITICAL: '🔴', HIGH: '🟠', MEDIUM: '🟡', LOW: '🟢' }
+
+// Accessible severity badge — icon + label, never color alone
+const SevBadge = ({ sev, style = {} }) => {
+  if (!sev) return null
+  const s = sev.toUpperCase()
+  return (
+    <span className="sev-badge" style={{ background: SEV_DIM[s], color: SEV_COLOR[s], display: 'inline-flex', alignItems: 'center', gap: 4, ...style }}>
+      <span role="img" aria-hidden="true">{SEV_ICON[s]}</span>
+      {s}
+    </span>
+  )
+}
 
 const pkgName = v => v?.package_name || v?.package || ''
 const pkgVersion = v => v?.installed_version || v?.version || ''
@@ -31,6 +46,7 @@ export default function Analytics() {
   const [copied, setCopied] = useState(null)
   const [pkgPage, setPkgPage] = useState(1)
   const [pkgSearch, setPkgSearch] = useState('')
+  const [showRiskModal, setShowRiskModal] = useState(false)
   const exportRef = useRef(null)
   
   const handleCopy = (text, id) => {
@@ -41,6 +57,17 @@ export default function Analytics() {
   
   const result = locationState?.result
 
+
+  // Auto-save scan to project history
+  useEffect(() => {
+    if (result?.summary && result?.project_name) {
+      try {
+        saveProjectScan(result.project_name, result)
+      } catch (error) {
+        console.error('Failed to save scan to history:', error)
+      }
+    }
+  }, [result])
   useEffect(() => {
     const h = e => { if (exportRef.current && !exportRef.current.contains(e.target)) setShowExportMenu(false) }
     document.addEventListener('mousedown', h)
@@ -159,17 +186,146 @@ export default function Analytics() {
           </div>
         </div>
 
+        {/* Risk Score Modal */}
+        {showRiskModal && (() => {
+          const critImpact = counts.CRITICAL > 0 ? 40 * (1 - Math.exp(-counts.CRITICAL / 3)) : 0
+          const highImpact = counts.HIGH     > 0 ? 30 * (1 - Math.exp(-counts.HIGH     / 5)) : 0
+          const medImpact  = counts.MEDIUM   > 0 ? 20 * (1 - Math.exp(-counts.MEDIUM   / 8)) : 0
+          const lowImpact  = counts.LOW      > 0 ? 10 * (1 - Math.exp(-counts.LOW      / 10)): 0
+          const computedTotal = critImpact + highImpact + medImpact + lowImpact
+          const transitiveVuln = sm.vulnerable_transitive_count || 0
+          const fixableCount = fixes.length
+          const rows = [
+            { sev: 'CRITICAL', count: counts.CRITICAL, maxPts: 40, divisor: 3,  impact: critImpact, color: 'var(--critical)' },
+            { sev: 'HIGH',     count: counts.HIGH,     maxPts: 30, divisor: 5,  impact: highImpact, color: 'var(--high)' },
+            { sev: 'MEDIUM',   count: counts.MEDIUM,   maxPts: 20, divisor: 8,  impact: medImpact,  color: 'var(--medium)' },
+            { sev: 'LOW',      count: counts.LOW,      maxPts: 10, divisor: 10, impact: lowImpact,  color: 'var(--low)' },
+          ]
+          return (
+            <div onClick={() => setShowRiskModal(false)} style={{ position: 'fixed', inset: 0, background: 'var(--overlay-bg)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+              <div onClick={e => e.stopPropagation()} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, width: '100%', maxWidth: 500, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}>
+                {/* Header */}
+                <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, background: 'var(--bg-card)', zIndex: 1 }}>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--text-primary)' }}>Risk Score Methodology</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>How your score of <span style={{ color: riskColor, fontWeight: 700, fontFamily: 'var(--font-mono)' }}>{riskScore}/100</span> was calculated</div>
+                  </div>
+                  <button onClick={() => setShowRiskModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 20, lineHeight: 1, padding: '0 4px' }}>×</button>
+                </div>
+                {/* Step 1 */}
+                <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>Step 1 — Severity Contribution</div>
+                  {rows.map(({ sev, count, maxPts, impact, color }) => {
+                    const pct = Math.round((impact / maxPts) * 100)
+                    const isSaturated = pct >= 90
+                    return (
+                      <div key={sev} style={{ marginBottom: 14 }}>
+                        {/* Row header */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
+                          <span style={{ fontSize: 10, fontFamily: 'var(--font-mono)', fontWeight: 700, color, width: 60 }}>{sev}</span>
+                          <span style={{ fontSize: 11, color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>{count} CVE{count !== 1 ? 's' : ''}</span>
+                          <div style={{ flex: 1 }} />
+                          <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 12, color }}>{impact.toFixed(1)}</span>
+                          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-muted)' }}>/ {maxPts} pts</span>
+                        </div>
+                        {/* Bar */}
+                        <div style={{ height: 6, background: 'var(--border)', borderRadius: 3, overflow: 'hidden' }}>
+                          <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: 3, transition: 'width 0.4s ease' }} />
+                        </div>
+                        {/* Subtext */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3 }}>
+                          <span style={{ fontSize: 9, color: isSaturated ? color : 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                            {isSaturated ? `⚠ Nearly maxed out — more ${sev} CVEs won't raise score much` : `${100 - pct}% headroom remaining`}
+                          </span>
+                          <span style={{ fontSize: 9, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>{pct}%</span>
+                        </div>
+                      </div>
+                    )
+                  })}
+                  <div style={{ marginTop: 6, paddingTop: 10, borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>Combined</span>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 13, color: 'var(--text-primary)' }}>{computedTotal.toFixed(1)} pts</span>
+                  </div>
+                  <div style={{ marginTop: 8, fontSize: 10, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                    ⓘ Each additional CVE of the same severity contributes <em>less</em> than the previous one — so saturated severities (90%+) won't move your score much even with more CVEs.
+                  </div>
+                </div>
+                {/* Step 2 */}
+                <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)' }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Step 2 — Final Score</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 10 }}>
+                    <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-primary)', fontWeight: 700 }}>min(100, round({computedTotal.toFixed(1)}))</span> = <span style={{ color: riskColor, fontFamily: 'var(--font-mono)', fontWeight: 700 }}>{riskScore}</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                    <div style={{ flex: 1, height: 8, background: 'var(--border)', borderRadius: 4, overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${riskScore}%`, background: riskColor, borderRadius: 4 }} />
+                    </div>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 14, color: riskColor, whiteSpace: 'nowrap' }}>{riskScore} / 100</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    {[
+                      { range: '0–39',   label: 'Low',      color: 'var(--low)',      dim: 'var(--green-dim)',  min: 0,  max: 39  },
+                      { range: '40–69',  label: 'Medium',   color: 'var(--medium)',   dim: 'var(--yellow-dim)', min: 40, max: 69  },
+                      { range: '70–89',  label: 'High',     color: 'var(--high)',     dim: 'var(--yellow-dim)', min: 70, max: 89  },
+                      { range: '90–100', label: 'Critical', color: 'var(--critical)', dim: 'var(--red-dim)',    min: 90, max: 100 },
+                    ].map(({ range, label, color, dim, min, max }) => {
+                      const active = riskScore >= min && riskScore <= max
+                      return (
+                        <div key={label} style={{ flex: 1, padding: '5px 4px', background: active ? dim : 'var(--bg-elevated)', border: `1px solid ${active ? color : 'var(--border)'}`, borderRadius: 5, textAlign: 'center' }}>
+                          <div style={{ fontSize: 9, fontFamily: 'var(--font-mono)', color, fontWeight: 700 }}>{range}</div>
+                          <div style={{ fontSize: 9, color: active ? color : 'var(--text-muted)', fontWeight: active ? 700 : 400 }}>{label}</div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+                {/* Step 3 */}
+                <div style={{ padding: '14px 20px' }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>Step 3 — Context</div>
+                  {[
+                    { label: 'Transitive vulnerabilities', value: transitiveVuln, note: 'Inherited from your dependencies', color: transitiveVuln > 0 ? 'var(--high)' : 'var(--green)' },
+                    { label: 'Fixable packages', value: `${fixableCount} of ${vulnPackages.length}`, note: 'Have a known safe version available', color: fixableCount > 0 ? 'var(--green)' : 'var(--text-muted)' },
+                    { label: 'Attack surface', value: `${totalPkgs > 0 ? Math.round((vulnPackages.length / totalPkgs) * 100) : 0}%`, note: 'Of total packages are vulnerable', color: 'var(--text-primary)' },
+                  ].map(({ label, value, note, color }) => (
+                    <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', paddingBottom: 8, marginBottom: 8, borderBottom: '1px solid var(--border)' }}>
+                      <div>
+                        <div style={{ fontSize: 12, color: 'var(--text-primary)', fontWeight: 600 }}>{label}</div>
+                        <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 1 }}>{note}</div>
+                      </div>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 13, color }}>{value}</span>
+                    </div>
+                  ))}
+                  <div style={{ padding: '10px 12px', background: 'var(--bg-elevated)', borderRadius: 6, border: '1px solid var(--border)', fontSize: 11, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                    A score of <span style={{ color: riskColor, fontWeight: 700, fontFamily: 'var(--font-mono)' }}>{riskScore}/100</span> means <strong style={{ color: 'var(--text-primary)' }}>{riskLabel} risk</strong>. Each additional CVE of the same severity contributes less than the previous — so a project with 50 high CVEs scores lower than you might expect.
+                  </div>
+                </div>
+              </div>
+            </div>
+          )
+        })()}
+
         {/* Risk Card */}
         <div className="a-risk-card">
           <div className="a-risk-ring-wrap">
-            <div className="a-ring" style={{ background: `conic-gradient(${riskColor} 0% ${riskScore}%, var(--border) ${riskScore}% 100%)` }}>
-              <span style={{ color: riskColor }}>{riskScore}</span>
+            <div
+              onClick={() => setShowRiskModal(true)}
+              title="Click to see how this score was calculated"
+              style={{ cursor: 'pointer' }}
+            >
+              <div className="a-ring" style={{ background: `conic-gradient(${riskColor} 0% ${riskScore}%, var(--border) ${riskScore}% 100%)` }}>
+                <span style={{ color: riskColor }}>{riskScore}</span>
+              </div>
             </div>
             <div>
               <div style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Risk Score</div>
               <div data-testid="risk-score" style={{ fontFamily: 'var(--font-mono)', fontSize: 20, fontWeight: 700, color: riskColor }}>{riskScore}<span style={{ fontSize: 12, color: 'var(--text-muted)' }}>/100</span></div>
               <span className="a-risk-label" style={{ background: riskDim, color: riskColor }}>{riskLabel}</span>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginTop: 4, lineHeight: 1.4 }}>Logarithmic scale based on severity counts</div>
+              <div style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', marginTop: 6, lineHeight: 1.5 }}>
+                <span style={{ color: 'var(--critical)' }}>Critical</span> ×10 · <span style={{ color: 'var(--high)' }}>High</span> ×7 · <span style={{ color: 'var(--medium)' }}>Medium</span> ×4 · <span style={{ color: 'var(--low)' }}>Low</span> ×1
+              </div>
+              <button onClick={() => setShowRiskModal(true)} style={{ marginTop: 6, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontSize: 10, color: 'var(--accent)', fontFamily: 'var(--font-mono)', textDecoration: 'underline' }}>
+                How is this calculated?
+              </button>
             </div>
           </div>
           <div className="a-risk-divider" />
@@ -198,7 +354,10 @@ export default function Analytics() {
             <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
               {['ALL', 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].map(sv => (
                 <button key={sv} onClick={() => setSevFilter(sv)} className={`a-pill ${sevFilter === sv ? 'active' : ''}`}>
-                  {sv === 'ALL' ? `All (${vulnPackages.length})` : `${sv} (${counts[sv] || 0})`}
+                  {sv === 'ALL'
+                    ? `All (${vulnPackages.length})`
+                    : <>{SEV_ICON[sv]} {sv} ({counts[sv] || 0})</>
+                  }
                 </button>
               ))}
             </div>
@@ -225,7 +384,7 @@ export default function Analytics() {
                               </div>
                             )}
                           </div>
-                          <span className="sev-badge" style={{ background: SEV_DIM[topSev], color: SEV_COLOR[topSev] }}>{topSev}</span>
+                          <SevBadge sev={topSev} />
                           <span className="a-muted-mono">{cves.length} CVE{cves.length !== 1 ? 's' : ''}</span>
                           {pkg.recommended_fix && <span style={{ fontSize: 10, color: 'var(--green)', fontFamily: 'var(--font-mono)' }}>Fix available</span>}
                         </div>
@@ -235,7 +394,7 @@ export default function Analytics() {
                               <div key={v.cve_id} data-testid="vulnerability-row" onClick={() => setSelected(selected === v.cve_id ? null : v.cve_id)} className={`a-cve-row ${selected === v.cve_id ? 'selected' : ''}`}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                                   <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--blue)', fontWeight: 600 }}>{v.cve_id}</span>
-                                  <span data-severity={v.severity} className="sev-badge" style={{ background: SEV_DIM[v.severity], color: SEV_COLOR[v.severity] }}>{v.severity}</span>
+                                  <span data-severity={v.severity}><SevBadge sev={v.severity} /></span>
                                   <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, color: SEV_COLOR[v.severity] }}>CVSS {v.cvss_score}</span>
                                   <span style={{ flex: 1 }} />
                                   {v.fix_version && <span style={{ fontSize: 10, color: 'var(--green)', fontFamily: 'var(--font-mono)' }}>Fix: v{v.fix_version}</span>}
@@ -262,9 +421,10 @@ export default function Analytics() {
                 const has = g.vulnerabilities && g.vulnerabilities.length > 0
                 return (
                   <div key={i} className="a-pkg-row" style={{ borderLeftColor: has ? SEV_COLOR[g.highestSeverity] : 'var(--green)' }}>
-                    <span className="sev-badge" style={{ background: has ? SEV_DIM[g.highestSeverity] : 'var(--green-dim)', color: has ? SEV_COLOR[g.highestSeverity] : 'var(--green)' }}>
-                      {has ? `${g.vulnerabilities.length} CVE${g.vulnerabilities.length > 1 ? 's' : ''}` : 'Secure'}
-                    </span>
+                    {has
+                      ? <SevBadge sev={g.highestSeverity} style={{ fontSize: 10 }} />
+                      : <span className="sev-badge" style={{ background: 'var(--green-dim)', color: 'var(--green)', display: 'inline-flex', alignItems: 'center', gap: 4 }}><span role="img" aria-hidden="true">🟢</span> Secure</span>
+                    }
                     <span className="a-mono-bold">{g.package}</span>
                     <span className="a-muted-mono">v{g.version}</span>
                     <span className={`a-dep-tag ${g.is_direct ? 'direct' : ''}`}>{g.is_direct ? 'DIRECT' : 'TRANSITIVE'}</span>
@@ -281,6 +441,66 @@ export default function Analytics() {
         {/* TAB: FIX SUGGESTIONS */}
         {tab === 'fixes' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {fixes.length > 0 && (
+              <div style={{ marginBottom: 16, border: '1px solid var(--fix-border)', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
+                {/* Header */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: 'var(--fix-bg)', borderBottom: '1px solid var(--fix-border)' }}>
+                  <span style={{ fontSize: 16 }}>🔧</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)', marginBottom: 2 }}>Fix All Vulnerabilities</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                      {fixes.length} {fixes.length === 1 ? 'fix' : 'fixes'} available · Run this command in your project root
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const script = generateFixAllScript(fixes, snapshot.ecosystem)
+                      if (script) {
+                        navigator.clipboard?.writeText(script)
+                        setCopied('fix-all-btn')
+                        setTimeout(() => setCopied(null), 2000)
+                      }
+                    }}
+                    style={{
+                      padding: '6px 14px',
+                      background: copied === 'fix-all-btn' ? 'var(--green)' : 'var(--bg-card)',
+                      color: copied === 'fix-all-btn' ? 'var(--white)' : 'var(--text)',
+                      border: '1px solid var(--border)',
+                      borderRadius: 'var(--radius-sm)',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      fontSize: 12,
+                      fontFamily: 'var(--font-ui)',
+                      transition: 'all 0.15s ease',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    {copied === 'fix-all-btn' ? '✓ Copied!' : 'Copy Command'}
+                  </button>
+                </div>
+                {/* Warning */}
+                <div style={{ padding: '6px 16px', background: 'var(--warn-bg)', borderBottom: '1px solid var(--warn-border)', fontSize: 11, color: 'var(--yellow)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span>⚠️</span>
+                  <span>These are minimum-safe versions. Test in a staging environment before deploying to production — version upgrades may introduce breaking changes.</span>
+                </div>
+                {/* Terminal block */}
+                <div style={{
+                  background: 'var(--code-bg)',
+                  padding: '14px 16px',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 12,
+                  lineHeight: 1.8,
+                  color: 'var(--text)',
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word',
+                  overflowX: 'auto',
+                  maxHeight: 200,
+                  overflowY: 'auto'
+                }}>
+                  {generateFixAllScript(fixes, snapshot.ecosystem)}
+                </div>
+              </div>
+            )}
             {fixes.length === 0
               ? <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>No fixes available</div>
               : fixes.map((v, i) => (
@@ -288,7 +508,7 @@ export default function Analytics() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, flexWrap: 'wrap' }}>
                     <div className="a-fix-num">{i + 1}</div>
                     <span className="a-mono-bold" style={{ flex: 1 }}>{pkgName(v)}</span>
-                    <span className="sev-badge" style={{ background: SEV_DIM[v.severity], color: SEV_COLOR[v.severity] }}>{v.severity}</span>
+                    <SevBadge sev={v.severity} />
                     {v.fix_version && <span style={{ fontSize: 11, color: 'var(--green)', fontFamily: 'var(--font-mono)' }}>v{pkgVersion(v)} &#8594; v{v.fix_version}</span>}
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 8 }}>{v.description}</div>
@@ -305,7 +525,7 @@ export default function Analytics() {
         <div className="a-panel">
           <div className="a-panel-hdr">
             <span>CVE Details</span>
-            {selectedVuln && <span className="sev-badge" style={{ background: SEV_DIM[selectedVuln.severity], color: SEV_COLOR[selectedVuln.severity] }}>{selectedVuln.severity}</span>}
+            {selectedVuln && <SevBadge sev={selectedVuln.severity} />}
             {selectedVuln && <span onClick={() => setSelected(null)} style={{ cursor: 'pointer', color: 'var(--text-muted)', marginLeft: 'auto', fontSize: 14 }} aria-label="Close details">x</span>}
           </div>
           <div style={{ padding: 14 }}>
@@ -358,7 +578,9 @@ export default function Analytics() {
           <div style={{ padding: 14 }}>
             {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].map(sv => (
               <div key={sv} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                <span style={{ width: 55, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: 10 }}>{sv}</span>
+                <span style={{ width: 66, color: SEV_COLOR[sv], fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <span role="img" aria-hidden="true">{SEV_ICON[sv]}</span>{sv}
+                </span>
                 <div style={{ flex: 1, height: 6, background: 'var(--border)', borderRadius: 3, overflow: 'hidden' }}>
                   <div style={{ height: '100%', width: `${totalVulns > 0 ? ((counts[sv] || 0) / totalVulns) * 100 : 0}%`, background: SEV_COLOR[sv], borderRadius: 3 }} />
                 </div>
@@ -371,10 +593,26 @@ export default function Analytics() {
         <div className="a-panel">
           <div className="a-panel-hdr"><span>Risk Insights</span></div>
           <div style={{ padding: '10px 14px', fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.7 }}>
-            <div style={{ marginBottom: 12, padding: '8px 10px', background: 'var(--code-bg)', borderRadius: 6, border: '1px solid var(--border)' }}>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', marginBottom: 4 }}>How Risk Score is Calculated</div>
-              <div style={{ fontSize: 11, lineHeight: 1.6 }}>
-                Uses logarithmic weighting: <span style={{ color: 'var(--critical)' }}>Critical</span> (max 40pts), <span style={{ color: 'var(--high)' }}>High</span> (max 30pts), <span style={{ color: 'var(--medium)' }}>Medium</span> (max 20pts), <span style={{ color: 'var(--low)' }}>Low</span> (max 10pts). More vulnerabilities increase score with diminishing returns to avoid immediate cap.
+            <div style={{ marginBottom: 12, padding: '10px 12px', background: 'var(--code-bg)', borderRadius: 6, border: '1px solid var(--border)' }}>
+              <div style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>How Risk Score is Calculated</div>
+              {/* Severity weight bars */}
+              {[
+                { label: 'Critical', color: 'var(--critical)', pts: 40, weight: '10 pts each', count: counts.CRITICAL },
+                { label: 'High',     color: 'var(--high)',     pts: 30, weight: '7 pts each',  count: counts.HIGH },
+                { label: 'Medium',   color: 'var(--medium)',   pts: 20, weight: '4 pts each',  count: counts.MEDIUM },
+                { label: 'Low',      color: 'var(--low)',      pts: 10, weight: '1 pt each',   count: counts.LOW },
+              ].map(({ label, color, pts, weight, count }) => (
+                <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
+                  <span style={{ width: 52, fontSize: 10, color, fontFamily: 'var(--font-mono)', fontWeight: 700 }}>{label}</span>
+                  <div style={{ flex: 1, height: 4, background: 'var(--border)', borderRadius: 2, overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${pts}%`, background: color, borderRadius: 2, opacity: 0.85 }} />
+                  </div>
+                  <span style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', width: 62, textAlign: 'right' }}>{weight}</span>
+                  <span style={{ fontSize: 10, fontFamily: 'var(--font-mono)', fontWeight: 700, color, width: 16, textAlign: 'right' }}>{count}</span>
+                </div>
+              ))}
+              <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--border)', fontSize: 10, color: 'var(--text-muted)', lineHeight: 1.6 }}>
+                Score uses <strong style={{ color: 'var(--text-secondary)' }}>diminishing returns</strong> — adding more CVEs increases score but never instantly reaches 100. A score of {riskScore}/100 means your project has significant exposure and should be prioritised.
               </div>
             </div>
             {vulnPackages.length > 0 && (

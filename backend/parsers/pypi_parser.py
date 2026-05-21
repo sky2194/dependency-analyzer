@@ -49,32 +49,22 @@ def parse(content):
             continue
         match = re.match(r'^([A-Za-z0-9_\-\.]+)\s*[=><~!]+\s*([A-Za-z0-9_\.\-]+)', line)
         if match:
-            name = match.group(1)
-            version = match.group(2)
-            # Validate package name
+            name, ver = match.groups()
             try:
-                validate_package_name(name)
+                validated_name = validate_package_name(name)
+                validated_ver = validate_version(ver)
+                deps.append({'package': validated_name, 'version': validated_ver, 'type': 'direct'})
             except ValueError:
-                # Skip invalid package names
                 continue
-            # Validate version string
-            try:
-                validate_version(version)
-            except ValueError:
-                # Skip invalid versions
-                continue
-            deps.append({'name': name, 'version': version, 'pinned': True, 'warning': None})
         else:
-            bare = re.match(r'^([A-Za-z0-9_\-\.]+)$', line)
-            if bare:
-                name = bare.group(1)
-                # Validate package name
+            # No version constraint; optionally fetch latest or skip
+            name_only = re.match(r'^([A-Za-z0-9_\-\.]+)$', line)
+            if name_only:
+                name = name_only.group(1)
                 try:
-                    validate_package_name(name)
+                    validated_name = validate_package_name(name)
+                    ver = get_latest_version(name)
+                    deps.append({'package': validated_name, 'version': ver or '*', 'type': 'direct'})
                 except ValueError:
-                    # Skip invalid package names
                     continue
-                latest = get_latest_version(name)
-                deps.append({'name': name, 'version': latest or 'unknown', 'pinned': False,
-                    'warning': f"No version pinned — scanning latest ({latest}). Pin: {name}=={latest}" if latest else f"Could not resolve {name}."})
-    return {'project_name': 'my-python-app', 'project_version': '1.0.0', 'deps': deps}
+    return {'project_name': 'python-app', 'deps': deps}
