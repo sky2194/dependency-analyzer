@@ -44,8 +44,8 @@ def parse(content):
         # Reject lines with obvious XSS attempts before matching
         if any(char in line.lower() for char in ['<script', '</script>', 'javascript:', 'onerror', 'onload']):
             continue
-        # Reject lines with shell metacharacters
-        if any(char in line for char in ['|', '`', '$', ';', '&', '>', '<']):
+        # Reject lines with shell metacharacters (not > or < — valid PEP 440 version specifiers)
+        if any(char in line for char in ['|', '`', '$', ';', '&']):
             continue
         match = re.match(r'^([A-Za-z0-9_\-\.]+)\s*[=><~!]+\s*([A-Za-z0-9_\.\-]+)', line)
         if match:
@@ -53,7 +53,7 @@ def parse(content):
             try:
                 validated_name = validate_package_name(name)
                 validated_ver = validate_version(ver)
-                deps.append({'package': validated_name, 'version': validated_ver, 'type': 'direct'})
+                deps.append({'name': validated_name, 'version': validated_ver, 'type': 'direct'})
             except ValueError:
                 continue
         else:
@@ -64,7 +64,7 @@ def parse(content):
                 try:
                     validated_name = validate_package_name(name)
                     ver = get_latest_version(name)
-                    deps.append({'package': validated_name, 'version': ver or '*', 'type': 'direct'})
+                    deps.append({'name': validated_name, 'version': ver or '*', 'type': 'direct'})
                 except ValueError:
                     continue
     return {'project_name': 'python-app', 'deps': deps}

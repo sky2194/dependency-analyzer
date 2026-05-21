@@ -6,7 +6,7 @@ const SEV_FILL  = { CRITICAL: 'var(--red-dim)',  HIGH: 'var(--yellow-dim)', MEDI
 function flatten(node, depth = 0, parent = null, out = []) {
   if (!node) return out
   out.push({ name: node.name, version: node.version, depth, parent, vulns: Array.isArray(node.vulnerabilities) ? node.vulnerabilities : [] })
-  if (node.dependencies) for (const d of node.dependencies) flatten(d, depth + 1, node.name, out)
+  if (Array.isArray(node.dependencies)) for (const d of node.dependencies) flatten(d, depth + 1, node.name, out)
   return out
 }
 
