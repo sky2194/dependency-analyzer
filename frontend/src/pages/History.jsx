@@ -26,7 +26,7 @@ export default function History() {
         ← Back
       </button>
       
-      <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 800, marginBottom: 8, color: 'var(--text-primary)' }}>
+      <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 800, marginBottom: 8, letterSpacing: -0.4, color: 'var(--text-primary)' }}>
         Scan History
       </h1>
       <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginBottom: 28 }}>

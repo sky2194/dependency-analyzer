@@ -1,59 +1,33 @@
-# Environment & Secrets
-backend/.env
-.env
-*.env
-
-# Python
-backend/venv/
+# ── Python ────────────────────────────────────────────────────────────────────
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
 *.pyd
 .Python
 *.egg-info/
-dist/
-build/
 .pytest_cache/
 .coverage
 htmlcov/
+coverage/
 
-# Node / Frontend
+# Virtual environments
+venv/
+.venv/
+backend/venv/
+*.venv/
+
+# ── Node ──────────────────────────────────────────────────────────────────────
+node_modules/
 frontend/node_modules/
+tests/node_modules/
+
+# Build output
+dist/
+build/
 frontend/dist/
 frontend/.vite/
-*.log
-npm-debug.log*
 
-# OS
-.DS_Store
-Thumbs.db
-.idea/
-.vscode/
-*.swp
-*.swo
-
-# Test artifacts
-.pytest_cache/
-test-results/
-venv/
-venv/
-*.venv/
-.venv/
-venv/
-*.txt
-txt
-*.txt
-*.pub
-*.key
-*.pem
-*.log
-logs/
-*.logSMarketing/
-ssh-keygen
-Marketing/
-ssh-keygen
-
-# Security - never commit these
+# ── Environment & Secrets ─────────────────────────────────────────────────────
 .env
 .env.*
 !.env.example
@@ -62,125 +36,42 @@ ssh-keygen
 *.key
 *.p12
 *.pfx
+*.pub
 *_rsa
 *_ed25519
 *id_rsa*
 *id_ed25519*
-ssh-keygen
 secrets/
-Marketing/
-
-# API keys in config files
 config.secret.*
 
-# SSH Keys (public and private)
-*.pub
-id_rsa*
-id_ed25519*
-*.pem
-*.key
-.venv/
-venv/
-backend/venv/
-frontend/node_modules/
-*.backups
-.backups/.backups/
-node_modules/
-dist/
-build/
-.env
+# ── Logs ──────────────────────────────────────────────────────────────────────
 *.log
-# Playwright test results
+logs/
+backend/backend.log
+frontend/frontend.log
+
+# ── Runtime ───────────────────────────────────────────────────────────────────
+.backend.pid
+.frontend.pid
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# ── Playwright ────────────────────────────────────────────────────────────────
 playwright-report/
 test-results/
-playwright/.cache/
-blob-report/
-playwright/.auth/
-
-# Optional traces/videos/screenshots (if you don’t want them in git)
-**/trace.zip
-**/*.webm
-**/*.png
-# Playwright generated artifacts
-playwright-report/
-test-results/
-blob-report/
-
-# Screenshots / videos / traces
-*.png
-*.webm
-*.trace
-*.zip
-
-# Coverage
-coverage/
-
-# Cache
-.playwright/
-playwright/.cache/
-
-# Playwright outputs
-test-results/
-playwright-report/
-blob-report/
 tests/test-results/
 tests/playwright-report/
-
-# artifacts
-*.png
-*.webm
-*.trace
-*.zip
-
-# runtime
-test-results.json
-
-
-# Playwright generated artifacts
-test-results.json
-tests/test-results.json
-test-results/
-playwright-report/
-# Node
-node_modules/
-
-# Build
-dist/
-build/
-
-# Python
-__pycache__/
-.pytest_cache/
-*.pyc
-
-# Playwright
-playwright-report/
-test-results/
 blob-report/
+playwright/.cache/
+playwright/.auth/
 *.trace
 *.webm
 
-# Coverage
-coverage/
-
-# Mac
-.DS_Store
-
-# Logs
-*.log
-# Environment
-.env
-*.env
-
-# SSH keys
-ssh-keygen
-ssh-keygen.pub
-
-# Python virtual env
-venv/
-backend/venv/
-
-# Node modules
-node_modules/
-frontend/node_modules/
-tests/node_modules/
+*.txt
+*txt*

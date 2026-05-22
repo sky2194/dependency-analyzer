@@ -38,9 +38,9 @@ export default function App() {
         <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}} @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}} @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}} @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}} @keyframes pulse-node{0%,100%{opacity:0.8}50%{opacity:1}} @keyframes dash{to{stroke-dashoffset:-20}}`}</style>
         <div style={{ minHeight: location.pathname === '/results' ? undefined : '100vh', height: location.pathname === '/results' ? '100vh' : undefined, overflow: location.pathname === '/results' ? 'hidden' : undefined, background: 'var(--bg)' }}>
           {isLanding ? (
-            <div style={{ position: 'fixed', top: 20, right: 20, zIndex: 1000 }}>
-              <button onClick={toggleTheme} aria-label="Toggle theme" style={{ width: 40, height: 22, borderRadius: 11, border: 'none', background: theme === 'dark' ? 'var(--orange)' : 'var(--border-light)', cursor: 'pointer', position: 'relative', transition: 'background 0.3s', padding: 0 }}>
-                <div style={{ width: 16, height: 16, borderRadius: '50%', background: 'var(--white)', position: 'absolute', top: 3, left: theme === 'dark' ? 21 : 3, transition: 'left 0.3s', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }} />
+            <div style={{ position: 'fixed', top: 19, right: 16, zIndex: 1001 }}>
+              <button onClick={toggleTheme} aria-label="Toggle theme" style={{ width: 36, height: 20, borderRadius: 10, border: 'none', background: theme === 'dark' ? 'var(--orange)' : 'var(--border)', cursor: 'pointer', position: 'relative', transition: 'background 0.3s', padding: 0 }}>
+                <div style={{ width: 14, height: 14, borderRadius: '50%', background: 'var(--white)', position: 'absolute', top: 3, left: theme === 'dark' ? 19 : 3, transition: 'left 0.3s', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }} />
               </button>
             </div>
           ) : (

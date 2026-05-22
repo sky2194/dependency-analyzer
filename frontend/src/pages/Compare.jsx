@@ -15,7 +15,7 @@ export default function Compare() {
         ← Back
       </button>
       
-      <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 800, marginBottom: 8 }}>
+      <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 800, marginBottom: 8, letterSpacing: -0.4 }}>
         Compare Scans
       </h1>
       <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginBottom: 28 }}>

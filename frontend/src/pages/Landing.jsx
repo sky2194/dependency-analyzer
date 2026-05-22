@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 const shield = (
@@ -27,40 +27,72 @@ function CheckRow({ title, text }) {
 
 export default function Landing() {
   const navigate = useNavigate()
+  const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
     const nav = document.getElementById('landing-nav')
-    const onScroll = () => nav?.classList.toggle('scrolled', window.scrollY > 20)
+    const onScroll = () => {
+      nav?.classList.toggle('scrolled', window.scrollY > 20)
+      if (menuOpen) setMenuOpen(false)
+    }
     const obs = new IntersectionObserver(entries => {
       entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible') })
     }, { threshold: 0.12 })
     document.querySelectorAll('.landing-page .reveal').forEach(el => obs.observe(el))
     window.addEventListener('scroll', onScroll)
     onScroll()
-    return () => {
-      window.removeEventListener('scroll', onScroll)
-      obs.disconnect()
-    }
-  }, [])
+    return () => { window.removeEventListener('scroll', onScroll); obs.disconnect() }
+  }, [menuOpen])
 
-  const handleScan = () => navigate('/scan')
+  const handleScan = () => { setMenuOpen(false); navigate('/scan') }
 
   return (
     <div className="landing-page">
       <style>{landingCss}</style>
 
       <nav className="lp-nav" id="landing-nav">
-        <button className="lp-nav-logo" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+        <button className="lp-nav-logo" onClick={() => { setMenuOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }) }}>
           <div className="lp-nav-logo-icon">{shield}</div>
           DepAnalyzer
         </button>
+
+        {/* Desktop links */}
         <div className="lp-nav-links">
-          <a href="#features" className="lp-nav-link" aria-label="Jump to features section">Features</a>
-          <a href="#how-it-works" className="lp-nav-link" aria-label="Jump to how it works section">How it works</a>
-          <button onClick={handleScan} className="lp-nav-link" aria-label="Go to scanner">Scan Now</button>
+          <a href="#features"     className="lp-nav-link">Features</a>
+          <a href="#how-it-works" className="lp-nav-link">How it works</a>
+          <button onClick={handleScan} className="lp-nav-link">Scan Now</button>
         </div>
-        <div className="lp-nav-cta"><button onClick={handleScan} className="lp-btn-primary" style={{fontSize:12,padding:"6px 14px"}}>{shield}Scan</button>
+
+        {/* Desktop CTA */}
+        <div className="lp-nav-cta">
+          <button onClick={handleScan} className="lp-btn-primary" style={{ fontSize: 12, padding: '6px 14px' }}>{shield}Scan</button>
         </div>
+
+        {/* Hamburger button — mobile only, left of theme toggle */}
+        <button
+          className="lp-hamburger"
+          onClick={() => setMenuOpen(o => !o)}
+          aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={menuOpen}
+        >
+          <span style={{ display: 'block', width: 18, height: 2, background: 'var(--text)', borderRadius: 2, transition: 'transform .25s,opacity .25s', transform: menuOpen ? 'translateY(6px) rotate(45deg)' : 'none' }} />
+          <span style={{ display: 'block', width: 18, height: 2, background: 'var(--text)', borderRadius: 2, transition: 'opacity .25s', opacity: menuOpen ? 0 : 1 }} />
+          <span style={{ display: 'block', width: 18, height: 2, background: 'var(--text)', borderRadius: 2, transition: 'transform .25s', transform: menuOpen ? 'translateY(-6px) rotate(-45deg)' : 'none' }} />
+        </button>
+
+        {/* Mobile drawer */}
+        {menuOpen && (
+          <>
+            <div className="lp-mobile-menu">
+              <a href="#features"     className="lp-mobile-link" onClick={() => setMenuOpen(false)}>Features</a>
+              <a href="#how-it-works" className="lp-mobile-link" onClick={() => setMenuOpen(false)}>How it works</a>
+              <a href="#why"          className="lp-mobile-link" onClick={() => setMenuOpen(false)}>Why DepAnalyzer</a>
+              <div style={{ height: 1, background: 'var(--border)', margin: '6px 0' }} />
+              <button onClick={handleScan} className="lp-mobile-cta">{shield}&nbsp;&nbsp;Start Scanning — Free</button>
+            </div>
+            <div className="lp-menu-backdrop" onClick={() => setMenuOpen(false)} />
+          </>
+        )}
       </nav>
 
       <section className="lp-hero">
@@ -255,5 +287,13 @@ const landingCss = `
 .lp-cta-band{margin:0 48px 96px;border-radius:20px;background:linear-gradient(135deg,var(--accent-dim) 0%,var(--purple-dim) 100%);border:1px solid var(--accent);padding:72px 64px;display:flex;align-items:center;justify-content:space-between;gap:40px;position:relative;overflow:hidden}.lp-cta-band:before{content:'';position:absolute;top:-60px;right:-60px;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,var(--accent-dim) 0%,transparent 70%);pointer-events:none}.lp-cta-title{font-family:var(--font-d);font-size:36px;font-weight:800;letter-spacing:-1px;line-height:1.2;color:var(--text)}.lp-cta-sub{font-size:15px;color:var(--text-2);margin-top:10px}
 .lp-footer{border-top:1px solid var(--border);padding:48px 48px 40px;display:grid;grid-template-columns:1.5fr repeat(2,1fr);gap:48px;max-width:1200px;margin:0 auto}.lp-footer-desc{font-size:14px;color:var(--text-2);line-height:1.7;max-width:240px}.lp-footer-col-title{font-size:12px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--text-3);margin-bottom:14px}.lp-footer-links{display:flex;flex-direction:column;gap:10px}.lp-footer-links button{font-size:14.5px;color:var(--text-2);text-decoration:none;transition:color .15s;background:none;border:0;text-align:left;cursor:pointer}.lp-footer-links button:hover{color:var(--text)}.lp-footer-bottom{border-top:1px solid var(--border);padding:24px 48px;max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--text-3)}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}@keyframes pulse-node{0%,100%{opacity:.6}50%{opacity:1}}@keyframes dash{to{stroke-dashoffset:-40}}
-@media(max-width:900px){.lp-mini-stats{grid-template-columns:repeat(2,1fr)!important}.lp-nav{padding:0 18px}.lp-nav-links{display:none}.lp-showcase-header,.lp-two-col,.lp-problem-grid,.lp-features-grid,.lp-footer{grid-template-columns:1fr}.lp-hiw-steps{grid-template-columns:1fr;gap:28px}.lp-hiw-steps:before{display:none}.lp-cta-band{margin:0 20px 72px;padding:42px 28px;flex-direction:column;align-items:flex-start}.lp-section,.lp-showcase,.lp-hero{padding-left:24px;padding-right:24px}.lp-footer-bottom{flex-direction:column;gap:10px;align-items:flex-start}.lp-nav-cta .lp-btn-ghost{display:none}}
+.lp-hamburger{display:none;flex-direction:column;justify-content:center;align-items:center;gap:5px;width:32px;height:32px;background:none;border:none;cursor:pointer;border-radius:6px;padding:6px;flex-shrink:0;margin-right:44px}
+.lp-hamburger:hover{background:var(--bg-elevated)}
+.lp-mobile-menu{position:absolute;top:60px;left:0;right:0;background:var(--bg-card);border-bottom:2px solid var(--border);padding:10px 16px 18px;display:flex;flex-direction:column;gap:4px;box-shadow:0 8px 32px rgba(0,0,0,0.18);z-index:200}
+.lp-mobile-link{display:block;padding:13px 14px;font-size:15px;font-weight:500;color:var(--text-secondary);text-decoration:none;border-radius:8px;transition:background .15s,color .15s}
+.lp-mobile-link:hover{background:var(--bg-elevated);color:var(--text)}
+.lp-mobile-cta{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;background:var(--accent);color:var(--white);border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;margin-top:6px;transition:opacity .15s;width:100%}
+.lp-mobile-cta:hover{opacity:0.9}
+.lp-menu-backdrop{position:fixed;inset:0;z-index:199;background:rgba(0,0,0,0.25);backdrop-filter:blur(2px)}
+@media(max-width:900px){.lp-mini-stats{grid-template-columns:repeat(2,1fr)!important}.lp-nav{padding:0 16px}.lp-nav-links{display:none!important}.lp-nav-cta{display:none!important}.lp-hamburger{display:flex!important}.lp-showcase-header,.lp-two-col,.lp-problem-grid,.lp-features-grid,.lp-footer{grid-template-columns:1fr}.lp-hiw-steps{grid-template-columns:1fr;gap:28px}.lp-hiw-steps:before{display:none}.lp-cta-band{margin:0 20px 72px;padding:42px 28px;flex-direction:column;align-items:flex-start}.lp-section,.lp-showcase,.lp-hero{padding-left:24px;padding-right:24px}.lp-footer-bottom{flex-direction:column;gap:10px;align-items:flex-start}}
 `

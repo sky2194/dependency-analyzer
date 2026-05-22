@@ -133,11 +133,22 @@ export default function Analytics() {
   const exportReport = async (type) => {
     setExportStatus('loading')
     try {
-      const res = await fetch(`${API_BASE}/api/export/${type}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(result) })
+      const res = await fetch(`${API_BASE}/api/export/${type}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(result)
+      })
       if (!res.ok) throw new Error(`Export failed: ${res.status}`)
-      const blob = await res.blob(); const url = URL.createObjectURL(blob)
-      Object.assign(document.createElement('a'), { href: url, download: `sca-report.${type}` }).click()
-      URL.revokeObjectURL(url); setShowExportMenu(false); setExportStatus('success')
+      const blob = await res.blob()
+      const url  = URL.createObjectURL(blob)
+      // Both PDF and CSV download directly now
+      Object.assign(document.createElement('a'), {
+        href: url,
+        download: `sca-report.${type}`
+      }).click()
+      URL.revokeObjectURL(url)
+      setShowExportMenu(false)
+      setExportStatus('success')
       setTimeout(() => setExportStatus(null), 2000)
     } catch {
       setExportStatus('error')
@@ -165,7 +176,7 @@ export default function Analytics() {
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20, gap: 12, flexWrap: 'wrap' }}>
           <div>
-            <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, letterSpacing: -0.4, marginBottom: 4 }}>
+            <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 800, letterSpacing: -0.4, marginBottom: 4 }}>
               Security Report
               <span style={{ marginLeft: 10, fontSize: 10, fontWeight: 700, fontFamily: 'var(--font-mono)', padding: '2px 8px', borderRadius: 4, background: 'var(--green-dim)', border: '1px solid var(--fix-border)', color: 'var(--green)', verticalAlign: 'middle' }}>COMPLETED</span>
             </h1>
@@ -206,7 +217,7 @@ export default function Analytics() {
                 {/* Header */}
                 <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, background: 'var(--bg-card)', zIndex: 1 }}>
                   <div>
-                    <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--text-primary)' }}>Risk Score Methodology</div>
+                    <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 18, color: 'var(--text-primary)' }}>Risk Score Methodology</div>
                     <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>How your score of <span style={{ color: riskColor, fontWeight: 700, fontFamily: 'var(--font-mono)' }}>{riskScore}/100</span> was calculated</div>
                   </div>
                   <button onClick={() => setShowRiskModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 20, lineHeight: 1, padding: '0 4px' }}>×</button>

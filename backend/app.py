@@ -598,9 +598,17 @@ def export_pdf():
     if not data:
         return jsonify({'error': 'No data provided'}), 400
     from flask import Response
-    html = generate_html_report(data)
-    return Response(html, mimetype='text/html',
-        headers={'Content-Disposition': f'attachment; filename=sca-report-{data.get("project_name","report")}.html'})
+    from export.pdf_export import generate_pdf_bytes
+    try:
+        pdf_bytes = generate_pdf_bytes(data)
+        filename  = f"sca-report-{data.get('project_name','report')}.pdf"
+        return Response(pdf_bytes,
+            mimetype='application/pdf',
+            headers={'Content-Disposition': f'attachment; filename="{filename}"',
+                     'Content-Length': len(pdf_bytes)})
+    except Exception as e:
+        log.error(f"PDF export error: {e}")
+        return jsonify({'error': f'PDF generation failed: {str(e)}'}), 500
 
 @app.route('/api/export/csv', methods=['POST'])
 @rate_limited

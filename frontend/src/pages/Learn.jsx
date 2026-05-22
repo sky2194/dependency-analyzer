@@ -245,7 +245,7 @@ export default function Learn() {
       <p key={i} style={{ fontSize: 14, lineHeight: 1.85, color: 'var(--text)', marginBottom: 16 }}>{block.text}</p>
     )
     if (block.type === 'heading') return (
-      <h3 key={i} style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', marginTop: 28, marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid var(--border)' }}>{block.text}</h3>
+      <h3 key={i} style={{ fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', marginTop: 28, marginBottom: 12, paddingBottom: 8, borderBottom: '1px solid var(--border)' }}>{block.text}</h3>
     )
     if (block.type === 'keypoint') return (
       <div key={i} style={{ display: 'flex', gap: 14, marginBottom: 16, padding: '14px 16px', background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: 'var(--radius)' }}>
@@ -323,7 +323,7 @@ export default function Learn() {
         ← Back
       </button>
 
-      <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 800, marginBottom: 4, color: 'var(--text-primary)' }}>
+      <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 800, marginBottom: 4, letterSpacing: -0.4, color: 'var(--text-primary)' }}>
         Security Knowledge Base
       </h1>
       <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginBottom: 28, lineHeight: 1.6 }}>
@@ -383,7 +383,7 @@ export default function Learn() {
         <div ref={contentRef} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '28px 28px', minHeight: 400 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
             <span style={{ fontSize: 22 }}>{section.icon}</span>
-            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 700, color: 'var(--text-primary)' }}>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 700, color: 'var(--text-primary)' }}>
               {section.title}
             </h2>
           </div>

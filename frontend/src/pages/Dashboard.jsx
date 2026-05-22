@@ -119,7 +119,7 @@ export default function Dashboard() {
   return (
     <div className="page-container">
       <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 800, marginBottom: 6, letterSpacing: -0.3 }}>
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 800, marginBottom: 6, letterSpacing: -0.4 }}>
           Dependency Vulnerability Scanner
         </h1>
         <p style={{ color: 'var(--muted)', fontSize: 14, lineHeight: 1.7, maxWidth: 600 }}>
