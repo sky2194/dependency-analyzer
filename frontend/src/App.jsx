@@ -34,14 +34,49 @@ export default function App() {
 
   return (
     <ScanContext.Provider value={{ scanning, setScanning, scanProject, setScanProject }}>
-      <ErrorBoundary>
-        <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}} @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}} @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}} @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}} @keyframes pulse-node{0%,100%{opacity:0.8}50%{opacity:1}} @keyframes dash{to{stroke-dashoffset:-20}}`}</style>
-        <div style={{ minHeight: location.pathname === '/results' ? undefined : '100vh', height: location.pathname === '/results' ? '100vh' : undefined, overflow: location.pathname === '/results' ? 'hidden' : undefined, background: 'var(--bg)' }}>
-          {isLanding ? (
-            <div style={{ position: 'fixed', top: 19, right: 16, zIndex: 1001 }}>
-              <button onClick={toggleTheme} aria-label="Toggle theme" style={{ width: 36, height: 20, borderRadius: 10, border: 'none', background: theme === 'dark' ? 'var(--orange)' : 'var(--border)', cursor: 'pointer', position: 'relative', transition: 'background 0.3s', padding: 0 }}>
-                <div style={{ width: 14, height: 14, borderRadius: '50%', background: 'var(--white)', position: 'absolute', top: 3, left: theme === 'dark' ? 19 : 3, transition: 'left 0.3s', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }} />
-              </button>
+      <style>{`
+        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
+        .nav-brand {
+          font-family: var(--font-display);
+          font-weight: 900;
+          font-size: 17px;
+          color: var(--text);
+          margin-right: 20px;
+          letter-spacing: -0.3px;
+          white-space: nowrap;
+          text-decoration: none;
+        }
+        .nav-brand span { color: var(--accent); }
+        @media (max-width: 480px) {
+          .nav-brand { font-size: 14px; margin-right: 10px; }
+        }
+      `}</style>
+      <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
+        <nav style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)', padding: '0 20px', display: 'flex', alignItems: 'center', gap: 4, height: 52, position: 'sticky', top: 0, zIndex: 100 }}>
+
+          {/* Brand — plain Link, not NavLink, so it never gets active styling */}
+          <Link to="/" className="nav-brand">
+            🔐 <span>Dep</span>Analyzer
+          </Link>
+
+          {/* Nav tabs */}
+          {[
+            { to: '/',      label: 'Scanner',        end: true },
+            { to: '/learn', label: 'Resource Centre' },
+          ].map(({ to, label, end }) => (
+            <NavLink key={to} to={to} end={end} style={({ isActive }) => ({
+              padding: '6px 13px', fontSize: 13, fontWeight: 600, borderRadius: 6,
+              background: isActive ? '#2d1510' : 'none',
+              color: isActive ? 'var(--accent)' : 'var(--muted)',
+              transition: 'all 0.15s', whiteSpace: 'nowrap',
+            })}>
+              {label}
+            </NavLink>
+          ))}
+
+          {scanning && (
+            <div style={{ marginLeft: 12 }}>
+              <ScanStatusBar scanning={scanning} scanProject={scanProject} />
             </div>
           ) : (
             <nav style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border)', padding: '0 16px', display: 'flex', alignItems: 'center', gap: 4, height: 52, position: 'sticky', top: 0, zIndex: 100 }}>
