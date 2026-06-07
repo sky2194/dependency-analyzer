@@ -20,7 +20,10 @@ When you upload a `package.json`, `requirements.txt`, or `pom.xml`:
 
 **What the database stores:**
 
-The PostgreSQL database stores CVE vulnerability data sourced from OSV, EPSS, and CISA KEV — public vulnerability intelligence only. It does not store anything about user scans, uploaded files, or package manifests.
+The PostgreSQL database stores:
+
+- **CVE intelligence** — vulnerability data sourced from OSV, EPSS, and CISA KEV (public data only)
+- **Scan snapshots** — the CVE findings and risk score for a completed scan, stored for **30 days** to power the shareable CI report link (`/results?id=<uuid>`). The raw manifest (package names, versions, file contents) is **never persisted** — only the derived vulnerability results are stored. Snapshots are automatically deleted after 30 days.
 
 ## CVE Data Sources
 
@@ -69,4 +72,4 @@ Full details (allowed origins, rate limits, NVD key status, sync timestamps) are
 - `DATABASE_URL` is stored in `backend/.env` which is gitignored — never committed to the repository
 - In production, `DATABASE_URL` is set as an environment variable in the hosting platform — never written to the filesystem
 - Neon PostgreSQL enforces TLS (`sslmode=require`) on all connections
-- The database stores only public CVE data — no user data, no scan results
+- The database stores public CVE intelligence and scan result snapshots (CVE findings only, 30-day TTL) — the raw manifest file is never written to the database

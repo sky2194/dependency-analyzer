@@ -92,6 +92,18 @@ CREATE TABLE IF NOT EXISTS resolver_cache (
     expires_at  TIMESTAMPTZ DEFAULT NOW() + INTERVAL '24 hours'
 );
 
+CREATE TABLE IF NOT EXISTS scan_snapshots (
+    id           TEXT PRIMARY KEY,         -- transaction_id (UUID)
+    ecosystem    TEXT NOT NULL,
+    project_name TEXT NOT NULL,
+    result       BYTEA NOT NULL,           -- gzip-compressed JSON (~80% smaller than raw)
+    created_at   TIMESTAMPTZ DEFAULT NOW(),
+    expires_at   TIMESTAMPTZ DEFAULT NOW() + INTERVAL '30 days'
+);
+
+CREATE INDEX IF NOT EXISTS idx_snapshots_expires
+    ON scan_snapshots (expires_at);
+
 CREATE INDEX IF NOT EXISTS idx_resolver_cache_expires
     ON resolver_cache (expires_at);
 
@@ -158,6 +170,17 @@ def purge_expired_resolver_cache():
                 log.info(f"Resolver cache: purged {deleted} expired entries")
     except Exception as e:
         log.warning(f"Resolver cache purge error: {e}")
+
+def purge_expired_scan_snapshots():
+    """Delete scan snapshots past their 30-day TTL. Called daily by scheduler."""
+    try:
+        with get_conn() as conn:
+            with get_cursor(conn) as cur:
+                cur.execute("DELETE FROM scan_snapshots WHERE expires_at < NOW()")
+                deleted = cur.rowcount
+                log.info(f"Scan snapshots: purged {deleted} expired entries")
+    except Exception as e:
+        log.warning(f"Scan snapshot purge error: {e}")
 
 def last_sync_time(source: str):
     """Return ISO timestamp of last successful sync for a source, or None."""

@@ -53,6 +53,8 @@ Built for developers who want visibility into their supply chain without enterpr
 ### Vulnerability Analysis
 - Dual-source lookup: OSV (primary) + NVD (CVSS enrichment)
 - CVSS v3.1 / v3.0 / v2 scoring with severity labels
+- **EPSS score** — probability (0–100%) a CVE will be exploited in the wild within 30 days, sourced from the Cyentia Institute and synced daily
+- **CISA KEV flag** — marks CVEs confirmed on the [Known Exploited Vulnerabilities](https://www.cisa.gov/known-exploited-vulnerabilities-catalog) list; these are displayed with a prominent alert and auto-selected in the detail panel
 - Vulnerability deduplication and grouping by `package@version`
 - CVE path tracking — shows how each vulnerability enters the dependency tree
 - Fix version recommendations where published
@@ -61,6 +63,7 @@ Built for developers who want visibility into their supply chain without enterpr
 - Composite score (0–100) using a logarithmic decay model across four severity tiers
 - Labels: Secure, Low, Medium, High, Critical
 - Priority fix count surfaces Critical and High vulnerabilities first
+- Auto-selects the most urgent CVE on load — KEV-confirmed vulnerabilities are prioritised above severity alone
 
 ### Dependency Graph
 - Interactive SVG graph built without an external graph library
@@ -97,6 +100,15 @@ Built for developers who want visibility into their supply chain without enterpr
 - Mobile hamburger navigation
 - Adaptive layouts for file upload and results at mobile and desktop viewports
 - Cross-browser E2E coverage: Chromium, Firefox, and WebKit
+
+### GitHub Action — Automatic Scanning on Every Commit
+- Install `sky2194/dependency-analyzer@v1` in any project to scan dependencies on every push and pull request
+- Posts a full report comment to the PR — risk score, CVE breakdown, and a deep link to the visual report in the app
+- **CISA KEV alert** — if any CVE in the scan is on the CISA Known Exploited Vulnerabilities list, a prominent warning block appears at the top of the PR comment
+- Emits `::warning::` annotations for KEV CVEs visible in the GitHub Actions summary panel and PR checks tab
+- Never blocks or rejects a PR — informational by default
+- Exposes `risk-score`, `scan-url`, `critical`, `high`, and `kev-count` as step outputs for downstream workflow steps (Slack alerts, Jira tickets, etc.)
+- Scan results are persisted server-side for 30 days — the "View full report" link opens the full app including dependency graph, CVE paths, and fix commands
 
 ---
 
@@ -156,10 +168,30 @@ Tests cover 5 areas (41 tests total):
 - **History** — load, empty state, delete without crash
 - **Knowledge Base** — all sections, mobile picker
 
-### CI Gate
-Every PR to `main` automatically runs the full test suite via GitHub Actions.
+### CI Gate (internal)
+Every PR to `main` automatically runs the full Playwright + pytest test suite via GitHub Actions.
 PRs cannot be merged if any test fails.
 Failure artifacts (screenshots, videos) are uploaded for debugging.
+
+### Using DepAnalyzer in your own CI pipeline
+Add the following to `.github/workflows/security.yml` in any project to get automatic dependency scanning on every push and PR:
+
+```yaml
+name: Dependency Security Scan
+on: [push, pull_request]
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: sky2194/dependency-analyzer@v1
+        with:
+          manifest-file: package.json   # or requirements.txt / pom.xml
+          api-url: https://depanalyzer.com
+```
+
+The Action scans your dependencies, posts a PR comment with the full report (including a CISA KEV alert if any actively-exploited CVEs are found), and links directly to the visual report in the app. It never fails the build.
 
 ### Backend Tests (pytest)
 ```bash
@@ -527,6 +559,7 @@ dependency-analyzer/
 |--------|----------|-------------|
 | `POST` | `/api/scan` | Parse and scan a dependency manifest |
 | `POST` | `/api/scan-package` | Scan a single package by name and version |
+| `GET` | `/api/scans/<id>` | Retrieve a stored scan snapshot by its transaction ID (used by shareable links from the GitHub Action) |
 | `GET` | `/api/cve/<cve_id>` | Fetch details for a specific CVE |
 | `POST` | `/api/export/pdf` | Generate a PDF report from a scan snapshot |
 | `POST` | `/api/export/csv` | Generate a CSV export of vulnerabilities |

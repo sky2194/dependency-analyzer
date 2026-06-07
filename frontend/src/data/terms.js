@@ -24,6 +24,7 @@ const TERMS = {
   falsePositive: { term: 'False Positive',         plain: 'A reported vulnerability that doesn\'t actually affect your code — e.g. the vulnerable function is never called in your app.' },
   cwe:           { term: 'CWE',                    plain: 'Common Weakness Enumeration — a category system for the type of bug (e.g. CWE-79 = XSS, CWE-89 = SQL Injection).' },
   epss:          { term: 'EPSS',                   plain: 'Exploit Prediction Scoring System — the probability (0–100%) that a CVE will be actively exploited in the wild within 30 days.' },
+  kev:           { term: 'CISA KEV',               plain: 'Known Exploited Vulnerabilities — a CISA-maintained list of CVEs with confirmed real-world exploitation. Not theoretical: someone is actively using this against systems right now.' },
   zeroDay:       { term: 'Zero-Day',               plain: 'A vulnerability that is being actively exploited before a fix exists — the most dangerous category.' },
   supplyChain:   { term: 'Supply Chain Attack',    plain: 'When attackers compromise a package you depend on, so malicious code enters your app without you knowing.' },
   lockfile:      { term: 'Lock File',              plain: 'A file (package-lock.json, yarn.lock) that records the exact version of every dependency resolved — ensures reproducible builds.' },

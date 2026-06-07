@@ -1,0 +1,44 @@
+name: 'DepAnalyzer Security Scan'
+description: 'Scan your dependencies for CVE vulnerabilities and post a full report to your PR — never blocks your pipeline'
+branding:
+  icon: 'shield'
+  color: 'blue'
+
+inputs:
+  manifest-file:
+    description: 'Path to the dependency manifest (package.json, requirements.txt, or pom.xml)'
+    required: false
+    default: 'package.json'
+  api-url:
+    description: 'DepAnalyzer API base URL'
+    required: false
+    default: 'https://depanalyzer.com'
+  github-token:
+    description: 'GitHub token used to post PR comments'
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  risk-score:
+    description: 'Composite risk score (0–100)'
+    value: ${{ steps.scan.outputs.risk_score }}
+  scan-url:
+    description: 'URL to view the full scan report in the DepAnalyzer app'
+    value: ${{ steps.scan.outputs.scan_url }}
+  critical:
+    description: 'Number of Critical severity CVEs found'
+    value: ${{ steps.scan.outputs.critical }}
+  high:
+    description: 'Number of High severity CVEs found'
+    value: ${{ steps.scan.outputs.high }}
+  kev-count:
+    description: 'Number of CISA KEV (actively exploited) CVEs found'
+    value: ${{ steps.scan.outputs.kev_count }}
+
+runs:
+  using: node20
+  main: action/scan.js
+  env:
+    DA_MANIFEST: ${{ inputs.manifest-file }}
+    DA_API_URL: ${{ inputs.api-url }}
+    DA_GITHUB_TOKEN: ${{ inputs.github-token }}

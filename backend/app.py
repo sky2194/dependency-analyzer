@@ -65,8 +65,9 @@ def _start_scheduler():
         scheduler.add_job(sync_epss, 'interval', hours=24, id='epss_sync', replace_existing=True)
         scheduler.add_job(sync_kev,  'interval', hours=24, id='kev_sync',  replace_existing=True)
         # Purge expired resolver cache entries daily
-        from db import purge_expired_resolver_cache
-        scheduler.add_job(purge_expired_resolver_cache, 'interval', hours=24, id='resolver_cache_purge', replace_existing=True)
+        from db import purge_expired_resolver_cache, purge_expired_scan_snapshots
+        scheduler.add_job(purge_expired_resolver_cache,  'interval', hours=24, id='resolver_cache_purge', replace_existing=True)
+        scheduler.add_job(purge_expired_scan_snapshots, 'interval', hours=24, id='scan_snapshot_purge',  replace_existing=True)
         scheduler.start()
         log.info("Sync scheduler started (OSV hourly, EPSS/KEV daily)")
     except Exception as e:
@@ -481,6 +482,25 @@ def run_analysis(body):
         'scan_timestamp': int(time.time()),
     }
     
+    # Best-effort: persist the full snapshot (gzip-compressed) for shareable CI links.
+    # gzip typically reduces the JSON payload by ~80%, keeping all features intact.
+    try:
+        import gzip as _gzip
+        import psycopg2
+        from db import get_conn, get_cursor
+        compressed = _gzip.compress(json.dumps(copy.deepcopy(scan_result)).encode('utf-8'))
+        with get_conn() as conn:
+            with get_cursor(conn) as cur:
+                cur.execute(
+                    """INSERT INTO scan_snapshots (id, ecosystem, project_name, result)
+                       VALUES (%s, %s, %s, %s)
+                       ON CONFLICT (id) DO NOTHING""",
+                    (transaction_id, scan_result['ecosystem'],
+                     scan_result['project_name'], psycopg2.Binary(compressed))
+                )
+    except Exception as e:
+        log.debug(f"Snapshot storage skipped: {e}")
+
     return jsonify(copy.deepcopy(scan_result))
 
 @app.route('/api/scan', methods=['POST'])
@@ -621,6 +641,31 @@ def scan_package_deep():
     except Exception as e:
         log.error(f"Deep scan error: {e}")
         return jsonify({'error': 'Deep scan failed. Check server logs for details.'}), 500
+
+@app.route('/api/scans/<scan_id>', methods=['GET'])
+@request_id_middleware
+def get_scan(scan_id):
+    """Retrieve a stored scan snapshot by its transaction ID (used by shareable links)."""
+    import re
+    if not re.match(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', scan_id):
+        return jsonify({'error': 'Invalid scan ID'}), 400
+    try:
+        from db import get_conn, get_cursor
+        with get_conn() as conn:
+            with get_cursor(conn) as cur:
+                cur.execute(
+                    "SELECT result FROM scan_snapshots WHERE id=%s AND expires_at > NOW()",
+                    (scan_id,)
+                )
+                row = cur.fetchone()
+                if not row:
+                    return jsonify({'error': 'Scan not found or expired'}), 404
+                import gzip as _gzip
+                result = json.loads(_gzip.decompress(bytes(row['result'])).decode('utf-8'))
+                return jsonify(result)
+    except Exception as e:
+        log.error(f"get_scan error: {e}")
+        return jsonify({'error': 'Failed to retrieve scan'}), 500
 
 @app.route('/api/cve/<cve_id>', methods=['GET'])
 @rate_limited

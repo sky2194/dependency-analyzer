@@ -1,11 +1,13 @@
 import { useState, useRef, useEffect } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import API_BASE from '../config'
 import DependencyGraph from '../components/DependencyGraph'
+import Tooltip from '../components/Tooltip'
 import validateContract from '../utils/validateSnapshot'
 import { generateFixAllScript } from '../utils/fixAll'
 import { saveProjectScan, getProjectScans } from '../utils/projectStore'
 import normalizeSnapshot from '../utils/normalizeSnapshot'
+import TERMS from '../data/terms'
 
 const SEV_COLOR = { CRITICAL: 'var(--critical)', HIGH: 'var(--high)', MEDIUM: 'var(--medium)', LOW: 'var(--low)' }
 const SEV_DIM   = { CRITICAL: 'var(--red-dim)', HIGH: 'var(--yellow-dim)', MEDIUM: 'var(--blue-dim)', LOW: 'var(--green-dim)' }
@@ -17,6 +19,28 @@ const SevBadge = ({ sev, style = {} }) => {
   return (
     <span className="sev-badge" style={{ background: SEV_DIM[s], color: SEV_COLOR[s], display: 'inline-flex', alignItems: 'center', gap: 4, ...style }}>
       {s}
+    </span>
+  )
+}
+
+// CISA KEV badge — this CVE is confirmed under active exploitation in the wild
+const KevBadge = ({ style = {} }) => (
+  <span className="sev-badge" title={TERMS.kev.plain}
+    style={{ background: 'var(--red-dim)', color: 'var(--red)', display: 'inline-flex', alignItems: 'center', gap: 4, cursor: 'help', ...style }}>
+    <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--red)' }} /> KEV
+  </span>
+)
+
+// EPSS badge — probability (0-100%) this CVE gets exploited in the wild within 30 days
+const EpssBadge = ({ score, style = {} }) => {
+  if (score == null) return null
+  const pct = score * 100
+  const label = pct >= 10 ? `${pct.toFixed(0)}%` : pct >= 1 ? `${pct.toFixed(1)}%` : `${pct.toFixed(2)}%`
+  const color = pct >= 10 ? 'var(--high)' : pct >= 1 ? 'var(--medium)' : 'var(--text-muted)'
+  return (
+    <span className="sev-badge" title={`${TERMS.epss.plain} This CVE: ${label} probability.`}
+      style={{ background: 'var(--purple-dim)', color, display: 'inline-flex', alignItems: 'center', gap: 4, cursor: 'help', ...style }}>
+      EPSS {label}
     </span>
   )
 }
@@ -144,11 +168,14 @@ function AllClearHero({ snapshot, totalPkgs, directDeps, transitiveDeps, navigat
 export default function Analytics() {
   const { state: locationState } = useLocation()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [tab, setTab] = useState('vulns')
   const [sevFilter, setSevFilter] = useState('ALL')
   const [selected, setSelected] = useState(null)
   const [expanded, setExpanded] = useState(new Set())
-
+  const [sharedResult, setSharedResult] = useState(null)
+  const [sharedLoading, setSharedLoading] = useState(false)
+  const [sharedError, setSharedError] = useState(null)
 
   const [showExportMenu, setShowExportMenu] = useState(false)
   const [copied, setCopied] = useState(null)
@@ -156,14 +183,26 @@ export default function Analytics() {
   const [pkgSearch, setPkgSearch] = useState('')
   const [showRiskModal, setShowRiskModal] = useState(false)
   const exportRef = useRef(null)
-  
+
+  // Load a shared scan via ?id=<transaction_id> (used by CI pipeline links)
+  useEffect(() => {
+    const id = searchParams.get('id')
+    if (!id || locationState?.result) return
+    setSharedLoading(true)
+    fetch(`${API_BASE}/api/scans/${id}`)
+      .then(r => r.ok ? r.json() : r.json().then(e => Promise.reject(e.error || 'Not found')))
+      .then(data => setSharedResult(data))
+      .catch(err => setSharedError(typeof err === 'string' ? err : 'Failed to load scan'))
+      .finally(() => setSharedLoading(false))
+  }, [searchParams, locationState])
+
   const handleCopy = (text, id) => {
     navigator.clipboard?.writeText(text)
     setCopied(id)
     setTimeout(() => setCopied(null), 2000)
   }
-  
-  const result = locationState?.result
+
+  const result = locationState?.result || sharedResult
 
 
   // Auto-save scan to project history
@@ -184,6 +223,24 @@ export default function Analytics() {
 
   // exportStatus must be above all conditional returns (React hook rules)
   const [exportStatus, setExportStatus] = useState(null) // 'loading' | 'error' | 'success'
+
+  if (sharedLoading) {
+    return (
+      <div style={{ textAlign: 'center', padding: 80 }}>
+        <p style={{ color: 'var(--text-muted)', marginBottom: 8 }}>Loading scan report…</p>
+        <p style={{ color: 'var(--text-muted)', fontSize: 12, fontFamily: 'var(--font-mono)' }}>{searchParams.get('id')}</p>
+      </div>
+    )
+  }
+
+  if (sharedError) {
+    return (
+      <div style={{ textAlign: 'center', padding: 80 }}>
+        <p style={{ color: 'var(--critical)', marginBottom: 16 }}>{sharedError}</p>
+        <button onClick={() => navigate('/scan')} className="a-btn-primary">Go to Scanner</button>
+      </div>
+    )
+  }
 
   if (!result) {
     return (
@@ -211,13 +268,14 @@ export default function Analytics() {
   const groupedPackages = snapshot.grouped_packages || []
   const vulns = snapshot.vulnerabilities || []
 
-  // Auto-select highest severity CVE — snapshot is now available
+  // Auto-select the most urgent CVE — confirmed actively-exploited (KEV) outranks severity alone
   useEffect(() => {
     if (!vulns.length) return
     const SEV_ORDER = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3 }
-    const top = [...vulns].sort((a, b) =>
-      (SEV_ORDER[a.severity] ?? 4) - (SEV_ORDER[b.severity] ?? 4)
-    )[0]
+    const top = [...vulns].sort((a, b) => {
+      if (!!a.in_kev !== !!b.in_kev) return a.in_kev ? -1 : 1
+      return (SEV_ORDER[a.severity] ?? 4) - (SEV_ORDER[b.severity] ?? 4)
+    })[0]
     if (top?.cve_id) setSelected(top.cve_id)
   }, [result])
   const sm = snapshot.summary
@@ -533,6 +591,8 @@ export default function Analytics() {
                                   <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--blue)', fontWeight: 600 }}>{v.cve_id}</span>
                                   <span data-severity={v.severity}><SevBadge sev={v.severity} /></span>
                                   <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, color: SEV_COLOR[v.severity] }}>CVSS {v.cvss_score}</span>
+                                  {v.in_kev && <KevBadge />}
+                                  <EpssBadge score={v.epss_score} />
                                   <span style={{ flex: 1 }} />
                                   {v.fix_version && <span style={{ fontSize: 10, color: 'var(--green)', fontFamily: 'var(--font-mono)' }}>Fix: v{v.fix_version}</span>}
                                 </div>
@@ -681,6 +741,26 @@ export default function Analytics() {
                       <div style={{ height: '100%', width: `${(selectedVuln.cvss_score / 10) * 100}%`, background: `linear-gradient(90deg,var(--green),var(--high),var(--critical))`, borderRadius: 2 }} />
                     </div>
                   </div>
+                  {(selectedVuln.in_kev || selectedVuln.epss_score != null) && (
+                    <div className="a-panel-row">
+                      <div className="a-panel-label"><Tooltip termKey="epss">Real-World Exploitation</Tooltip></div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 6 }}>
+                        {selectedVuln.in_kev && <KevBadge />}
+                        <EpssBadge score={selectedVuln.epss_score} />
+                      </div>
+                      {selectedVuln.epss_score != null && (
+                        <div style={{ fontSize: 11, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                          {(selectedVuln.epss_score * 100).toFixed(2)}% probability of exploitation in the wild within 30 days
+                          {selectedVuln.epss_percentile != null && <> — higher than {(selectedVuln.epss_percentile * 100).toFixed(0)}% of all known CVEs</>}
+                        </div>
+                      )}
+                      {selectedVuln.in_kev && (
+                        <div style={{ fontSize: 11, color: 'var(--red)', lineHeight: 1.6, marginTop: selectedVuln.epss_score != null ? 4 : 0 }}>
+                          Confirmed on the CISA Known Exploited Vulnerabilities list — fix this first.
+                        </div>
+                      )}
+                    </div>
+                  )}
                   <div className="a-panel-row"><div className="a-panel-label">Description</div><span style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.6 }}>{selectedVuln.description}</span></div>
                   <div className="a-panel-row">
                     <div className="a-panel-label">Dependency Type</div>
