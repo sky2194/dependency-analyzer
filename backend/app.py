@@ -61,7 +61,7 @@ def _start_scheduler():
 
         scheduler = BackgroundScheduler()
         # OSV delta: every 5 minutes — only fetches records changed since last sync
-        scheduler.add_job(sync_all,  'interval', hours=8, id='osv_sync',  replace_existing=True)
+        scheduler.add_job(sync_all,  'interval', hours=24, id='osv_sync',  replace_existing=True)
         # EPSS + KEV: daily
         scheduler.add_job(sync_epss, 'interval', hours=24, id='epss_sync', replace_existing=True)
         scheduler.add_job(sync_kev,  'interval', hours=24, id='kev_sync',  replace_existing=True)
