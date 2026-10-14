@@ -10,6 +10,9 @@ function detectFromContent(text) {
   // Maven — XML with groupId/artifactId
   if (t.includes('<groupId>') || t.includes('<artifactId>') || t.includes('<dependencies>'))
     return 'maven'
+  // Gradle — dependencies block with Maven coordinates
+  if (/dependencies\s*\{/.test(t) && /(implementation|api|compileOnly|runtimeOnly|compile)\s*(\(|\s+)['"][^:'"]+:[^:'"]+:[^'"]+['"]/.test(t))
+    return 'gradle'
   // npm — JSON with dependencies/devDependencies/name+version
   try {
     const parsed = JSON.parse(t)
@@ -31,6 +34,7 @@ const PLACEHOLDERS = {
   npm: `Paste your package.json here...\n\nExample:\n{\n  "dependencies": {\n    "express": "4.17.1",\n    "lodash": "4.17.21"\n  }\n}`,
   pypi: `Paste your requirements.txt here...\n\nExample:\nDjango==3.2.0\nrequests==2.28.0\nnumpy==1.23.0`,
   maven: `Paste your pom.xml here...\n\nExample:\n<dependencies>\n  <dependency>\n    <groupId>org.springframework</groupId>\n    <artifactId>spring-core</artifactId>\n    <version>5.3.0</version>\n  </dependency>\n</dependencies>`,
+  gradle: `Paste your build.gradle here...\n\nExample:\ndependencies {\n  implementation 'org.springframework:spring-core:5.3.0'\n  implementation 'com.fasterxml.jackson.core:jackson-databind:2.9.8'\n}`,
 }
 
 export default function FileUpload({ onAnalyze, loading, onEcosystemChange }) {
@@ -74,7 +78,7 @@ export default function FileUpload({ onAnalyze, loading, onEcosystemChange }) {
           const active = activeEco === key
           return (
             <button key={key} onClick={() => { setActiveEco(key); setContent(''); onEcosystemChange?.(e) }}
-              style={{ flex: 1, padding: '10px 0', border: 'none', borderRight: key !== 'maven' ? '1px solid var(--border)' : 'none', background: active ? 'var(--surface2)' : 'var(--surface)', color: active ? e.color : 'var(--muted)', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 12, borderBottom: active ? `2px solid ${e.color}` : '2px solid transparent', transition: 'all 0.15s' }}>
+              style={{ flex: 1, padding: '10px 0', border: 'none', borderRight: key !== Object.keys(ECOSYSTEMS).at(-1) ? '1px solid var(--border)' : 'none', background: active ? 'var(--surface2)' : 'var(--surface)', color: active ? e.color : 'var(--muted)', cursor: 'pointer', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 12, borderBottom: active ? `2px solid ${e.color}` : '2px solid transparent', transition: 'all 0.15s' }}>
               {e.label}
               <div style={{ fontSize: 10, fontWeight: 400, color: 'var(--muted)', marginTop: 2 }}>{e.file}</div>
             </button>
@@ -93,8 +97,8 @@ export default function FileUpload({ onAnalyze, loading, onEcosystemChange }) {
         aria-label="Upload dependency file — click or drag and drop"
         style={{ border: `2px dashed ${drag ? 'var(--brand)' : 'var(--border)'}`, borderRadius: 'var(--radius)', padding: '16px', textAlign: 'center', cursor: 'pointer', background: drag ? 'var(--vuln-bg)' : 'var(--surface)', marginBottom: 10, transition: 'all 0.2s' }}>
         <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 13 }}>Drop file or click to browse</div>
-        <div style={{ color: 'var(--muted)', fontSize: 11, marginTop: 2 }}>package.json / package-lock.json · requirements.txt · pom.xml</div>
-        <input ref={ref} type="file" hidden accept=".json,.txt,.xml" onChange={e => handleFile(e.target.files[0])} />
+        <div style={{ color: 'var(--muted)', fontSize: 11, marginTop: 2 }}>package.json / package-lock.json · requirements.txt · pom.xml · build.gradle</div>
+        <input ref={ref} type="file" hidden accept=".json,.txt,.xml,.gradle,.kts" onChange={e => handleFile(e.target.files[0])} />
       </div>
 
       {/* Sample button - only for active ecosystem */}

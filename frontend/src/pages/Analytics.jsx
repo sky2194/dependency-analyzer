@@ -52,6 +52,7 @@ const installCmd = (v, eco = 'npm') => {
   if (!v?.fix_version) return ''
   if (eco === 'pypi') return `pip install ${pkgName(v)}==${v.fix_version}`
   if (eco === 'maven') return `${pkgName(v)} -> ${v.fix_version}`
+  if (eco === 'gradle') return `implementation '${pkgName(v)}:${v.fix_version}'`
   return `npm install ${pkgName(v)}@${v.fix_version}`
 }
 

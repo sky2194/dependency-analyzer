@@ -38,6 +38,21 @@ export const generateFixAllScript = (fixes, ecosystem) => {
       '<!-- Then run: mvn clean install -->'
     ].join('\n')
 
+  } else if (ecosystem === 'gradle') {
+    const lines = fixable.map(f => {
+      const pkg = f.package_name || f.package
+      return `    implementation '${pkg}:${f.fix_version}'`
+    })
+    return [
+      '// Update these versions in your build.gradle dependencies:',
+      'dependencies {',
+      ...lines,
+      '}',
+      '',
+      '// Then run:',
+      './gradlew build'
+    ].join('\n')
+
   } else {
     // npm — show package.json dependency lines to update
     const lines = fixable.map(f => {

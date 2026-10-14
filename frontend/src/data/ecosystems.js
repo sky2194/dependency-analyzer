@@ -71,6 +71,30 @@ urllib3==1.26.2`
     <version>2.9.8</version>
   </dependency>
 </dependencies>`
+  },
+  gradle: {
+    label: 'Gradle', lang: 'Java / Kotlin', color: '#02303a',
+    file: 'build.gradle',
+    mediationRule: 'Gradle resolves version conflicts by selecting the newest requested version by default.',
+    mediationFix: 'Pin the safe version in dependencies, use constraints, or add a resolutionStrategy rule for transitive fixes.',
+    mediationExample: {
+      package: 'jackson-databind',
+      contestants: [
+        { requester: 'legacy-lib', version: '2.9.8', depth: 2, safe: false },
+        { requester: 'spring-boot-starter-web', version: '2.11.0', depth: 2, safe: true },
+      ],
+      winner: '2.11.0', winReason: 'newest version wins',
+      danger: 'Gradle normally picks the newest requested version, but explicit pins and constraints can still keep an unsafe version in the graph.'
+    },
+    cvePathExample: ['my-app', 'spring-boot-starter-web', 'jackson-databind (CVE)'],
+    sampleContent: `plugins {
+  id 'java'
+}
+
+dependencies {
+  implementation 'org.springframework.boot:spring-boot-starter-web:2.3.0.RELEASE'
+  implementation 'com.fasterxml.jackson.core:jackson-databind:2.9.8'
+}`
   }
 }
 
@@ -88,6 +112,7 @@ export const detectEcosystem = (filename) => {
   if (filename.includes('package-lock.json')) return LOCKFILE_ECO
   if (filename.includes('package.json')) return ECOSYSTEMS.npm
   if (filename.endsWith('.txt') || filename.includes('requirements')) return ECOSYSTEMS.pypi
+  if (filename.endsWith('.gradle') || filename.endsWith('.gradle.kts') || filename.includes('build.gradle')) return ECOSYSTEMS.gradle
   if (filename.endsWith('.xml') || filename.includes('pom')) return ECOSYSTEMS.maven
   return null
 }

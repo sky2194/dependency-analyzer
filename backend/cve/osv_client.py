@@ -10,7 +10,7 @@ from utils.circuit_breaker import CircuitBreaker, retry_with_backoff
 log = logging.getLogger(__name__)
 
 OSV_URL = 'https://api.osv.dev/v1'
-ECOSYSTEM_MAP = {'npm': 'npm', 'pypi': 'PyPI', 'maven': 'Maven', 'lockfile': 'npm', 'npm-lock': 'npm'}
+ECOSYSTEM_MAP = {'npm': 'npm', 'pypi': 'PyPI', 'maven': 'Maven', 'gradle': 'Maven', 'lockfile': 'npm', 'npm-lock': 'npm'}
 
 # Circuit breaker for OSV API
 osv_circuit_breaker = CircuitBreaker(failure_threshold=5, timeout=60, recovery_timeout=30)

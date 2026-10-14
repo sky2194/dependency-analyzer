@@ -152,7 +152,7 @@ export default function Landing() {
         <div className="lp-hero-content">
           <div className="lp-hero-badge"><div className="lp-hero-badge-dot" />Software Supply Chain Security · Open Source · No Signup</div>
           <h1 className="lp-hero-title">Find CVEs hiding<br />in your <span>dependencies.</span></h1>
-          <p className="lp-hero-sub">Upload your <code style={{fontFamily:"var(--font-mono)",fontSize:14}}>package.json</code>, <code style={{fontFamily:"var(--font-mono)",fontSize:14}}>requirements.txt</code>, or <code style={{fontFamily:"var(--font-mono)",fontSize:14}}>pom.xml</code> — get a full CVE report in seconds. Direct and transitive dependencies. Exact fix commands. Free, no signup.</p>
+          <p className="lp-hero-sub">Upload your <code style={{fontFamily:"var(--font-mono)",fontSize:14}}>package.json</code>, <code style={{fontFamily:"var(--font-mono)",fontSize:14}}>requirements.txt</code>, <code style={{fontFamily:"var(--font-mono)",fontSize:14}}>pom.xml</code>, or <code style={{fontFamily:"var(--font-mono)",fontSize:14}}>build.gradle</code> — get a full CVE report in seconds. Direct and transitive dependencies. Exact fix commands. Free, no signup.</p>
           <div className="lp-hero-actions">
             <button onClick={() => navigate('/scan')} className="lp-btn-hero" aria-label="Start scanning your project">{shield} Scan Free — No Signup</button>
             <button onClick={() => navigate('/learn')} className="lp-btn-hero-ghost" aria-label="Learn how it works">Learn the concepts →</button>
@@ -167,7 +167,7 @@ export default function Landing() {
             <span style={{ color:'var(--border)', fontSize:12 }}>·</span>
             <span style={{ fontSize:12, color:'var(--text-muted)' }}>Backed by OSV + NVD</span>
             <span style={{ color:'var(--border)', fontSize:12 }}>·</span>
-            <span style={{ fontSize:12, color:'var(--text-muted)' }}>npm · PyPI · Maven</span>
+            <span style={{ fontSize:12, color:'var(--text-muted)' }}>npm · PyPI · Maven · Gradle</span>
             <span style={{ color:'var(--border)', fontSize:12 }}>·</span>
             <span style={{ fontSize:12, color:'var(--text-muted)' }}>No data stored</span>
           </div>
@@ -289,7 +289,7 @@ export default function Landing() {
           <p className="lp-section-sub" style={{ margin: '0 auto' }}>No agents to install. No config files. Just upload your manifest and get results.</p>
         </div>
         <div className="lp-hiw-steps">
-          {['Upload manifest|Drop your package.json, requirements.txt, or pom.xml — any ecosystem.','Tree resolution|We build the complete dependency graph including all transitive packages.','CVE matching|Each package-version pair is cross-referenced against OSV database with NVD fallback.','Risk report|Receive a prioritized report with risk scores, severity breakdowns, and exact fix commands.'].map((item, i) => {
+          {['Upload manifest|Drop your package.json, requirements.txt, pom.xml, or build.gradle — any ecosystem.','Tree resolution|We build the complete dependency graph including all transitive packages.','CVE matching|Each package-version pair is cross-referenced against OSV database with NVD fallback.','Risk report|Receive a prioritized report with risk scores, severity breakdowns, and exact fix commands.'].map((item, i) => {
             const [title, text] = item.split('|')
             return <div className={`lp-hiw-step reveal reveal-delay-${i + 1}`} key={title}><div className="lp-hiw-num">{i + 1}</div><div className="lp-hiw-title">{title}</div><div className="lp-hiw-text">{text}</div></div>
           })}

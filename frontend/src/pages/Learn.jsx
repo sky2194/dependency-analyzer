@@ -38,13 +38,14 @@ const SECTIONS = [
     content: [
       { type: 'keypoint', label: 'Definition', text: 'Software Composition Analysis (SCA) is a security practice that automatically identifies all open-source libraries in a codebase and checks them against known vulnerability databases.' },
       { type: 'keypoint', label: 'Why it matters', text: 'Modern applications are built on hundreds of third-party packages. Each package is a potential attack surface. SCA tools provide complete visibility into every component being shipped to production.' },
-      { type: 'keypoint', label: 'How it works', text: 'SCA tools parse dependency manifests (package.json, requirements.txt, pom.xml), resolve the full dependency tree including all transitive dependencies, then cross-reference each package@version against vulnerability databases like OSV and NVD.' },
+      { type: 'keypoint', label: 'How it works', text: 'SCA tools parse dependency manifests (package.json, requirements.txt, pom.xml, build.gradle), resolve the full dependency tree including all transitive dependencies, then cross-reference each package@version against vulnerability databases like OSV and NVD.' },
       { type: 'callout', color: 'info', text: 'Over 75% of modern application code comes from open-source packages — making SCA a critical first line of defence.' },
       { type: 'heading', text: 'Common Ecosystems' },
       { type: 'table', headers: ['Ecosystem', 'Language', 'Manifest File', 'Package Manager'], rows: [
         ['npm', 'JavaScript / Node.js', 'package.json, package-lock.json', 'npm, yarn, pnpm'],
         ['PyPI', 'Python', 'requirements.txt, Pipfile', 'pip, pipenv, poetry'],
         ['Maven', 'Java', 'pom.xml', 'mvn'],
+        ['Gradle', 'Java / Kotlin', 'build.gradle, build.gradle.kts', 'gradle'],
       ]},
     ]
   },
@@ -130,7 +131,7 @@ const SECTIONS = [
     id: 'databases', title: 'Vulnerability Databases',
     subtitle: 'Where vulnerability data comes from.',
     content: [
-      { type: 'keypoint', label: 'OSV (Open Source Vulnerabilities)', text: 'Maintained by Google and the open-source community. Provides ecosystem-specific version ranges with real-time updates from package registry advisories. Optimized for npm, PyPI, Maven, and other open-source ecosystems.' },
+      { type: 'keypoint', label: 'OSV (Open Source Vulnerabilities)', text: 'Maintained by Google and the open-source community. Provides ecosystem-specific version ranges with real-time updates from package registry advisories. Optimized for npm, PyPI, Maven, Gradle-backed Maven coordinates, and other open-source ecosystems.' },
       { type: 'keypoint', label: 'NVD (National Vulnerability Database)', text: 'Maintained by NIST (US Government). Broadest coverage including proprietary software. Standardized CVSS scoring and comprehensive historical records. Updates can lag 3–7 days behind initial disclosure.' },
       { type: 'keypoint', label: 'GHSA (GitHub Security Advisory)', text: 'Integrated directly into GitHub repositories. Automatically detects vulnerable dependencies in repos and generates Dependabot alerts. Real-time updates for GitHub-hosted projects.' },
       { type: 'table', headers: ['Database', 'Maintained By', 'Strengths', 'Update Speed'], rows: [
@@ -181,7 +182,7 @@ const SECTIONS = [
       { type: 'keypoint', label: 'Shift-left security', text: 'Identifying vulnerabilities early in the development lifecycle (during commit or pull request) is significantly cheaper than discovering them in production. Automated gates can block deployments with critical vulnerabilities.' },
       { type: 'heading', text: 'Industry-Standard Workflow' },
       { type: 'diagram', steps: [
-        { num: 1, title: 'Developer Commits', desc: 'Developer pushes code with dependency manifest (package.json, requirements.txt, pom.xml) to version control.' },
+        { num: 1, title: 'Developer Commits', desc: 'Developer pushes code with dependency manifest (package.json, requirements.txt, pom.xml, build.gradle) to version control.' },
         { num: 2, title: 'Dependency Resolution', desc: 'CI system runs the package manager (npm install, pip install, mvn package) — resolving all direct and transitive dependencies.' },
         { num: 3, title: 'SBOM Generation', desc: 'Tools like Syft or CycloneDX generate a Software Bill of Materials — a machine-readable inventory of every component, version, and license.' },
         { num: 4, title: 'Vulnerability Scan', desc: 'Scanners query vulnerability databases (OSV, NVD, GHSA) to match each package@version against known CVEs.' },

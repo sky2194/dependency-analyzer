@@ -30,6 +30,7 @@ load_env()
 from parsers.npm_parser import parse as parse_npm
 from parsers.pypi_parser import parse as parse_pypi
 from parsers.maven_parser import parse as parse_maven
+from parsers.gradle_parser import parse as parse_gradle
 from parsers.lockfile_parser import parse as parse_lockfile
 from resolvers.npm_resolver import resolve as resolve_npm
 from resolvers.pypi_resolver import resolve as resolve_pypi
@@ -174,6 +175,7 @@ def detect_ecosystem(filename):
     if 'package-lock.json' in filename: return 'npm-lock'
     if 'package.json' in filename:      return 'npm'
     if filename.endswith('.txt') or 'requirements' in filename: return 'pypi'
+    if filename.endswith('.gradle') or filename.endswith('.gradle.kts') or 'build.gradle' in filename: return 'gradle'
     if filename.endswith('.xml') or 'pom' in filename: return 'maven'
     return 'npm'
 
@@ -183,6 +185,7 @@ def filename_for_ecosystem(ecosystem):
         'npm-lock': 'package-lock.json',
         'pypi': 'requirements.txt',
         'maven': 'pom.xml',
+        'gradle': 'build.gradle',
     }.get(ecosystem, 'package.json')
 
 def validate_content(content, filename):
@@ -195,6 +198,8 @@ def validate_content(content, filename):
         return 'Invalid package.json — must be valid JSON', 400
     if eco == 'maven' and '<' not in content:
         return 'Invalid pom.xml — must contain XML', 400
+    if eco == 'gradle' and 'dependencies' not in content:
+        return 'Invalid build.gradle — must contain dependencies', 400
     return None, None
 
 def deduplicate_vulns(vulnerabilities):
@@ -316,8 +321,8 @@ def add_ui_aliases(vulnerabilities):
         v.setdefault('recommended_fix', v.get('fix_version') or v.get('fix'))
     return vulnerabilities
 
-PARSERS   = {'npm': parse_npm, 'pypi': parse_pypi, 'maven': parse_maven, 'npm-lock': parse_lockfile}
-RESOLVERS = {'npm': resolve_npm, 'pypi': resolve_pypi, 'maven': resolve_maven, 'npm-lock': resolve_lockfile}
+PARSERS   = {'npm': parse_npm, 'pypi': parse_pypi, 'maven': parse_maven, 'gradle': parse_gradle, 'npm-lock': parse_lockfile}
+RESOLVERS = {'npm': resolve_npm, 'pypi': resolve_pypi, 'maven': resolve_maven, 'gradle': resolve_maven, 'npm-lock': resolve_lockfile}
 
 @app.after_request
 def add_cors_headers(response):
@@ -549,7 +554,7 @@ def scan_package_deep():
         from resolvers.pypi_resolver import resolve as pypi_resolve
         from resolvers.maven_resolver import resolve as maven_resolve
         
-        RESOLVERS = {'npm': npm_resolve, 'pypi': pypi_resolve, 'maven': maven_resolve}
+        RESOLVERS = {'npm': npm_resolve, 'pypi': pypi_resolve, 'maven': maven_resolve, 'gradle': maven_resolve}
         
         direct_deps = [{'name': package_name, 'version': package_version or 'latest', 'pinned': bool(package_version)}]
         graph_deps, mediation = RESOLVERS[ecosystem](direct_deps, max_depth=2)

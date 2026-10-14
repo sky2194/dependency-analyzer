@@ -41,6 +41,10 @@ def _maven(pom_xml, project='test-project'):
     return {"content": pom_xml, "filename": "pom.xml",
             "project_name": project}
 
+def _gradle(build_gradle, project='test-project'):
+    return {"content": build_gradle, "filename": "build.gradle",
+            "project_name": project}
+
 def _lockfile(lf_json, project='test-project'):
     return {"content": lf_json, "filename": "package-lock.json",
             "project_name": project}
@@ -155,6 +159,34 @@ class TestScanMaven:
         """ecosystem field must be 'maven' for pom.xml input."""
         resp = _scan(client, _maven(self.LOG4J_POM))
         assert resp.get_json()['ecosystem'] == 'maven'
+
+
+# ── Gradle scans ──────────────────────────────────────────────────────────────
+
+class TestScanGradle:
+    LOG4J_GRADLE = """plugins { id 'java' }
+dependencies {
+  implementation 'log4j:log4j:1.2.17'
+}"""
+
+    def test_log4j_returns_200(self, client):
+        """POST /api/scan with Gradle log4j@1.2.17 returns HTTP 200."""
+        resp = _scan(client, _gradle(self.LOG4J_GRADLE))
+        assert resp.status_code == 200, resp.data
+
+    def test_gradle_ecosystem_field(self, client):
+        """ecosystem field must be 'gradle' for build.gradle input."""
+        resp = _scan(client, _gradle(self.LOG4J_GRADLE))
+        assert resp.get_json()['ecosystem'] == 'gradle'
+
+    def test_log4j_finds_maven_cve(self, client):
+        """Gradle scan uses Maven coordinates for OSV lookup."""
+        resp = _scan(client, _gradle(self.LOG4J_GRADLE))
+        body = resp.get_json()
+        cve_ids = [v['cve_id'] for v in body.get('vulnerabilities', [])]
+        assert 'CVE-2019-17571' in cve_ids, (
+            f"CVE-2019-17571 missing from Gradle scan.\nFound: {cve_ids}"
+        )
 
 
 # ── Lockfile scans ────────────────────────────────────────────────────────────

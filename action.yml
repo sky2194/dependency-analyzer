@@ -8,7 +8,7 @@ inputs:
   manifest-file:
     description: |
       Path to the dependency manifest. Supported: package.json (npm),
-      requirements.txt (PyPI), pom.xml (Maven).
+      requirements.txt (PyPI), pom.xml (Maven), build.gradle/build.gradle.kts (Gradle).
       If omitted, the Action auto-detects whichever manifest exists in the workspace.
     required: false
     default: 'package.json'

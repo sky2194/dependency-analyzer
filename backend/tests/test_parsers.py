@@ -18,6 +18,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from parsers.npm_parser import parse as parse_npm
 from parsers.pypi_parser import parse as parse_pypi
 from parsers.maven_parser import parse as parse_maven
+from parsers.gradle_parser import parse as parse_gradle
 from parsers.lockfile_parser import parse as parse_lockfile
 
 
@@ -314,6 +315,56 @@ class TestMavenParser:
         </project>"""
         result = parse_maven(content)
         assert any('spring-core' in d['name'] for d in result['deps'])
+
+
+# ── Gradle parser ─────────────────────────────────────────────────────────────
+
+class TestGradleParser:
+    def test_string_notation_dependency_included(self):
+        content = """plugins { id 'java' }
+        rootProject.name = 'invoice-service'
+        version = '2.0.0'
+        dependencies {
+          implementation 'com.fasterxml.jackson.core:jackson-databind:2.9.8'
+        }"""
+        result = parse_gradle(content)
+        dep = next(d for d in result['deps'] if 'jackson-databind' in d['name'])
+        assert result['project_name'] == 'invoice-service'
+        assert result['project_version'] == '2.0.0'
+        assert dep['name'] == 'com.fasterxml.jackson.core:jackson-databind'
+        assert dep['version'] == '2.9.8'
+        assert dep['pinned'] is True
+
+    def test_map_notation_dependency_included(self):
+        content = """dependencies {
+          api group: 'org.springframework', name: 'spring-core', version: '5.3.25'
+        }"""
+        result = parse_gradle(content)
+        dep = next(d for d in result['deps'] if 'spring-core' in d['name'])
+        assert dep['name'] == 'org.springframework:spring-core'
+        assert dep['version'] == '5.3.25'
+
+    def test_kotlin_notation_dependency_included(self):
+        content = '''dependencies {
+          implementation("org.springframework:spring-core:5.3.25")
+        }'''
+        result = parse_gradle(content)
+        dep = next(d for d in result['deps'] if 'spring-core' in d['name'])
+        assert dep['name'] == 'org.springframework:spring-core'
+        assert dep['version'] == '5.3.25'
+
+    def test_test_dependencies_excluded(self):
+        content = """dependencies {
+          testImplementation 'junit:junit:4.13.2'
+        }"""
+        assert parse_gradle(content)['deps'] == []
+
+    def test_invalid_coordinate_raises_value_error(self):
+        content = """dependencies {
+          implementation 'bad<group:artifact:1.0.0'
+        }"""
+        with pytest.raises(ValueError, match="Invalid build.gradle"):
+            parse_gradle(content)
 
 
 # ── Lockfile parser ───────────────────────────────────────────────────────────

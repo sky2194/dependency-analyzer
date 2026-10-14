@@ -36,7 +36,7 @@ def query_db(name: str, version: str, ecosystem: str) -> list:
     Returns list of vuln dicts, or None if DB unavailable (caller falls back to live API).
     """
     eco_map = {
-        "npm": "npm", "pypi": "PyPI", "maven": "Maven",
+        "npm": "npm", "pypi": "PyPI", "maven": "Maven", "gradle": "Maven",
         "lockfile": "npm", "npm-lock": "npm"
     }
     eco = eco_map.get(ecosystem, ecosystem)

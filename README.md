@@ -14,7 +14,7 @@
 # DepAnalyzer
 
 **Open-source Software Composition Analysis (SCA) tool.**  
-Scan your project dependencies for known CVE vulnerabilities — across npm, PyPI, and Maven.
+Scan your project dependencies for known CVE vulnerabilities — across npm, PyPI, Maven, and Gradle.
 
 [🌐 depanalyzer.com](https://www.depanalyzer.com) · [📖 Docs](https://www.depanalyzer.com/learn) · [🐛 Report a Bug](https://github.com/sky2194/dependency-analyzer/issues) · [💡 Request a Feature](https://github.com/sky2194/dependency-analyzer/issues)
 
@@ -26,7 +26,7 @@ Scan your project dependencies for known CVE vulnerabilities — across npm, PyP
 
 DepAnalyzer parses a dependency manifest, resolves every package in the tree via the ecosystem's public registry, and maps each one against a local PostgreSQL cache of the [OSV](https://osv.dev) vulnerability database — seeded once and kept fresh via delta sync every 5 minutes. Missing CVSS scores are enriched from [NVD](https://nvd.nist.gov). Results are aggregated into a risk score, grouped by package, and rendered in an interactive UI with a live dependency graph.
 
-The local CVE cache (249k+ vulnerabilities across npm, PyPI, and Maven) means scan lookups take milliseconds instead of seconds — no live API round-trips per package.
+The local CVE cache (249k+ vulnerabilities across npm, PyPI, Maven, and Gradle-backed Maven coordinates) means scan lookups take milliseconds instead of seconds — no live API round-trips per package.
 
 **Scan workflow:**
 1. Parse the uploaded manifest (extract package names and pinned versions)
@@ -44,9 +44,9 @@ Built for developers who want visibility into their supply chain without enterpr
 ## Features
 
 ### Dependency Scanning
-- Parses `package.json`, `package-lock.json`, `requirements.txt`, and `pom.xml`
+- Parses `package.json`, `package-lock.json`, `requirements.txt`, `pom.xml`, and `build.gradle`
 - Resolves direct and transitive dependencies up to three levels deep
-- Auto-detects ecosystem from filename **and from pasted content** (JSON → npm, XML → Maven, `pkg==ver` → PyPI)
+- Auto-detects ecosystem from filename **and from pasted content** (JSON → npm, XML → Maven, Gradle dependencies → Gradle, `pkg==ver` → PyPI)
 - PostgreSQL resolver cache — repeat package lookups skip registry API entirely (warm cache: ~5ms vs ~500ms)
 - Handles `dependencies`, `devDependencies`, and `peerDependencies` for npm
 - No API key required for OSV (primary vulnerability source)
@@ -120,6 +120,7 @@ Built for developers who want visibility into their supply chain without enterpr
 | npm / Node.js | `package.json`, `package-lock.json` | registry.npmjs.org | Nearest depth wins |
 | PyPI / Python | `requirements.txt` | pypi.org/pypi | First matching version |
 | Maven / Java | `pom.xml` | search.maven.org | First declaration wins |
+| Gradle / Java | `build.gradle`, `build.gradle.kts` | Maven Central / OSV Maven | Newest version wins |
 
 ---
 
@@ -189,7 +190,7 @@ jobs:
       - uses: sky2194/dependency-analyzer@v1
 ```
 
-No configuration needed — the Action auto-detects your manifest (`package.json`, `requirements.txt`, or `pom.xml`) from the workspace. Override only if you have a non-standard path:
+No configuration needed — the Action auto-detects your manifest (`package.json`, `requirements.txt`, `pom.xml`, or `build.gradle`) from the workspace. Override only if you have a non-standard path:
 
 ```yaml
       - uses: sky2194/dependency-analyzer@v1
@@ -447,7 +448,7 @@ The backend initialises the schema and starts the delta sync scheduler on every 
 ## Usage
 
 1. Open `http://localhost:3000`
-2. Select an ecosystem tab (npm, PyPI, or Maven)
+2. Select an ecosystem tab (npm, PyPI, Maven, or Gradle)
 3. Upload your manifest file or paste its contents directly
 4. Click **Scan & Detect Vulnerabilities**
 5. Review the risk score, CVE list, dependency graph, and fix commands

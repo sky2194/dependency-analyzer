@@ -24,7 +24,7 @@ eval(helperSrc)                    // eslint-disable-line no-eval
 // ── Auto-detection helper (mirrors the logic in main()) ───────────────────────
 
 function detectManifest(workspace, specifiedFile = 'package.json') {
-  const candidates = [specifiedFile, 'package.json', 'requirements.txt', 'pom.xml']
+  const candidates = [specifiedFile, 'package.json', 'requirements.txt', 'pom.xml', 'build.gradle', 'build.gradle.kts']
   return candidates.find(f => fs.existsSync(path.resolve(workspace, f))) || null
 }
 
@@ -164,6 +164,14 @@ test('auto-detects pom.xml when package.json and requirements.txt absent', () =>
   fs.writeFileSync(path.join(tmp, 'pom.xml'), '<project/>')
   const found = detectManifest(tmp, 'package.json')
   assert.strictEqual(found, 'pom.xml')
+  fs.rmSync(tmp, { recursive: true })
+})
+
+test('auto-detects build.gradle when other manifests absent', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'da-test-'))
+  fs.writeFileSync(path.join(tmp, 'build.gradle'), "dependencies { implementation 'log4j:log4j:1.2.17' }")
+  const found = detectManifest(tmp, 'package.json')
+  assert.strictEqual(found, 'build.gradle')
   fs.rmSync(tmp, { recursive: true })
 })
 

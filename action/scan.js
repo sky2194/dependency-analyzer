@@ -144,17 +144,17 @@ async function main() {
 
   // Auto-detect manifest if the default is not found
   const workspace = process.env.GITHUB_WORKSPACE || '.'
-  const candidates = [manifestFile, 'package.json', 'requirements.txt', 'pom.xml']
+  const candidates = [manifestFile, 'package.json', 'requirements.txt', 'pom.xml', 'build.gradle', 'build.gradle.kts']
   const found = candidates.find(f => fs.existsSync(path.resolve(workspace, f)))
   if (!found) {
-    warning(`No supported manifest found (package.json, requirements.txt, pom.xml) — skipping scan`)
+    warning(`No supported manifest found (package.json, requirements.txt, pom.xml, build.gradle) — skipping scan`)
     return
   }
   if (found !== manifestFile) notice(`manifest-file not found; auto-detected ${found}`)
   const manifestPath = path.resolve(workspace, found)
 
   const content  = fs.readFileSync(manifestPath, 'utf8')
-  const filename = path.basename(manifestFile)
+  const filename = path.basename(found)
 
   notice(`DepAnalyzer: scanning ${filename}…`)
 
