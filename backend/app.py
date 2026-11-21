@@ -664,9 +664,15 @@ def get_scan(scan_id):
                 import gzip as _gzip
                 result = json.loads(_gzip.decompress(bytes(row['result'])).decode('utf-8'))
                 return jsonify(result)
+    except RuntimeError as e:
+        # DATABASE_URL not configured — storage feature not available
+        log.debug(f"get_scan: storage not configured: {e}")
+        return jsonify({'error': 'Scan not found or storage unavailable'}), 404
     except Exception as e:
-        log.error(f"get_scan error: {e}")
-        return jsonify({'error': 'Failed to retrieve scan'}), 500
+        # DB connection failure (e.g. quota exceeded, network error) — treat as not found
+        # so callers with skip-on-404 logic degrade gracefully
+        log.warning(f"get_scan {scan_id}: storage unavailable: {e}")
+        return jsonify({'error': 'Scan not found or storage unavailable'}), 404
 
 @app.route('/api/cve/<cve_id>', methods=['GET'])
 @rate_limited

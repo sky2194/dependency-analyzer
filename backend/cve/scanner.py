@@ -43,6 +43,12 @@ def _set_cached_scan(name, version, ecosystem, data):
 
 def _enrich_epss_kev(vulns: list):
     """Add epss_score, epss_percentile, in_kev fields from DB to vuln dicts."""
+    # Always set defaults so keys exist even when DB enrichment fails
+    for v in vulns:
+        v.setdefault("epss_score", None)
+        v.setdefault("epss_percentile", None)
+        v.setdefault("in_kev", False)
+
     if not vulns:
         return
     cve_ids = [v["cve_id"] for v in vulns if v.get("cve_id", "").startswith("CVE-")]
@@ -112,9 +118,9 @@ def scan_package(name, version, ecosystem):
                         idx = needs_enrichment.index(v)
                         vulns[i] = enriched[idx]
 
-        # Cache the result
+        # Enrich EPSS/KEV (best-effort — silently skipped if DB unavailable)
+        _enrich_epss_kev(vulns)
         _set_cached_scan(name, version, ecosystem, vulns)
-
         return vulns
     except requests.exceptions.Timeout as e:
         log.warning(f"Timeout scanning {name}@{version}: {e}")
