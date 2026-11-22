@@ -49,3 +49,27 @@ class TestHealthEndpoint:
             resp = client.get('/api/health')
         body = resp.get_json()
         assert body['status'] == 'ok'
+
+
+class TestHealthDbCache:
+    """Health must not query the DB on every poll (keeps Neon able to suspend)."""
+
+    def test_success_is_cached(self, client):
+        with patch('db.last_sync_time', return_value='2024-06-01T00:00:00+00:00') as m:
+            client.get('/api/health')
+            calls_after_first = m.call_count
+            for _ in range(5):
+                assert client.get('/api/health').get_json()['db_connected'] is True
+        assert calls_after_first > 0
+        assert m.call_count == calls_after_first
+
+    def test_failure_is_cached_briefly_then_retried(self, client):
+        import app as _app
+        with patch('db.last_sync_time', side_effect=Exception('down')) as m:
+            client.get('/api/health')
+            client.get('/api/health')
+            assert m.call_count == 1
+        # Expire the short failure TTL: a recovered DB is detected on next poll.
+        _app._health_db_cache['ts'] -= _app._HEALTH_DB_FAIL_TTL + 1
+        with patch('db.last_sync_time', return_value='2024-06-01T00:00:00+00:00'):
+            assert client.get('/api/health').get_json()['db_connected'] is True

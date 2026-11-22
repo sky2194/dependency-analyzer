@@ -720,28 +720,34 @@ def export_csv():
     return Response(csv_data, mimetype='text/csv',
         headers={'Content-Disposition': f'attachment; filename=sca-report-{data.get("project_name","report")}.csv'})
 
+# Health is polled every 30–60s by every open browser tab. Querying the DB on
+# each poll keeps Neon's compute from ever auto-suspending and burns the
+# monthly CU-hour allowance. Sync times change at most daily, so cache them.
+_HEALTH_DB_TTL = int(os.environ.get('HEALTH_DB_TTL', '1800'))         # cache success 30 min
+_HEALTH_DB_FAIL_TTL = int(os.environ.get('HEALTH_DB_FAIL_TTL', '60'))  # cache failure 60 s
+_health_db_cache = {'ts': 0.0, 'ttl': 0, 'value': (None, None, None, False)}
+
+def _health_db_status():
+    from db import last_sync_time
+    now = time.monotonic()
+    if _health_db_cache['ts'] and now - _health_db_cache['ts'] < _health_db_cache['ttl']:
+        return _health_db_cache['value']
+    try:
+        osv = (last_sync_time('OSV_npm') or last_sync_time('OSV_pypi')
+               or last_sync_time('OSV_maven') or None)
+        value, ttl = (osv, last_sync_time('EPSS') or None, last_sync_time('KEV') or None, True), _HEALTH_DB_TTL
+    except Exception:
+        # Short TTL so a recovered DB shows as connected again quickly.
+        value, ttl = (None, None, None, False), _HEALTH_DB_FAIL_TTL
+    _health_db_cache.update(ts=now, ttl=ttl, value=value)
+    return value
+
 @app.route('/api/health', methods=['GET'])
 def health():
     from datetime import datetime, timezone
     now = datetime.now(timezone.utc).isoformat()
 
-    # Real DB sync times — powering the freshness indicator in the frontend
-    try:
-        from db import last_sync_time
-        osv_synced_at = (
-            last_sync_time('OSV_npm') or
-            last_sync_time('OSV_pypi') or
-            last_sync_time('OSV_maven') or
-            None
-        )
-        epss_synced_at = last_sync_time('EPSS') or None
-        kev_synced_at  = last_sync_time('KEV')  or None
-        db_ok = True
-    except Exception:
-        osv_synced_at  = None
-        epss_synced_at = None
-        kev_synced_at  = None
-        db_ok = False
+    osv_synced_at, epss_synced_at, kev_synced_at, db_ok = _health_db_status()
 
     # Internal token allows frontend/monitoring to see full details
     # Public callers get minimal response only

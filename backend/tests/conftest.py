@@ -25,3 +25,12 @@ def client():
     _rate_limiter._store.clear()
     with app.test_client() as c:
         yield c
+
+
+@pytest.fixture(autouse=True)
+def _reset_health_cache():
+    """Reset the health-check DB cache so DB availability state does not
+    bleed across tests."""
+    import app as _app
+    _app._health_db_cache.update(ts=0.0, ttl=0, value=(None, None, None, False))
+    yield
